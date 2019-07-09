@@ -1,0 +1,28 @@
+[package]
+name = "emacs-tree-sitter"
+version = "0.1.0"
+authors = ["Tuấn-Anh Nguyễn <ubolonton@gmail.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+name = "tree_sitter_dyn"
+crate-type = ["cdylib"]
+
+[dependencies.emacs]
+version = "0.8.0"
+path = "../emacs-module-rs"
+
+[dependencies.tree-sitter]
+version = "0.3.10"
+path = "../tree-sitter/lib"
+# git = "https://github.com/ubolonton/tree-sitter"
+# branch = "rust-binding"
+
+[dependencies]
+libloading = "0.5.1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
