@@ -2,6 +2,7 @@
 
 use emacs::{Env, Result, Value, IntoLisp};
 use emacs::defun;
+use emacs::ResultExt;
 
 use std::mem;
 
@@ -50,14 +51,13 @@ fn parse(parser: &mut Parser, read: Value) -> Result<Tree> {
                 "funcall",
                 &[
                     read,
-                    // TODO: Make panics' messages more informative by extracting info from errors.
-                    (byte as i64).into_lisp(env).unwrap_or_else(|e| panic!("{}", e)),
-                    (position.row as i64).into_lisp(env).unwrap_or_else(|e| panic!("{}", e)),
-                    (position.column as i64).into_lisp(env).unwrap_or_else(|e| panic!("{}", e)),
+                    (byte as i64).into_lisp(env).unwrap_or_propagate(),
+                    (position.row as i64).into_lisp(env).unwrap_or_propagate(),
+                    (position.column as i64).into_lisp(env).unwrap_or_propagate(),
                 ],
             )
-            .unwrap_or_else(|e| panic!("{}", e));
-        fragment.into_rust::<String>().unwrap_or_else(|e| panic!("{}", e))
+            .unwrap_or_propagate();
+        fragment.into_rust::<String>().unwrap_or_propagate()
     };
     let tree = parser.parse_buffering_with(input, None).unwrap();
     Ok(tree)

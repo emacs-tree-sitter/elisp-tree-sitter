@@ -11,7 +11,7 @@ name = "tree_sitter_dyn"
 crate-type = ["cdylib"]
 
 [dependencies.emacs]
-version = "0.8.0"
+version = "0.9.0"
 path = "../emacs-module-rs"
 
 [dependencies.tree-sitter]
