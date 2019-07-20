@@ -56,8 +56,17 @@
   "Test that a tree's nodes are still usable after no direct reference to the
 tree is held (since nodes internally reference the tree)."
   (let* ((parser (tree-sitter-parser "rust")))
-    (let ((node (tree-sitter-dyn-root-node
-                 (tree-sitter-dyn-parse-string parser "fn foo() {}"))))
-      (garbage-collect)
-      (should (eql 1 (tree-sitter-dyn-child-count node))))
+    (message "timing: %s" (benchmark-run 1 (let ((node (tree-sitter-dyn-root-node
+                                      (tree-sitter-dyn-parse-string parser "fn foo() {}"))))
+                           (garbage-collect)
+                           (should (eql 1 (tree-sitter-dyn-child-count node))))))
     (garbage-collect)))
+
+(ert-deftest walk ()
+  (let* ((parser (tree-sitter-parser "rust"))
+         (tree (tree-sitter-dyn-parse-string parser "fn foo() {}"))
+         (node (tree-sitter-dyn-root-node tree)))
+    (tree-sitter-dyn-walk tree)
+    (tree-sitter-dyn-walk node)
+    (message "%s" (tree-sitter-dyn-foo "abc"))
+    (message "%s" (tree-sitter-dyn-foo -123))))

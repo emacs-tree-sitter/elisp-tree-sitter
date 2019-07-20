@@ -1,4 +1,4 @@
-use emacs::{defun, Value, Result};
+use emacs::{defun, Value, Result, IntoLisp, Vector};
 
 use std::{
     cell::RefCell,
@@ -8,42 +8,63 @@ use std::{
 
 use tree_sitter::{InputEdit, Point};
 
-use super::types::{SharedTree, WrappedNode};
+use super::types::{SharedTree, WrappedNode, Range};
+
+// XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
+// .into_rust() boilerplate. This is a trick to avoid both.
+type Tree<'a> = &'a SharedTree;
 
 #[defun]
-fn tree_to_sexp(tree: Value) -> Result<String> {
-    let tree: &SharedTree = tree.into_rust()?;
+fn tree_to_sexp(tree: Tree) -> Result<String> {
     Ok(tree.try_borrow()?.root_node().to_sexp())
 }
 
 #[defun(user_ptr)]
-fn root_node(tree: Value) -> Result<WrappedNode> {
-    let tree: &SharedTree = tree.into_rust()?;
-    Ok(unsafe { WrappedNode::new(tree, tree.try_borrow()?.root_node()) })
+fn root_node(tree: Tree) -> Result<WrappedNode> {
+    Ok(unsafe { WrappedNode::new(tree.clone(), tree.try_borrow()?.root_node()) })
 }
 
+#[allow(clippy::too_many_arguments)]
 #[defun]
-fn edit(
-    tree: Value,
-    start_byte: i64,
-    old_end_byte: i64,
-    new_end_byte: i64,
-    start_row: i64,
-    start_column: i64,
-    old_end_row: i64,
-    old_end_column: i64,
-    new_end_row: i64,
-    new_end_column: i64,
+fn edit_tree(
+    tree: Tree,
+    start_byte: usize,
+    old_end_byte: usize,
+    new_end_byte: usize,
+    start_row: usize,
+    start_column: usize,
+    old_end_row: usize,
+    old_end_column: usize,
+    new_end_row: usize,
+    new_end_column: usize,
 ) -> Result<()> {
-    let tree: &SharedTree = tree.into_rust()?;
     let edit = InputEdit {
-        start_byte: start_byte as usize,
-        old_end_byte: old_end_byte as usize,
-        new_end_byte: new_end_byte as usize,
-        start_position: Point { row: start_row as usize, column: start_column as usize },
-        old_end_position: Point { row: old_end_row as usize, column: old_end_column as usize },
-        new_end_position: Point { row: new_end_row as usize, column: new_end_column as usize },
+        start_byte,
+        old_end_byte,
+        new_end_byte,
+        start_position: Point { row: start_row, column: start_column },
+        old_end_position: Point { row: old_end_row, column: old_end_column },
+        new_end_position: Point { row: new_end_row, column: new_end_column },
     };
     tree.try_borrow_mut()?.edit(&edit);
     Ok(())
+}
+
+// TODO: walk_with_properties
+
+#[defun]
+fn changed_ranges<'e>(tree: Value<'e>, other_tree: Tree<'e>) -> Result<Vector<'e>> {
+    let env = tree.env;
+    let tree = tree.into_rust::<&SharedTree>()?.try_borrow()?;
+    let other_tree = other_tree.try_borrow()?;
+    let ranges = tree.changed_ranges(&*other_tree);
+    let len = ranges.len();
+    let vec = Vector(env.call("make-vector", &[
+        len.into_lisp(env)?,
+        env.intern("nil")?
+    ])?);
+    for (i, range) in ranges.into_iter().enumerate() {
+        vec.set(i, Range(range))?;
+    }
+    Ok(vec)
 }

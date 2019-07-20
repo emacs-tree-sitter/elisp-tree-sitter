@@ -4,19 +4,21 @@ use std::{
     cell::{RefCell, Ref},
     rc::Rc,
     mem,
+    ops::Deref,
 };
 
-use emacs::{defun, Env, Result, Value, IntoLisp};
+use emacs::{defun, Env, Result, Value, IntoLisp, FromLisp, Transfer};
 use emacs::ResultExt;
 
-use tree_sitter::{Parser, Tree, Point, Language, InputEdit, Node, TreeCursor};
+use tree_sitter::{Parser, Tree, Point, InputEdit, Node, TreeCursor};
 use libloading;
 
-use self::types::{shared, SharedTree};
+use self::types::{shared, Language, SharedTree};
 
 mod types;
 mod tree;
 mod node;
+mod cursor;
 
 emacs::plugin_is_GPL_compatible! {}
 
@@ -31,30 +33,30 @@ fn _parser() -> Result<Parser> {
 }
 
 #[defun]
-fn _set_language(parser: &mut Parser, language: &Language) -> Result<()> {
+fn _set_language(parser: &mut Parser, language: Language) -> Result<()> {
     parser.set_language(*language).unwrap();
     Ok(())
 }
 
 /// Load language identified by NAME from tree-sitter's bin directory.
-#[defun(user_ptr)]
+#[defun(user_ptr(direct))]
 fn _load_language(name: String) -> Result<Language> {
     // TODO: Expand path properly.
     let path = format!("{}/.tree-sitter/bin/{}.so", std::env::var("HOME").unwrap(), name);
     let lib = libloading::Library::new(path)?;
-    let tree_sitter_lang: libloading::Symbol<'_, unsafe extern "C" fn() -> Language> =
+    let tree_sitter_lang: libloading::Symbol<'_, unsafe extern "C" fn() -> _> =
         unsafe { lib.get(format!("tree_sitter_{}", name).as_bytes())? };
-    let lang = unsafe { tree_sitter_lang() };
+    let language: Language = unsafe { tree_sitter_lang() };
     // Avoid segmentation fault by not unloading the lib, as language is a static struct.
     mem::forget(lib);
-    Ok(lang)
+    Ok(language)
 }
 
 #[defun(user_ptr(direct))]
-fn parse(parser: &mut Parser, read: Value, old_tree: Option<Value>) -> Result<SharedTree> {
+fn parse(parser: &mut Parser, read: Value, old_tree: Option<&SharedTree>) -> Result<SharedTree> {
     let env = read.env;
     let old_tree = match old_tree {
-        Some(v) => Some(v.into_rust::<&SharedTree>()?.try_borrow()?),
+        Some(v) => Some(v.try_borrow()?),
         _ => None,
     };
     let old_tree = match &old_tree {
@@ -67,9 +69,9 @@ fn parse(parser: &mut Parser, read: Value, old_tree: Option<Value>) -> Result<Sh
                 "funcall",
                 &[
                     read,
-                    (byte as i64).into_lisp(env).unwrap_or_propagate(),
-                    (position.row as i64).into_lisp(env).unwrap_or_propagate(),
-                    (position.column as i64).into_lisp(env).unwrap_or_propagate(),
+                    byte.into_lisp(env).unwrap_or_propagate(),
+                    position.row.into_lisp(env).unwrap_or_propagate(),
+                    position.column.into_lisp(env).unwrap_or_propagate(),
                 ],
             )
             .unwrap_or_propagate();
@@ -96,7 +98,7 @@ fn edit_(parser: &mut Parser, tree: Option<&RefCell<Tree>>, edit: &InputEdit) ->
         None => None,
         Some(r) => Some(&mut **r),
     };
-    y.map(|t| t.edit(edit));
+    if let Some(t) = y { t.edit(edit) }
     unimplemented!()
 }
 
@@ -108,7 +110,7 @@ fn edit__(parser: &mut Parser, tree: Value, edit: &InputEdit) -> Result<()> {
         None => None,
         Some(r) => Some(&mut **r),
     };
-    y.map(|t| t.edit(edit));
+    if let Some(t) = y { t.edit(edit) }
     unimplemented!()
 }
 
