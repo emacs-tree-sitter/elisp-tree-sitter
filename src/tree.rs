@@ -8,7 +8,7 @@ use std::{
 
 use tree_sitter::{InputEdit, Point};
 
-use super::types::{SharedTree, WrappedNode, Range};
+use crate::types::{SharedTree, WrappedNode, Range};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.

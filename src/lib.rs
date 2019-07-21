@@ -16,6 +16,7 @@ use libloading;
 use self::types::{shared, Language, SharedTree};
 
 mod types;
+mod lang;
 mod tree;
 mod node;
 mod cursor;
@@ -36,20 +37,6 @@ fn _parser() -> Result<Parser> {
 fn _set_language(parser: &mut Parser, language: Language) -> Result<()> {
     parser.set_language(*language).unwrap();
     Ok(())
-}
-
-/// Load language identified by NAME from tree-sitter's bin directory.
-#[defun(user_ptr(direct))]
-fn _load_language(name: String) -> Result<Language> {
-    // TODO: Expand path properly.
-    let path = format!("{}/.tree-sitter/bin/{}.so", std::env::var("HOME").unwrap(), name);
-    let lib = libloading::Library::new(path)?;
-    let tree_sitter_lang: libloading::Symbol<'_, unsafe extern "C" fn() -> _> =
-        unsafe { lib.get(format!("tree_sitter_{}", name).as_bytes())? };
-    let language: Language = unsafe { tree_sitter_lang() };
-    // Avoid segmentation fault by not unloading the lib, as language is a static struct.
-    mem::forget(lib);
-    Ok(language)
 }
 
 #[defun(user_ptr(direct))]

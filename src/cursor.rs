@@ -7,7 +7,7 @@ use std::{
 
 use tree_sitter::TreeCursor;
 
-use super::types::{SharedTree, WrappedCursor, WrappedNode};
+use crate::types::{SharedTree, WrappedCursor, WrappedNode};
 use crate::types::Either;
 
 #[defun(user_ptr)]

@@ -7,7 +7,7 @@
 
 (defun tree-sitter-parser (lang)
   (let ((parser (tree-sitter--parser))
-        (language (tree-sitter--load-language lang)))
+        (language (tree-sitter--load-language lang nil nil)))
     (tree-sitter--set-language parser language)
     parser))
 
