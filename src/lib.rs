@@ -22,7 +22,7 @@ mod cursor;
 
 emacs::plugin_is_GPL_compatible! {}
 
-#[emacs::module(mod_in_name = false)]
+#[emacs::module(mod_in_name = false, defun_prefix = "tree-sitter")]
 fn init(_: &Env) -> Result<()> {
     Ok(())
 }
