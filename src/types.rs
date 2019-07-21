@@ -4,32 +4,30 @@ use std::{
     mem,
     ops::Deref,
     convert::TryInto,
+    marker::PhantomData,
 };
 
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
 use tree_sitter::{Tree, InputEdit, Node, TreeCursor};
-use std::marker::PhantomData;
+
+pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
+    Rc::new(RefCell::new(t))
+}
 
 macro_rules! impl_wrapper_traits {
     ($wrapper:ty, $inner:ty) => {
         impl From<$inner> for $wrapper {
+            #[inline(always)]
             fn from(inner: $inner) -> Self {
                 Self(inner)
             }
         }
 
         impl Into<$inner> for $wrapper {
+            #[inline(always)]
             fn into(self) -> $inner {
                 self.0
-            }
-        }
-
-        impl Deref for $wrapper {
-            type Target = $inner;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
             }
         }
     };
@@ -48,9 +46,10 @@ impl_wrapper_traits!(Point);
 
 impl IntoLisp<'_> for Point {
     fn into_lisp(self, env: &Env) -> Result<Value> {
+        let inner = self.0;
         env.call("vector", &[
-            self.row.into_lisp(env)?,
-            self.column.into_lisp(env)?,
+            inner.row.into_lisp(env)?,
+            inner.column.into_lisp(env)?,
         ])
     }
 }
@@ -74,11 +73,12 @@ impl_wrapper_traits!(Range);
 
 impl IntoLisp<'_> for Range {
     fn into_lisp(self, env: &Env) -> Result<Value> {
+        let inner = self.0;
         env.call("vector", &[
-            self.start_byte.into_lisp(env)?,
-            self.end_byte.into_lisp(env)?,
-            Point(self.start_point).into_lisp(env)?,
-            Point(self.end_point).into_lisp(env)?,
+            inner.start_byte.into_lisp(env)?,
+            inner.end_byte.into_lisp(env)?,
+            Point(inner.start_point).into_lisp(env)?,
+            Point(inner.end_point).into_lisp(env)?,
         ])
     }
 }
@@ -121,10 +121,6 @@ impl<'e> FromLisp<'e> for Language {
 // TODO: We probably don't need RefCell.
 pub type SharedTree = Rc<RefCell<Tree>>;
 
-pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
-    Rc::new(RefCell::new(t))
-}
-
 // -------------------------------------------------------------------------------------------------
 // Node
 
@@ -149,19 +145,19 @@ impl WrappedNode {
         Self { tree, raw }
     }
 
-    #[inline(always)]
+    #[inline]
     pub unsafe fn wrap(&self, node: Node) -> Self {
         let tree = self.tree.clone();
         Self::new(tree, node)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inner(&self) -> &Node {
         let ptr = (&self.raw as *const RawNode) as *const Node;
         unsafe { &*ptr }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inner_mut(&mut self) -> &mut Node {
         let ptr = (&mut self.raw as *mut RawNode) as *mut Node;
         unsafe { &mut *ptr }
@@ -192,19 +188,19 @@ impl WrappedCursor {
         Self { tree, raw }
     }
 
-    #[inline(always)]
+    #[inline]
     pub unsafe fn wrap(&self, cursor: TreeCursor) -> Self {
         let tree = self.tree.clone();
         Self::new(tree, cursor)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inner(&self) -> &TreeCursor {
         let ptr = (&self.raw as *const RawCursor) as *const TreeCursor;
         unsafe { &*ptr }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inner_mut(&mut self) -> &mut TreeCursor {
         let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
         unsafe { &mut *ptr }

@@ -1,4 +1,5 @@
 use emacs::{defun, Result, Value, IntoLisp, ResultExt};
+use emacs::failure;
 
 use tree_sitter::{Parser, Point};
 
@@ -11,7 +12,7 @@ fn _parser() -> Result<Parser> {
 
 #[defun]
 fn _set_language(parser: &mut Parser, language: Language) -> Result<()> {
-    parser.set_language(*language).unwrap();
+    parser.set_language(language.into()).map_err(failure::err_msg);
     Ok(())
 }
 
