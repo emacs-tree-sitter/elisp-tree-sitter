@@ -176,7 +176,7 @@ pub type RawCursor = [u64; TREE_CURSOR_LEN];
 #[derive(Clone)]
 #[repr(C)]
 pub struct WrappedCursor {
-    tree: SharedTree,
+    pub(crate) tree: SharedTree,
     raw: RawCursor,
 }
 
