@@ -14,10 +14,10 @@ use crate::types::Either;
 fn walk<'e>(tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<WrappedNode>>) -> Result<WrappedCursor> {
     match tree_or_node {
         Either::Left(tree, ..) => {
-            Ok(unsafe { WrappedCursor::new(tree.clone(), tree.try_borrow()?.walk()) })
+            Ok(unsafe { WrappedCursor::new(tree.clone(), tree.borrow().walk()) })
         }
         Either::Right(node, ..) => {
-            let node = node.try_borrow()?;
+            let node = node.borrow();
             Ok(unsafe { WrappedCursor::new( node.tree.clone(), node.inner().walk()) })
         }
     }
