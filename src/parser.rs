@@ -11,11 +11,12 @@ fn _parser() -> Result<Parser> {
 }
 
 #[defun]
-fn _set_language(parser: &mut Parser, language: Language) -> Result<()> {
+fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
     parser.set_language(language.into()).map_err(failure::err_msg);
     Ok(())
 }
 
+// TODO: Add a version that reuses a single buffer to avoid multiple allocations.
 #[defun(user_ptr(direct))]
 fn parse(parser: &mut Parser, read: Value, old_tree: Option<&SharedTree>) -> Result<SharedTree> {
     let env = read.env;
@@ -53,22 +54,22 @@ fn parse_string(parser: &mut Parser, s: String) -> Result<Option<SharedTree>> {
 }
 
 #[defun]
-fn _reset(parser: &mut Parser) -> Result<()> {
+fn reset_parser(parser: &mut Parser) -> Result<()> {
     Ok(parser.reset())
 }
 
 #[defun]
-fn _timeout_micros(parser: &mut Parser) -> Result<u64> {
+fn timeout_micros(parser: &mut Parser) -> Result<u64> {
     Ok(parser.timeout_micros())
 }
 
 #[defun]
-fn _set_timeout_micros(parser: &mut Parser, timeout_micros: u64) -> Result<()> {
+fn set_timeout_micros(parser: &mut Parser, timeout_micros: u64) -> Result<()> {
     Ok(parser.set_timeout_micros(timeout_micros))
 }
 
 #[defun]
-fn _set_included_ranges(parser: &mut Parser, ranges: Value) -> Result<()> {
+fn set_included_ranges(parser: &mut Parser, ranges: Value) -> Result<()> {
     let ranges = Vector(ranges);
     let len = ranges.size()?;
     let included = &mut Vec::with_capacity(len);

@@ -11,7 +11,7 @@ mod cursor;
 
 emacs::plugin_is_GPL_compatible! {}
 
-#[emacs::module(mod_in_name = false, defun_prefix = "tree-sitter")]
+#[emacs::module(mod_in_name = false, defun_prefix = "ts")]
 fn init(_: &Env) -> Result<()> {
     Ok(())
 }

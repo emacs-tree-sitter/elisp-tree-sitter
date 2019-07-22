@@ -47,38 +47,20 @@ fn current_field_name(cursor: &WrappedCursor) -> Result<Option<&str>> {
 }
 
 macro_rules! mutator {
-    ($name:ident -> $type:ty) => {
-        #[defun]
-        fn $name(cursor: &mut WrappedCursor) -> Result<$type> {
-            Ok(cursor.inner_mut().$name())
-        }
-    };
-    ($name:ident as $lisp_name:ident -> $type:ty) => {
-        #[defun]
-        fn $lisp_name(cursor: &mut WrappedCursor) -> Result<$type> {
-            Ok(cursor.inner_mut().$name())
-        }
-    };
-    ($name:ident ( $($param:ident: $itype:ty),* ) -> $type:ty) => {
-        #[defun]
-        fn $name(cursor: &mut WrappedCursor, $($param: $itype),*) -> Result<$type> {
-            Ok(cursor.inner_mut().$name($($param),*))
-        }
-    };
-    ($name:ident as $lisp_name:ident ( $($param:ident: $itype:ty),* ) -> $type:ty) => {
-        #[defun]
-        fn $lisp_name(cursor: &mut WrappedCursor, $($param: $itype),*) -> Result<$type> {
-            Ok(cursor.inner_mut().$name($($param),*))
+    ($($lisp_name:literal)? fn $name:ident $( ( $( $param:ident: $itype:ty ),* ) )? -> $type:ty) => {
+        #[defun$((name = $lisp_name))?]
+        fn $name(cursor: &mut WrappedCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
+            Ok(cursor.inner_mut().$name( $( $( $param ),* )? ))
         }
     };
 }
 
-mutator!(goto_first_child -> bool);
-mutator!(goto_parent -> bool);
-mutator!(goto_next_sibling -> bool);
-mutator!(goto_first_child_for_index as goto_first_child_for_byte(index: usize) -> Option<usize>);
+mutator!(fn goto_first_child -> bool);
+mutator!(fn goto_parent -> bool);
+mutator!(fn goto_next_sibling -> bool);
+mutator!("goto-first-child-for-byte" fn goto_first_child_for_index(index: usize) -> Option<usize>);
 
 #[defun]
-fn reset_to_node(cursor: &mut WrappedCursor, node: &WrappedNode) -> Result<()> {
+fn reset_cursor(cursor: &mut WrappedCursor, node: &WrappedNode) -> Result<()> {
     Ok(cursor.inner_mut().reset(*node.inner()))
 }

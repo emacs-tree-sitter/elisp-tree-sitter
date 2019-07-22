@@ -1,7 +1,4 @@
-use std::{
-    mem,
-    cell::RefCell,
-};
+use std::{mem, cell::RefCell};
 
 use emacs::{defun, Value, Result, IntoLisp};
 
@@ -9,83 +6,54 @@ use tree_sitter::{Node, InputEdit};
 
 use crate::types::{WrappedNode, Range, Point};
 
-macro_rules! getter {
-    ($name:ident -> $type:ty) => {
-        #[defun]
+macro_rules! prop {
+    ($($lisp_name:literal)? fn $name:ident -> $type:ty) => {
+        #[defun$((name = $lisp_name))?]
         fn $name(node: &WrappedNode) -> Result<$type> {
             Ok(node.inner().$name())
         }
     };
-    ($name:ident -> into $type:ty) => {
-        #[defun]
+    ($($lisp_name:literal)? fn $name:ident -> into $type:ty) => {
+        #[defun$((name = $lisp_name))?]
         fn $name(node: &WrappedNode) -> Result<$type> {
-            Ok(node.inner().$name().into())
-        }
-    };
-    ($name:ident as $lisp_name:ident -> $type:ty) => {
-        #[defun]
-        fn $lisp_name(node: &WrappedNode) -> Result<$type> {
-            Ok(node.inner().$name())
-        }
-    };
-    ($name:ident as $lisp_name:ident -> into $type:ty) => {
-        #[defun]
-        fn $lisp_name(node: &WrappedNode) -> Result<$type> {
             Ok(node.inner().$name().into())
         }
     };
 }
 
 /// Exposes a method that returns a(nother) node.
-macro_rules! walker {
-    ($name:ident) => {
-        #[defun]
-        fn $name(node: &WrappedNode) -> Result<Option<RefCell<WrappedNode>>> {
-            Ok(node.inner().$name().map(|other| {
-                RefCell::new(unsafe { node.wrap(other) })
-            }))
-        }
-    };
-    ($name:ident, $($param:ident $($into:ident)? : $type:ty),*) => {
-        #[defun]
-        fn $name(node: &WrappedNode, $($param: $type),*) -> Result<Option<RefCell<WrappedNode>>> {
-            Ok(node.inner().$name($($param $(.$into())? ),*).map(|other| {
-                RefCell::new(unsafe { node.wrap(other) })
-            }))
-        }
-    };
-    ($name:ident ( $($param:ident $($into:ident)? : $type:ty),* )) => {
-        #[defun]
-        fn $name(node: &WrappedNode, $($param: $type),*) -> Result<Option<RefCell<WrappedNode>>> {
-            Ok(node.inner().$name($($param $(.$into())? ),*).map(|other| {
+macro_rules! node {
+    ($($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $type:ty ),* ) )? ) => {
+        #[defun$((name = $lisp_name))?]
+        fn $name(node: &WrappedNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<WrappedNode>>> {
+            Ok(node.inner().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
                 RefCell::new(unsafe { node.wrap(other) })
             }))
         }
     };
 }
 
-getter!(kind_id as node_symbol -> u16);
-getter!(kind as node_type -> &'static str);
+prop!("node-kind-id" fn kind_id -> u16);
+prop!("node-kind" fn kind -> &'static str);
 
-getter!(is_named -> bool);
-getter!(is_extra -> bool);
-getter!(has_changes -> bool);
-getter!(has_error -> bool);
-getter!(is_error -> bool);
-getter!(is_missing -> bool);
+prop!("node-named-p" fn is_named -> bool);
+prop!("node-extra-p" fn is_extra -> bool);
+prop!("node-error-p" fn is_error -> bool);
+prop!("node-missing-p" fn is_missing -> bool);
+prop!("node-has-changes-p" fn has_changes -> bool);
+prop!("node-has-error-p" fn has_error -> bool);
 
-getter!(start_byte -> usize);
-getter!(end_byte -> usize);
-getter!(range -> into Range);
-getter!(start_position as start_point -> into Point);
-getter!(end_position as end_point -> into Point);
+prop!("node-start-byte" fn start_byte -> usize);
+prop!("node-start-point" fn start_position -> into Point);
+prop!("node-end-byte" fn end_byte -> usize);
+prop!("node-end-point" fn end_position -> into Point);
+prop!("node-range" fn range -> into Range);
 
-walker!(child(i: usize));
-walker!(child_by_field_name(field_name: String));
-getter!(child_count -> usize);
+prop!("count-children" fn child_count -> usize);
+prop!("count-named-children" fn named_child_count -> usize);
 
 #[defun]
-fn for_each_child_node(node: &WrappedNode, f: Value) -> Result<()> {
+fn mapc_children(node: &WrappedNode, f: Value) -> Result<()> {
     let tree = &node.tree;
     let env = f.env;
     for child in node.inner().children() {
@@ -95,22 +63,23 @@ fn for_each_child_node(node: &WrappedNode, f: Value) -> Result<()> {
     Ok(())
 }
 
-walker!(named_child, i: usize);
-getter!(named_child_count -> usize);
+node!("get-nth-child" fn child(i: usize));
+node!("get-nth-named-child" fn named_child(i: usize));
+node!("get-child-by-field-name" fn child_by_field_name(field_name: String));
 
-walker!(parent);
+node!("get-parent" fn parent);
 
-walker!(next_sibling);
-walker!(prev_sibling);
-walker!(next_named_sibling);
-walker!(prev_named_sibling);
+node!("get-next-sibling" fn next_sibling);
+node!("get-prev-sibling" fn prev_sibling);
+node!("get-next-named-sibling" fn next_named_sibling);
+node!("get-prev-named-sibling" fn prev_named_sibling);
 
-walker!(descendant_for_byte_range(start: usize, end: usize));
-walker!(named_descendant_for_byte_range(start: usize, end: usize));
-walker!(descendant_for_point_range(start into: Point, end into: Point));
-walker!(named_descendant_for_point_range(start into: Point, end into: Point));
+node!("get-descendant-for-byte-range" fn descendant_for_byte_range(start: usize, end: usize));
+node!("get-descendant-for-point-range" fn descendant_for_point_range(start into: Point, end into: Point));
+node!("get-named-descendant-for-byte-range" fn named_descendant_for_byte_range(start: usize, end: usize));
+node!("get-named-descendant-for-point-range" fn named_descendant_for_point_range(start into: Point, end into: Point));
 
-getter!(to_sexp as node_to_sexp -> String);
+prop!("node-to-sexp" fn to_sexp -> String);
 
 #[allow(clippy::too_many_arguments)]
 #[defun]

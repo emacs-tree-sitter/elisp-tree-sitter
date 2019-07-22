@@ -59,7 +59,7 @@ impl FromLisp<'_> for Point {
         let vector = Vector(value);
         let row = vector.get(0)?;
         let column = vector.get(1)?;
-        Ok(Point(tree_sitter::Point { row, column }))
+        Ok(tree_sitter::Point { row, column }.into())
     }
 }
 
@@ -90,7 +90,7 @@ impl FromLisp<'_> for Range {
         let end_byte = vector.get(1)?;
         let start_point = vector.get::<Point>(2)?.0;
         let end_point = vector.get::<Point>(3)?.0;
-        Ok(Range(tree_sitter::Range { start_byte, end_byte, start_point, end_point }))
+        Ok(tree_sitter::Range { start_byte, end_byte, start_point, end_point }.into())
     }
 }
 
@@ -99,7 +99,7 @@ impl FromLisp<'_> for Range {
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
-pub struct Language(tree_sitter::Language);
+pub struct Language(pub(crate) tree_sitter::Language);
 
 impl_wrapper_traits!(Language);
 
@@ -109,7 +109,13 @@ impl Transfer for Language {
     }
 }
 
-impl<'e> FromLisp<'e> for Language {
+impl IntoLisp<'_> for Language {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        Box::new(self).into_lisp(env)
+    }
+}
+
+impl FromLisp<'_> for Language {
     fn from_lisp(value: Value) -> Result<Language> {
         Ok(*value.into_rust::<&Language>()?)
     }
@@ -124,7 +130,7 @@ pub type SharedTree = Rc<RefCell<Tree>>;
 // -------------------------------------------------------------------------------------------------
 // Node
 
-// XXX: Don't juggle with alignment...
+// XXX: Find a better way to make 2 types have the same alignment.
 const NODE_LEN: usize = mem::size_of::<Node>() / 8;
 pub type RawNode = [u64; NODE_LEN];
 
@@ -167,7 +173,7 @@ impl WrappedNode {
 // -------------------------------------------------------------------------------------------------
 // Cursor
 
-// XXX: Don't juggle with alignment...
+// XXX: Find a better way to make 2 types have the same alignment.
 const TREE_CURSOR_LEN: usize = mem::size_of::<TreeCursor>() / 8;
 pub type RawCursor = [u64; TREE_CURSOR_LEN];
 

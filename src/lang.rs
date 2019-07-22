@@ -14,7 +14,7 @@ use crate::types::Language;
 /// If FILE is nil, load from "~/.tree-sitter/bin/NAME.so". This is where the
 /// tree-sitter CLI tool stores the generated shared libs.
 ///
-#[defun(user_ptr(direct))]
+#[defun]
 fn _load_language(name: String, file: Option<String>, symbol_prefix: Option<String>) -> Result<Language> {
     let filename = file.unwrap_or_else(|| {
         // TODO: Get home directory properly.
@@ -32,4 +32,24 @@ fn _load_language(name: String, file: Option<String>, symbol_prefix: Option<Stri
     // Avoid segmentation fault by not unloading the lib, as language is a static piece of data.
     mem::forget(lib);
     Ok(language)
+}
+
+#[defun]
+fn count_kinds(lang: Language) -> Result<usize> {
+    Ok(lang.0.node_kind_count())
+}
+
+#[defun]
+fn kind_from_id(lang: Language, id: u16) -> Result<&'static str> {
+    Ok(lang.0.node_kind_for_id(id))
+}
+
+#[defun]
+fn kind_named_p(lang: Language, id: u16) -> Result<bool> {
+    Ok(lang.0.node_kind_is_named(id))
+}
+
+#[defun]
+fn field_id(lang: Language, field_name: String) -> Result<Option<u16>> {
+    Ok(lang.0.field_id_for_name(field_name))
 }
