@@ -68,3 +68,8 @@ fn changed_ranges<'e>(tree: Value<'e>, other_tree: Tree<'e>) -> Result<Vector<'e
     }
     Ok(vec)
 }
+
+#[defun(user_ptr(direct))]
+fn clone_tree(tree: Tree) -> Result<SharedTree> {
+    Ok(tree.clone())
+}
