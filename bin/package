@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export TARGET=release
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+(cd "$PROJECT_ROOT"
+
+cargo build --$TARGET
+
+cp "$MODULE_DIR/$MODULE_ORIGINAL" "./$MODULE_RENAMED"
+
+cask build && cask package
+
+rm "./$MODULE_RENAMED")

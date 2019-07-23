@@ -2,20 +2,10 @@
 
 set -euo pipefail
 
-here=`cd $(dirname $BASH_SOURCE); pwd`
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
 
-ext=dylib
-MODULE_NAME=tree-sitter-dyn
-MODULE_ORIGINAL=libtree_sitter_dyn.$ext
-
-export PROJECT_ROOT=`cd $here/..; pwd`
-MODULE_RENAMED=${MODULE_NAME}.so
-export MODULE_DIR="$PROJECT_ROOT/target/debug"
-MODULE_FULL="$MODULE_DIR/$MODULE_RENAMED"
-EMACS=${EMACS:-emacs}
-RUST_BACKTRACE=${RUST_BACKTRACE:-0}
-
-`cd $MODULE_DIR && ln -f -s $MODULE_ORIGINAL $MODULE_RENAMED`
+(cd "$MODULE_DIR" && ln -f -s "$MODULE_ORIGINAL" "$MODULE_RENAMED")
 
 $EMACS -batch -l ert \
        -l "$PROJECT_ROOT/tests/main.el" \
