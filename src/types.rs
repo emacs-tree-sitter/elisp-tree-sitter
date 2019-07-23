@@ -9,7 +9,7 @@ use std::{
 
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
-use tree_sitter::{Tree, InputEdit, Node, TreeCursor};
+use tree_sitter::{Tree, InputEdit, Node, TreeCursor, Parser};
 
 pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(t))
@@ -210,3 +210,20 @@ impl<'e, L, R> FromLisp<'e> for Either<'e, L, R> where L: FromLisp<'e>, R: FromL
         Ok(Either::Right(value, PhantomData))
     }
 }
+
+macro_rules! impl_pred {
+    ($name:ident, $type:ty) => {
+        #[defun]
+        fn $name(value: Value) -> Result<bool> {
+            Ok(value.into_rust::<$type>().is_ok())
+        }
+    };
+}
+
+impl_pred!(language_p, Language);
+impl_pred!(range_p, Range);
+impl_pred!(point_p, Point);
+impl_pred!(parser_p, &RefCell<Parser>);
+impl_pred!(tree_p, &SharedTree);
+impl_pred!(node_p, &RefCell<WrappedNode>);
+impl_pred!(cursor_p, &RefCell<WrappedCursor>);

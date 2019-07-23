@@ -18,7 +18,7 @@
   (pp (read (ts-tree-to-sexp tree))))
 
 (ert-deftest creating-parser ()
-  (message "%s" (ts-parser "rust")))
+  (should (ts-parser-p (ts-parser "rust"))))
 
 (ert-deftest parsing-rust-string ()
   (let ((parser (ts-parser "rust")))
@@ -61,7 +61,7 @@ tree is held (since nodes internally reference the tree)."
   (let* ((parser (ts-parser "rust"))
          (tree (ts-parse-string parser "fn foo() {}"))
          (node (ts-root-node tree)))
-    (ts-walk tree)
-    (ts-walk node)
+    (should (ts-cursor-p (ts-walk tree)))
+    (should (ts-cursor-p (ts-walk node)))
     (message "%s" (ts-foo "abc"))
     (message "%s" (ts-foo -123))))
