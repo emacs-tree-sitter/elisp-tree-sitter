@@ -15,16 +15,16 @@ pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(t))
 }
 
-macro_rules! impl_wrapper_traits {
-    ($wrapper:ty, $inner:ty) => {
-        impl From<$inner> for $wrapper {
+macro_rules! impl_newtype_traits {
+    ($newtype:ty, $inner:ty) => {
+        impl From<$inner> for $newtype {
             #[inline(always)]
             fn from(inner: $inner) -> Self {
                 Self(inner)
             }
         }
 
-        impl Into<$inner> for $wrapper {
+        impl Into<$inner> for $newtype {
             #[inline(always)]
             fn into(self) -> $inner {
                 self.0
@@ -32,7 +32,38 @@ macro_rules! impl_wrapper_traits {
         }
     };
     ($name:ident) => {
-        impl_wrapper_traits!($name, tree_sitter::$name);
+        impl_newtype_traits!($name, tree_sitter::$name);
+    };
+}
+
+macro_rules! impl_wrapper {
+    ($inner:path, $raw:path, $wrapper:path) => {
+        impl $wrapper {
+            #[inline]
+            pub unsafe fn new(tree: SharedTree, inner: $inner) -> Self {
+                let ptr = (&inner as *const $inner) as *const $raw;
+                let raw = ptr.read();
+                Self { tree, raw }
+            }
+
+            #[inline]
+            pub unsafe fn wrap(&self, inner: $inner) -> Self {
+                let tree = self.tree.clone();
+                Self::new(tree, inner)
+            }
+
+            #[inline]
+            pub fn inner(&self) -> &$inner {
+                let ptr = (&self.raw as *const $raw) as *const $inner;
+                unsafe { &*ptr }
+            }
+
+            #[inline]
+            pub fn inner_mut(&mut self) -> &mut $inner {
+                let ptr = (&mut self.raw as *mut $raw) as *mut $inner;
+                unsafe { &mut *ptr }
+            }
+        }
     };
 }
 
@@ -42,7 +73,7 @@ macro_rules! impl_wrapper_traits {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point(tree_sitter::Point);
 
-impl_wrapper_traits!(Point);
+impl_newtype_traits!(Point);
 
 impl IntoLisp<'_> for Point {
     fn into_lisp(self, env: &Env) -> Result<Value> {
@@ -69,7 +100,7 @@ impl FromLisp<'_> for Point {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Range(pub(crate) tree_sitter::Range);
 
-impl_wrapper_traits!(Range);
+impl_newtype_traits!(Range);
 
 impl IntoLisp<'_> for Range {
     fn into_lisp(self, env: &Env) -> Result<Value> {
@@ -101,7 +132,7 @@ impl FromLisp<'_> for Range {
 #[repr(transparent)]
 pub struct Language(pub(crate) tree_sitter::Language);
 
-impl_wrapper_traits!(Language);
+impl_newtype_traits!(Language);
 
 impl Transfer for Language {
     fn type_name() -> &'static str {
@@ -143,32 +174,7 @@ pub struct WrappedNode {
     raw: RawNode,
 }
 
-impl WrappedNode {
-    #[inline]
-    pub unsafe fn new(tree: SharedTree, node: Node) -> Self {
-        let ptr = (&node as *const Node) as *const RawNode;
-        let raw = ptr.read();
-        Self { tree, raw }
-    }
-
-    #[inline]
-    pub unsafe fn wrap(&self, node: Node) -> Self {
-        let tree = self.tree.clone();
-        Self::new(tree, node)
-    }
-
-    #[inline]
-    pub fn inner(&self) -> &Node {
-        let ptr = (&self.raw as *const RawNode) as *const Node;
-        unsafe { &*ptr }
-    }
-
-    #[inline]
-    pub fn inner_mut(&mut self) -> &mut Node {
-        let ptr = (&mut self.raw as *mut RawNode) as *mut Node;
-        unsafe { &mut *ptr }
-    }
-}
+impl_wrapper!(Node, RawNode, WrappedNode);
 
 // -------------------------------------------------------------------------------------------------
 // Cursor
@@ -186,32 +192,7 @@ pub struct WrappedCursor {
     raw: RawCursor,
 }
 
-impl WrappedCursor {
-    #[inline]
-    pub unsafe fn new(tree: SharedTree, cursor: TreeCursor) -> Self {
-        let ptr = (&cursor as *const TreeCursor) as *const RawCursor;
-        let raw = ptr.read();
-        Self { tree, raw }
-    }
-
-    #[inline]
-    pub unsafe fn wrap(&self, cursor: TreeCursor) -> Self {
-        let tree = self.tree.clone();
-        Self::new(tree, cursor)
-    }
-
-    #[inline]
-    pub fn inner(&self) -> &TreeCursor {
-        let ptr = (&self.raw as *const RawCursor) as *const TreeCursor;
-        unsafe { &*ptr }
-    }
-
-    #[inline]
-    pub fn inner_mut(&mut self) -> &mut TreeCursor {
-        let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
-        unsafe { &mut *ptr }
-    }
-}
+impl_wrapper!(TreeCursor, RawCursor, WrappedCursor);
 
 // -------------------------------------------------------------------------------------------------
 
