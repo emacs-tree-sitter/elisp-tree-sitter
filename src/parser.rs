@@ -54,17 +54,17 @@ fn parse_string(parser: &mut Parser, s: String) -> Result<Option<SharedTree>> {
 }
 
 #[defun]
-fn reset_parser(parser: &mut Parser) -> Result<()> {
+fn _reset_parser(parser: &mut Parser) -> Result<()> {
     Ok(parser.reset())
 }
 
 #[defun]
-fn timeout_micros(parser: &mut Parser) -> Result<u64> {
+fn _timeout_micros(parser: &mut Parser) -> Result<u64> {
     Ok(parser.timeout_micros())
 }
 
 #[defun]
-fn set_timeout_micros(parser: &mut Parser, timeout_micros: u64) -> Result<()> {
+fn _set_timeout_micros(parser: &mut Parser, timeout_micros: u64) -> Result<()> {
     Ok(parser.set_timeout_micros(timeout_micros))
 }
 

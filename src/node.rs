@@ -33,8 +33,8 @@ macro_rules! node {
     };
 }
 
-prop!("node-kind-id" fn kind_id -> u16);
-prop!("node-kind" fn kind -> &'static str);
+prop!("node-type-id" fn kind_id -> u16);
+prop!("node-type" fn kind -> &'static str);
 
 prop!("node-named-p" fn is_named -> bool);
 prop!("node-extra-p" fn is_extra -> bool);

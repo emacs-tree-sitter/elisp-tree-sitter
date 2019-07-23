@@ -35,17 +35,17 @@ fn _load_language(name: String, file: Option<String>, symbol_prefix: Option<Stri
 }
 
 #[defun]
-fn count_kinds(lang: Language) -> Result<usize> {
+fn count_types(lang: Language) -> Result<usize> {
     Ok(lang.0.node_kind_count())
 }
 
 #[defun]
-fn kind_from_id(lang: Language, id: u16) -> Result<&'static str> {
+fn type_from_id(lang: Language, id: u16) -> Result<&'static str> {
     Ok(lang.0.node_kind_for_id(id))
 }
 
 #[defun]
-fn kind_named_p(lang: Language, id: u16) -> Result<bool> {
+fn type_named_p(lang: Language, id: u16) -> Result<bool> {
     Ok(lang.0.node_kind_is_named(id))
 }
 
