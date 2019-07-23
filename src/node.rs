@@ -6,81 +6,127 @@ use tree_sitter::{Node, InputEdit};
 
 use crate::types::{WrappedNode, Range, Point};
 
-macro_rules! prop {
-    ($($lisp_name:literal)? fn $name:ident -> $type:ty) => {
-        #[defun$((name = $lisp_name))?]
-        fn $name(node: &WrappedNode) -> Result<$type> {
-            Ok(node.inner().$name())
-        }
-    };
-    ($($lisp_name:literal)? fn $name:ident -> into $type:ty) => {
-        #[defun$((name = $lisp_name))?]
-        fn $name(node: &WrappedNode) -> Result<$type> {
-            Ok(node.inner().$name().into())
-        }
+/// Exposes methods that return a node's property.
+macro_rules! defun_node_props {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident -> $type:ty $(; $into:ident)? )*) => {
+        $(
+            #[defun$((name = $lisp_name))?]
+            $(#[$meta])*
+            fn $name(node: &WrappedNode) -> Result<$type> {
+                Ok(node.inner().$name()$(.$into())?)
+            }
+        )*
     };
 }
 
-/// Exposes a method that returns a(nother) node.
-macro_rules! node {
-    ($($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $type:ty ),* ) )? ) => {
-        #[defun$((name = $lisp_name))?]
-        fn $name(node: &WrappedNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<WrappedNode>>> {
-            Ok(node.inner().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
-                RefCell::new(unsafe { node.wrap(other) })
-            }))
-        }
+/// Exposes methods that return another node.
+macro_rules! defun_node_navs {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $type:ty ),* ) )?)*) => {
+        $(
+            #[defun$((name = $lisp_name))?]
+            $(#[$meta])*
+            fn $name(node: &WrappedNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<WrappedNode>>> {
+                Ok(node.inner().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
+                    RefCell::new(unsafe { node.wrap(other) })
+                }))
+            }
+        )*
     };
 }
 
-prop!("node-type-id" fn kind_id -> u16);
-prop!("node-type" fn kind -> &'static str);
+defun_node_props! {
+/// Return NODE's type-id.
+"node-type-id" fn kind_id -> u16
+/// Return NODE's type.
+"node-type" fn kind -> &'static str
 
-prop!("node-named-p" fn is_named -> bool);
-prop!("node-extra-p" fn is_extra -> bool);
-prop!("node-error-p" fn is_error -> bool);
-prop!("node-missing-p" fn is_missing -> bool);
-prop!("node-has-changes-p" fn has_changes -> bool);
-prop!("node-has-error-p" fn has_error -> bool);
+/// Return t if NODE is named.
+/// Named nodes correspond to named rules in the grammar, whereas anonymous nodes
+/// correspond to string literals in the grammar.
+"node-named-p" fn is_named -> bool
+"node-extra-p" fn is_extra -> bool
+"node-error-p" fn is_error -> bool
+/// Return t if NODE is missing.
+/// Missing nodes are inserted by the parser in order to recover from certain kinds
+/// of syntax errors.
+"node-missing-p" fn is_missing -> bool
+/// Return t if NODE has been edited.
+"node-has-changes-p" fn has_changes -> bool
+/// Return t if NODE is a syntax error or contains any syntax errors.
+"node-has-error-p" fn has_error -> bool
 
-prop!("node-start-byte" fn start_byte -> usize);
-prop!("node-start-point" fn start_position -> into Point);
-prop!("node-end-byte" fn end_byte -> usize);
-prop!("node-end-point" fn end_position -> into Point);
-prop!("node-range" fn range -> into Range);
+/// Return NODE's start byte.
+"node-start-byte" fn start_byte -> usize
+/// Return NODE's start point.
+"node-start-point" fn start_position -> Point; into
+/// Return NODE's end byte.
+"node-end-byte" fn end_byte -> usize
+/// Return NODE's end point.
+"node-end-point" fn end_position -> Point; into
+/// Return NODE's [start-point end-point].
+"node-range" fn range -> Range; into
 
-prop!("count-children" fn child_count -> usize);
-prop!("count-named-children" fn named_child_count -> usize);
+/// Return NODE's number of children.
+"count-children" fn child_count -> usize
+/// Return NODE's number of named children.
+"count-named-children" fn named_child_count -> usize
+}
 
+/// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
-fn mapc_children(node: &WrappedNode, f: Value) -> Result<()> {
+fn mapc_children(node: &WrappedNode, function: Value) -> Result<()> {
     let tree = &node.tree;
-    let env = f.env;
+    let env = function.env;
     for child in node.inner().children() {
         let child = RefCell::new(unsafe { node.wrap(child) });
-        env.call("funcall", &[f, child.into_lisp(env)?])?;
+        env.call("funcall", &[function, child.into_lisp(env)?])?;
     }
     Ok(())
 }
 
-node!("get-nth-child" fn child(i: usize));
-node!("get-nth-named-child" fn named_child(i: usize));
-node!("get-child-by-field-name" fn child_by_field_name(field_name: String));
+defun_node_navs! {
+/// Return NODE's child at the given zero-based index.
+"get-nth-child" fn child(i: usize)
+/// Return NODE's named child at the given zero-based index.
+"get-nth-named-child" fn named_child(i: usize)
+/// Return NODE's child under the given FIELD-NAME.
+"get-child-by-field-name" fn child_by_field_name(field_name: String)
 
-node!("get-parent" fn parent);
+/// Return NODE's parent node.
+"get-parent" fn parent
 
-node!("get-next-sibling" fn next_sibling);
-node!("get-prev-sibling" fn prev_sibling);
-node!("get-next-named-sibling" fn next_named_sibling);
-node!("get-prev-named-sibling" fn prev_named_sibling);
+/// Return NODE's next sibling.
+"get-next-sibling" fn next_sibling
+/// Return NODE's previous sibling.
+"get-prev-sibling" fn prev_sibling
+/// Return NODE's next named sibling.
+"get-next-named-sibling" fn next_named_sibling
+/// Return NODE's previous named sibling.
+"get-prev-named-sibling" fn prev_named_sibling
 
-node!("get-descendant-for-byte-range" fn descendant_for_byte_range(start: usize, end: usize));
-node!("get-descendant-for-point-range" fn descendant_for_point_range(start into: Point, end into: Point));
-node!("get-named-descendant-for-byte-range" fn named_descendant_for_byte_range(start: usize, end: usize));
-node!("get-named-descendant-for-point-range" fn named_descendant_for_point_range(start into: Point, end into: Point));
+/// Return the smallest node within NODE that spans the given range of bytes.
+"get-descendant-for-byte-range" fn descendant_for_byte_range(start: usize, end: usize)
+/// Return the smallest node within NODE that spans the given range of points.
+"get-descendant-for-point-range" fn descendant_for_point_range(start into: Point, end into: Point)
+/// Return the smallest named node within NODE that spans the given range of bytes.
+"get-named-descendant-for-byte-range" fn named_descendant_for_byte_range(start: usize, end: usize)
+/// Return the smallest named node within NODE that spans the given range of points.
+"get-named-descendant-for-point-range" fn named_descendant_for_point_range(start into: Point, end into: Point)
+}
 
-prop!("node-to-sexp" fn to_sexp -> String);
+defun_node_props! {
+/// Return the sexp representation of NODE, in a string.
+"node-to-sexp" fn to_sexp -> String
+}
 
+/// Edit NODE to keep it in sync with source code that has been edited.
+///
+/// This function is only rarely needed. When you edit a syntax tree, all of the
+/// nodes that you retrieve from the tree afterward will already reflect the edit.
+/// You only need to use this function when you have a node that you want to keep
+/// and continue to use after an edit.
+///
+/// Note that indexing must be zero-based.
 #[allow(clippy::too_many_arguments)]
 #[defun]
 fn edit_node(
