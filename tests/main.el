@@ -1,23 +1,18 @@
 (require 'subr-x)
 
+(when-let ((project-root (getenv "PROJECT_ROOT")))
+  (add-to-list 'load-path project-root))
+
 (when-let ((module-path (getenv "MODULE_DIR")))
   (add-to-list 'load-path module-path))
 
-(require 'tree-sitter-dyn)
+(require 'tree-sitter)
 
 (defun ts-parser (lang)
   (let ((parser (ts--parser))
         (language (ts--load-language lang nil nil)))
     (ts-set-language parser language)
     parser))
-
-(defun ts-buffer-input (byte row column)
-  (save-restriction
-    (widen)
-    (let* ((start (or (byte-to-position byte) (point-min)))
-           (end (min (+ start 512) (point-max))))
-      ;; (message "(%s %s %s) -> (%s %s)" byte row column start end)
-      (buffer-substring-no-properties start end))))
 
 (defun ts-pprint (tree)
   (pp (read (ts-tree-to-sexp tree))))
