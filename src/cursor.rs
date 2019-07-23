@@ -11,7 +11,7 @@ use crate::types::{SharedTree, WrappedCursor, WrappedNode};
 use crate::types::Either;
 
 #[defun(user_ptr)]
-fn walk<'e>(tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<WrappedNode>>) -> Result<WrappedCursor> {
+fn make_cursor<'e>(tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<WrappedNode>>) -> Result<WrappedCursor> {
     match tree_or_node {
         Either::Left(tree, ..) => {
             Ok(unsafe { WrappedCursor::new(tree.clone(), tree.borrow().walk()) })

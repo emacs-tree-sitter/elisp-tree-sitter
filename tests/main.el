@@ -9,7 +9,7 @@
 (require 'tree-sitter)
 
 (defun ts-parser (lang)
-  (let ((parser (ts--parser))
+  (let ((parser (ts-make-parser))
         (language (ts--load-language lang nil nil)))
     (ts-set-language parser language)
     parser))
@@ -31,7 +31,7 @@
                         (block))))))))
 
 (ert-deftest parsing-without-setting-language ()
-  (let ((parser (ts--parser)))
+  (let ((parser (ts-make-parser)))
     (should (null (ts-parse-string parser "fn foo() {}")))))
 
 (ert-deftest parsing-rust-buffer ()
@@ -61,7 +61,7 @@ tree is held (since nodes internally reference the tree)."
   (let* ((parser (ts-parser "rust"))
          (tree (ts-parse-string parser "fn foo() {}"))
          (node (ts-root-node tree)))
-    (should (ts-cursor-p (ts-walk tree)))
-    (should (ts-cursor-p (ts-walk node)))
+    (should (ts-cursor-p (ts-make-cursor tree)))
+    (should (ts-cursor-p (ts-make-cursor node)))
     (message "%s" (ts-foo "abc"))
     (message "%s" (ts-foo -123))))

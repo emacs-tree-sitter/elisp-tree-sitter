@@ -6,7 +6,7 @@ use tree_sitter::{Parser, Point};
 use crate::types::{SharedTree, shared, Language, Range};
 
 #[defun(user_ptr)]
-fn _parser() -> Result<Parser> {
+fn make_parser() -> Result<Parser> {
     Ok(Parser::new())
 }
 
