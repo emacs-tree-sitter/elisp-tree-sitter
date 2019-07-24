@@ -1,0 +1,52 @@
+language: rust
+
+rust:
+  - stable
+
+node_js:
+  - "10"
+
+cache:
+  - cargo
+  - npm
+
+# https://github.com/travis-ci/travis-ci/issues/9073
+sudo: required
+
+matrix:
+  include:
+    - env: EVM_EMACS=emacs-25.3
+      os: osx
+    - env: EVM_EMACS=emacs-25.3
+      dist: trusty
+    - env: EVM_EMACS=emacs-25.3
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - libgtk-3-dev
+            - libxpm-dev
+    - env: EVM_EMACS=emacs-26.1
+      os: osx
+    - env: EVM_EMACS=emacs-26.1
+      dist: trusty
+    - env: EVM_EMACS=emacs-26.2
+      os: osx
+    - env: EVM_EMACS=emacs-26.2
+      dist: trusty
+
+before_install:
+  - export PATH="$HOME/.evm/bin:$PATH"
+  - git clone -b max-26.2 https://github.com/ubolonton/evm.git $HOME/.evm
+  - evm config path /tmp
+  - evm install $EVM_EMACS --use --skip
+
+install:
+  - cargo build --verbose --all
+
+before_script:
+  - npm install -g tree-sitter-cli
+  - ./bin/ensure-lang rust
+
+script:
+  - ./bin/test
