@@ -1,4 +1,4 @@
-# emacs-tree-sitter
+# emacs-tree-sitter [![Build Status](https://travis-ci.org/ubolonton/emacs-tree-sitter.svg?branch=master)](https://travis-ci.org/ubolonton/emacs-tree-sitter)
 
 This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library.
 
