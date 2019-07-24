@@ -10,12 +10,20 @@ It aims to be the foundation for a new breed of Emacs packages that understand c
 
 The author of tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
 
+## Pre-requisites
+
+- Emacs 25.1 or above, built with module support. This can be checked with `(functionp 'module-load)`.
+- [Rust toolchain](https://rustup.rs/), to build the dynamic module.
+- [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation), to build loadable language files from grammar repos.
+
 ## Building and Installation
 
-Requirements:
-- Emacs 25.1 or above, built with module support. This can be checked with `(functionp 'module-load)`.
-- [Rust toolchain](https://rustup.rs/), to build this package.
-- [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation), to build loadable language files from grammar repos.
+- Clone this repo.
+- Build:
+    ```bash
+    ./bin/build
+    ```
+- Add this repo's directory to `load-path`.
 
 ## Getting Language Support
 This package is currently not bundled with any language. Language support is to be loaded from shared dynamic libraries.
@@ -24,22 +32,17 @@ One way to get these shared libraries is to use the `tree-sitter` CLI tool.
 
 For example, to get Rust support:
 
-- Get the language's grammar.
-
+- Get the language's grammar:
     ```bash
     git clone https://github.com/tree-sitter/tree-sitter-rust
     cd tree-sitter-rust
     ```
-
-- Build the shared lib from the grammar.
-
+- Build the shared lib from the grammar:
     ```bash
     # The library should be created at ~/.tree-sitter/bin/rust.so
     tree-sitter test
     ```
-
-- Load it with `tree-sitter`.
-
+- Load it with `tree-sitter`:
     ```emacs-lisp
     (ts-load-language "rust")
     ```
@@ -114,7 +117,23 @@ Note that these types are understood only by this package. They are not recogniz
     + `ts-mapc-children`: loops through child nodes.
     + `ts-node-to-sexp`: debug utility.
 
+## Development
+
+- Make sure necessary languages are installed for tests:
+    ```bash
+    ./bin/ensure-lang rust
+    ```
+- Testing:
+    ```bash
+    ./bin/test
+    ```
+- Continuous testing (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
+    ```shell
+    ./bin/test --watch
+    ```
+
 ## TODOs
+- [ ] Submit to MELPA.
 - [ ] Implement a `tree-sitter-minor-mode` that exposes an always-up-to-date syntax tree, by integrating incremental parsing with Emacs's change hooks.
 - [ ] Implement syntax highlighting using [tree-sitter-highlight](https://github.com/tree-sitter/tree-sitter/tree/master/highlight).
 - [ ] Support multi-language buffers (with `ts-set-included-ranges`).

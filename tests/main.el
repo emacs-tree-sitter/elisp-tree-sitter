@@ -3,9 +3,6 @@
 (when-let ((project-root (getenv "PROJECT_ROOT")))
   (add-to-list 'load-path project-root))
 
-(when-let ((module-path (getenv "MODULE_DIR")))
-  (add-to-list 'load-path module-path))
-
 (require 'tree-sitter)
 
 (defun ts-parser (lang)

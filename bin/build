@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+(
+    cd "$PROJECT_ROOT"
+
+    if [[ $TARGET == "release" ]]; then
+        extra="--release"
+    else
+        extra=""
+    fi
+
+    cargo build --all $extra
+
+    cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./$MODULE_RENAMED"
+)

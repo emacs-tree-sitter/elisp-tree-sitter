@@ -5,8 +5,13 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-(cd "$MODULE_DIR" && ln -f -s "$MODULE_ORIGINAL" "$MODULE_RENAMED")
-
-$EMACS -batch -l ert \
-       -l "$PROJECT_ROOT/tests/main.el" \
-       -f ert-run-tests-batch-and-exit
+if [[ $@ == "--watch" ]]; then
+    (
+        cd "$PROJECT_ROOT"
+        cargo watch --ignore "$MODULE_RENAMED"  -s bin/build -s bin/test
+    )
+else
+    $EMACS -batch -l ert \
+           -l "$PROJECT_ROOT/tests/main.el" \
+           -f ert-run-tests-batch-and-exit
+fi
