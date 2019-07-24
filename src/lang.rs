@@ -15,14 +15,18 @@ use crate::types::Language;
 /// tree-sitter CLI tool stores the generated shared libs.
 ///
 #[defun]
-fn _load_language(name: String, file: Option<String>, symbol_prefix: Option<String>) -> Result<Language> {
+fn _load_language(
+    name: String,
+    file: Option<String>,
+    symbol_prefix: Option<String>,
+) -> Result<Language> {
     let filename = file.unwrap_or_else(|| {
         // TODO: Get home directory properly.
         format!("{}/.tree-sitter/bin/{}.so", std::env::var("HOME").unwrap(), name)
     });
     let prefix = match &symbol_prefix {
         None => "tree_sitter_",
-        Some(s) => s
+        Some(s) => s,
     };
     let symbol_name = format!("{}{}", prefix, name);
     let lib = Library::new(filename)?;
@@ -34,21 +38,25 @@ fn _load_language(name: String, file: Option<String>, symbol_prefix: Option<Stri
     Ok(language)
 }
 
+/// Return the number of distinct node types defined in LANG.
 #[defun]
 fn count_types(lang: Language) -> Result<usize> {
     Ok(lang.0.node_kind_count())
 }
 
+/// Return a LANG's node type string, given its numerical ID.
 #[defun]
 fn type_from_id(lang: Language, id: u16) -> Result<&'static str> {
     Ok(lang.0.node_kind_for_id(id))
 }
 
+/// Return t if the numeric ID identifies a named node type in LANG.
 #[defun]
 fn type_named_p(lang: Language, id: u16) -> Result<bool> {
     Ok(lang.0.node_kind_is_named(id))
 }
 
+/// Return the numerical id of FIELD-NAME in LANG, nil if FIELD-NAME is invalid.
 #[defun]
 fn field_id(lang: Language, field_name: String) -> Result<Option<u16>> {
     Ok(lang.0.field_id_for_name(field_name))
