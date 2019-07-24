@@ -18,11 +18,11 @@
 (require 'tree-sitter-dyn)
 
 ;;; TODO: Don't hard-code read length.
-(defun ts-buffer-input (byte row column)
+(defun ts-buffer-input (byte _row _column)
   (save-restriction
     (widen)
-    (let* ((start (or (byte-to-position byte) (point-min)))
-           (end (min (+ start 512) (point-max))))
+    (let* ((start (or (byte-to-position (1+ byte)) (point-min)))
+           (end (min (+ start 1024) (point-max))))
       (buffer-substring-no-properties start end))))
 
 (defun ts-pprint (tree)

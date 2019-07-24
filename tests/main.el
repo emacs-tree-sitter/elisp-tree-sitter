@@ -39,7 +39,7 @@
     (with-temp-buffer
       (insert-file-contents
        (concat (file-name-as-directory (getenv "PROJECT_ROOT"))
-               "src/lib.rs"))
+               "src/types.rs"))
       (let* ((tree)
              (initial (benchmark-run (setq tree (ts-parse parser #'ts-buffer-input nil))))
              (reparse (benchmark-run (ts-parse parser #'ts-buffer-input tree))))
