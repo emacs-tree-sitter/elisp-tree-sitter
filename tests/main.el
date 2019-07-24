@@ -10,12 +10,9 @@
 
 (defun ts-parser (lang)
   (let ((parser (ts-make-parser))
-        (language (ts--load-language lang nil nil)))
+        (language (ts-load-language lang)))
     (ts-set-language parser language)
     parser))
-
-(defun ts-pprint (tree)
-  (pp (read (ts-tree-to-sexp tree))))
 
 (ert-deftest creating-parser ()
   (should (ts-parser-p (ts-parser "rust"))))
