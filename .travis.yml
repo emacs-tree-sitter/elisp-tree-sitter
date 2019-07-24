@@ -42,7 +42,7 @@ before_install:
   - evm install $EVM_EMACS --use --skip
 
 install:
-  - cargo build --verbose --all
+  - ./bin/build
 
 before_script:
   - npm install -g tree-sitter-cli
