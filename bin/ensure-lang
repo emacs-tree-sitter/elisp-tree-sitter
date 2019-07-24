@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# TODO: Move away from hacky bash scripts.
+
+# Fetch latest grammar for a given language, generate and "install" the corresponding shared lib
+# at ~/.tree-sitter/bin/<name>.so
+#
+# Usage:
+# ensure-lang <name>
+#
+# Examples:
+# ensure-lang rust
+# ensure-lang python
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+LANG=$1
+
+(
+    cd "$PROJECT_ROOT"
+    mkdir -p grammars/
+
+    if [ ! -d "grammars/tree-sitter-$LANG" ]; then
+        git clone "https://github.com/tree-sitter/tree-sitter-$LANG" "grammars/tree-sitter-$LANG"
+    fi
+
+    cd "grammars/tree-sitter-$LANG"
+    git remote update
+    git reset --hard origin/HEAD
+
+    echo "Running 'tree-sitter test' for $LANG"
+    tree-sitter test
+)
