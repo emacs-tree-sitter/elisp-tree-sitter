@@ -62,6 +62,4 @@ tree is held (since nodes internally reference the tree)."
          (tree (ts-parse-string parser "fn foo() {}"))
          (node (ts-root-node tree)))
     (should (ts-cursor-p (ts-make-cursor tree)))
-    (should (ts-cursor-p (ts-make-cursor node)))
-    (message "%s" (ts-foo "abc"))
-    (message "%s" (ts-foo -123))))
+    (should (ts-cursor-p (ts-make-cursor node)))))
