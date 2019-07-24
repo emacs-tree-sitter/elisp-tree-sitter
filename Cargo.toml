@@ -10,18 +10,14 @@ path = "src/lib.rs"
 name = "tree_sitter_dyn"
 crate-type = ["cdylib"]
 
-[dependencies.emacs]
-version = "0.10.1"
-path = "../emacs-module-rs"
+[dependencies]
+emacs = "0.10.2"
+libloading = "0.5.1"
 
 [dependencies.tree-sitter]
 version = "0.3.10"
-path = "../tree-sitter/lib"
-# git = "https://github.com/ubolonton/tree-sitter"
-# branch = "rust-binding"
-
-[dependencies]
-libloading = "0.5.1"
+git = "https://github.com/ubolonton/tree-sitter"
+branch = "rust-binding"
 
 [profile.release]
 opt-level = 3
