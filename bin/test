@@ -11,7 +11,9 @@ if [[ $@ == "--watch" ]]; then
         cargo watch --ignore "$MODULE_RENAMED"  -s bin/build -s bin/test
     )
 else
-    $EMACS -batch -l ert \
-           -l "$PROJECT_ROOT/tests/main.el" \
+    $EMACS --batch \
+           --directory "$PROJECT_ROOT" \
+           -l ert \
+           -l tree-sitter-tests \
            -f ert-run-tests-batch-and-exit
 fi

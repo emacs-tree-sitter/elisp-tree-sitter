@@ -27,7 +27,7 @@
 
 ;; TODO: Windows support?
 (defun ts-load-language (name &optional file symbol-prefix)
-  "Load the shared lib FILE and return the language NAME it contains.
+  "Load and return the language NAME from the shared lib FILE.
 
 It is assumed that language's symbol in the shared lib is prefixed with
 SYMBOL-PREFIX. If SYMBOL-PREFIX is nil, it is assumed to be \"tree_sitter_\".
