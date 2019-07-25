@@ -19,11 +19,14 @@
 
 ;;; TODO: Don't hard-code read length.
 (defun ts-buffer-input (byte _row _column)
-  (save-restriction
-    (widen)
-    (let* ((start (or (byte-to-position (1+ byte)) (point-min)))
-           (end (min (+ start 1024) (point-max))))
-      (buffer-substring-no-properties start end))))
+  (let* ((max-position (buffer-size))
+         ;; Make sure start-byte is positive.
+         (start-byte (max 1 (1+ byte)))
+         (end-byte (+ 1024 start-byte))
+         ;; nil means > max-position, since we already made sure they are positive.
+         (start (or (byte-to-position start-byte) max-position))
+         (end (or (byte-to-position end-byte) max-position)))
+    (buffer-substring-no-properties start end)))
 
 ;; TODO: Windows support?
 (defun ts-load-language (name &optional file symbol-prefix)
