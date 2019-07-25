@@ -2,9 +2,9 @@ use emacs::{defun, Value, Result, IntoLisp, Vector};
 
 use std::{cell::RefCell, rc::Rc, mem};
 
-use tree_sitter::{InputEdit, Point};
+use tree_sitter::{InputEdit};
 
-use crate::types::{SharedTree, WrappedNode, Range};
+use crate::types::{SharedTree, WrappedNode, Range, Point};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
@@ -33,20 +33,17 @@ fn edit_tree(
     start_byte: usize,
     old_end_byte: usize,
     new_end_byte: usize,
-    start_row: usize,
-    start_column: usize,
-    old_end_row: usize,
-    old_end_column: usize,
-    new_end_row: usize,
-    new_end_column: usize,
+    start_point: Point,
+    old_end_point: Point,
+    new_end_point: Point,
 ) -> Result<()> {
     let edit = InputEdit {
         start_byte,
         old_end_byte,
         new_end_byte,
-        start_position: Point { row: start_row, column: start_column },
-        old_end_position: Point { row: old_end_row, column: old_end_column },
-        new_end_position: Point { row: new_end_row, column: new_end_column },
+        start_position: start_point.into(),
+        old_end_position: old_end_point.into(),
+        new_end_position: new_end_point.into(),
     };
     tree.borrow_mut().edit(&edit);
     Ok(())

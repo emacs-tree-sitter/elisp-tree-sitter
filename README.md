@@ -135,6 +135,12 @@ Note that these types are understood only by this package. They are not recogniz
 ## TODOs
 - [ ] Submit to MELPA.
 - [ ] Implement a `tree-sitter-minor-mode` that exposes an always-up-to-date syntax tree, by integrating incremental parsing with Emacs's change hooks.
+    ```emacs-lisp
+    ;;; WIP
+    (progn
+      (setq tree-sitter-language (ts-load-language "rust"))
+      (tree-sitter-mode +1))
+    ```
 - [ ] Implement syntax highlighting using [tree-sitter-highlight](https://github.com/tree-sitter/tree-sitter/tree/master/highlight).
 - [ ] Support multi-language buffers (with `ts-set-included-ranges`).
 - [ ] Allow parsing to be paused/cancelled by integrating tree-sitter cancellation/timeout support with `should_quit`.
