@@ -1,4 +1,4 @@
-;;; tree-sitter.el --- Incremental parsing system -*- lexical-binding: t; coding: utf-8 -*-
+;;; tree-sitter-tests.el --- Tests for tree-sitter.el -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
