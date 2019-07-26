@@ -35,12 +35,15 @@ SYMBOL-PREFIX. If SYMBOL-PREFIX is nil, it is assumed to be \"tree_sitter_\".
 
 If FILE is nil, load from \"~/.tree-sitter/bin/NAME.so\". This is where the
 tree-sitter CLI tool stores the generated shared libs."
-  (let ((file (or file
-                  ;; TODO: Support Windows.
-                  (expand-file-name (format "~/.tree-sitter/bin/%s.so" name))))
-        (symbol-name (format "%s%s"
-                             (or symbol-prefix "tree_sitter_")
-                             name)))
+  (let* ((ext (pcase system-type
+                ((or 'darwin 'gnu/linux) "so")
+                ('windows-nt "dll")
+                (_ (error "Unsupported system-type %s" system-type))))
+         (file (or file
+                   (expand-file-name (format "~/.tree-sitter/bin/%s.%s" name ext))))
+         (symbol-name (format "%s%s"
+                              (or symbol-prefix "tree_sitter_")
+                              name)))
     (ts--load-language file symbol-name)))
 
 (defun ts-pp-to-string (tree)
