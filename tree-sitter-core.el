@@ -26,6 +26,16 @@
     ;; (message "%s [%s %s] -> [%s %s] %s" byte _row _column start-byte end-byte (- end-byte start-byte))
     (buffer-substring-no-properties start end)))
 
+(defun ts-get-cli-directory ()
+  "Return tree-sitter CLI's directory, including the ending separator.
+This is the directory where the CLI tool keeps compiled lang definitions."
+  (file-name-as-directory
+   (expand-file-name
+    ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
+    (if-let ((dir (getenv "TREE_SITTER_DIR")))
+        dir
+      "~/.tree-sitter"))))
+
 ;;; TODO: Keep a global (symbol -> language) registry.
 (defun ts-load-language (name &optional file symbol-prefix)
   "Load and return the language NAME from the shared lib FILE.
@@ -40,11 +50,12 @@ tree-sitter CLI tool stores the generated shared libs."
                 ('windows-nt "dll")
                 (_ (error "Unsupported system-type %s" system-type))))
          (file (or file
-                   (expand-file-name (format "~/.tree-sitter/bin/%s.%s" name ext))))
+                   (concat (file-name-as-directory
+                            (concat (ts-get-cli-directory) "bin"))
+                           (format "%s.%s" name ext))))
          (symbol-name (format "%s%s"
                               (or symbol-prefix "tree_sitter_")
                               name)))
-    (message "Loading '%s'" file)
     (ts--load-language file symbol-name)))
 
 (defun ts-pp-to-string (tree)

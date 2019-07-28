@@ -1,5 +1,6 @@
 trigger:
 - master
+- azure-pipelines
 
 pr:
 - master
@@ -35,8 +36,10 @@ steps:
   displayName: Install Emacs
 
 - powershell: |
+    $env:TREE_SITTER_DIR = "$(Get-Location)\ci-tools\tree-sitter"
     npm install -g tree-sitter-cli
     .\bin\ensure-lang.ps1 rust
+    echo "##vso[task.setvariable variable=TREE_SITTER_DIR]$env:TREE_SITTER_DIR"
   displayName: Install language support for tests
 
 - powershell: |
