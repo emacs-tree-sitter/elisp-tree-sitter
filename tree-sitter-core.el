@@ -44,6 +44,7 @@ tree-sitter CLI tool stores the generated shared libs."
          (symbol-name (format "%s%s"
                               (or symbol-prefix "tree_sitter_")
                               name)))
+    (message "Loading '%s'" file)
     (ts--load-language file symbol-name)))
 
 (defun ts-pp-to-string (tree)
