@@ -9,39 +9,9 @@ pool:
   vmImage: 'vs2017-win2016'
 
 steps:
-- script: |
-    rustup update --no-self-update stable
-    rustup default stable
-    rustc -Vv
-    cargo -V
-  displayName: Install Rust
-
-- script: |
-    choco install llvm --version 8.0.0
-  displayName: Install LLVM
-
-# TODO: Install and get llvm location in a less fragile way.
-- powershell: |
-    $env:LIBCLANG_PATH = "$($env:SystemDrive)\Program Files\LLVM\bin"
-    .\bin\build.ps1
-  displayName: Build all packages
-
-# We use this instead of the one from GNU FTP for dynamic module support.
-- script: |
-    set MSYS_PATH=%CD%\ci-tools\msys2
-    choco install msys2 --params="/InstallDir:%MSYS_PATH% /NoPath"
-    set PATH=%MSYS_PATH%\usr\bin;%PATH%
-    pacman -S --noconfirm --needed mingw-w64-x86_64-emacs
-    echo ##vso[task.prependpath]%MSYS_PATH%\mingw64\bin
-  displayName: Install Emacs
-
-- powershell: |
-    $env:TREE_SITTER_DIR = "$(Get-Location)\ci-tools\tree-sitter"
-    npm install -g tree-sitter-cli
-    .\bin\ensure-lang.ps1 rust
-    echo "##vso[task.setvariable variable=TREE_SITTER_DIR]$env:TREE_SITTER_DIR"
-  displayName: Install language support for tests
-
-- powershell: |
-    .\bin\test.ps1
-  displayName: Run tests
+- template: steps/install-rust.yml
+- template: steps/set-up-llvm.yml
+- template: steps/-build.yml
+- template: steps/install-emacs.yml
+- template: steps/set-up-tree-sitter-cli.yml
+- template: steps/-test.yml

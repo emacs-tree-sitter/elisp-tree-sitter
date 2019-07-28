@@ -1,0 +1,14 @@
+steps:
+- powershell: |
+    echo "##vso[task.setvariable variable=TREE_SITTER_DIR]%CD%\ci-tools\tree-sitter"
+  displayName: Set TREE_SITTER_DIR env var (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+- bash: |
+    echo "##vso[task.setvariable variable=TREE_SITTER_DIR]$(pwd)/ci-tools/tree-sitter"
+  displayName: Set TREE_SITTER_DIR env var
+  condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
+
+- script: |
+    npm install -g tree-sitter-cli
+  displayName: Install tree-sitter CLI

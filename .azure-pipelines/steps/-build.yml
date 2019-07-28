@@ -1,0 +1,10 @@
+steps:
+- powershell: |
+    .\bin\build.ps1
+  displayName: Build all packages (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+- bash: |
+    ./bin/build
+  displayName: Build all packages
+  condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))

@@ -1,0 +1,10 @@
+parameters:
+  version: stable
+
+steps:
+- script: |
+    rustup update --no-self-update ${{ parameters.version }}
+    rustup default ${{ parameters.version }}
+    rustc -Vv
+    cargo -V
+  displayName: Install Rust ${{ parameters.version }}

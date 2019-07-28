@@ -1,0 +1,16 @@
+parameters:
+  version: 26.2
+
+steps:
+# We use this instead of the one from GNU FTP for dynamic module support.
+# TODO: Explain that parameters.version is not support for Windows install.
+- script: |
+    set MSYS_PATH=%CD%\ci-tools\msys2
+    choco install msys2 --params="/InstallDir:%MSYS_PATH% /NoPath"
+    set PATH=%MSYS_PATH%\usr\bin;%PATH%
+    pacman -S --noconfirm --needed mingw-w64-x86_64-emacs
+    echo ##vso[task.prependpath]%MSYS_PATH%\mingw64\bin
+  displayName: Install Emacs
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+# TODO: macOS, Linux
