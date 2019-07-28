@@ -118,7 +118,6 @@ Note that these types are understood only by this package. They are not recogniz
     + `ts-node-to-sexp`: debug utility.
 
 ## Development
-
 - Make sure necessary languages are installed for tests:
     ```bash
     ./bin/ensure-lang rust
@@ -129,11 +128,13 @@ Note that these types are understood only by this package. They are not recogniz
     ```
 - Continuous testing (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
     ```shell
-    ./bin/test --watch
+    ./bin/test watch
     ```
 
+On Windows, use PowerShell to run the corresponding `.ps1` scripts.
+
+
 ## TODOs
-- [ ] Submit to MELPA.
 - [ ] Implement a `tree-sitter-minor-mode` that exposes an always-up-to-date syntax tree, by integrating incremental parsing with Emacs's change hooks.
     ```emacs-lisp
     ;;; WIP
@@ -141,6 +142,6 @@ Note that these types are understood only by this package. They are not recogniz
       (setq tree-sitter-language (ts-load-language "rust"))
       (tree-sitter-mode +1))
     ```
-- [ ] Implement syntax highlighting using [tree-sitter-highlight](https://github.com/tree-sitter/tree-sitter/tree/master/highlight).
+- [ ] Implement syntax highlighting, maybe using [tree-sitter-highlight](https://github.com/tree-sitter/tree-sitter/tree/master/highlight).
 - [ ] Support multi-language buffers (with `ts-set-included-ranges`).
 - [ ] Allow parsing to be paused/cancelled by integrating tree-sitter cancellation/timeout support with `should_quit`.

@@ -5,7 +5,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-if [[ $@ == "--watch" ]]; then
+if [[ $@ == "watch" ]]; then
     (
         cd "$PROJECT_ROOT"
         cargo watch --ignore "$MODULE_RENAMED"  -s bin/build -s bin/test
