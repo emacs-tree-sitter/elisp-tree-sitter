@@ -6,6 +6,7 @@ steps:
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
 - bash: |
+    set -e
     ./bin/ensure-lang rust
     ./bin/test
   displayName: Run tests

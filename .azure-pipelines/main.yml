@@ -5,8 +5,34 @@ trigger:
 pr:
 - master
 
+strategy:
+  matrix:
+    vs2017-win2016:
+      IMAGE_NAME: 'vs2017-win2016'
+    windows-2019:
+      IMAGE_NAME: 'windows-2019'
+    macos-10.13-emacs-25.3:
+      IMAGE_NAME: 'macos-10.13'
+      EVM_EMACS: emacs-25.3
+    macos-10.13-emacs-26.2:
+      IMAGE_NAME: 'macos-10.13'
+      EVM_EMACS: emacs-26.2
+    macos-10.14-emacs-25.3:
+      IMAGE_NAME: 'macos-10.14'
+      EVM_EMACS: emacs-25.3
+    macos-10.14-emacs-26.2:
+      IMAGE_NAME: 'macos-10.14'
+      EVM_EMACS: emacs-26.2
+    ubuntu-16.04-emacs-25.3:
+      IMAGE_NAME: 'ubuntu-16.04'
+      EVM_EMACS: emacs-25.3
+    # https://github.com/ubolonton/emacs-module-rs/issues/1#issuecomment-476049325
+    # ubuntu-16.04-emacs-26.2:
+    #   IMAGE_NAME: 'ubuntu-16.04'
+    #   EVM_EMACS: emacs-26.2
+
 pool:
-  vmImage: 'vs2017-win2016'
+  vmImage: $(IMAGE_NAME)
 
 steps:
 - template: steps/install-rust.yml
