@@ -1,0 +1,22 @@
+parameters:
+  version: stable
+
+steps:
+- bash: |
+    set -e
+    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+    if command -v rustup; then
+      echo "rustup was installed"
+    else
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${{ parameters.version }}
+      echo "##vso[task.prependpath]$HOME/.cargo/bin"
+    fi
+  displayName: Install Rust
+  condition: and(succeeded(), ne( variables['Agent.OS'], 'Windows_NT' ))
+
+- bash: |
+    rustup update --no-self-update ${{ parameters.version }}
+    rustup default ${{ parameters.version }}
+    rustc -Vv
+    cargo -V
+  displayName: Update Rust ${{ parameters.version }}
