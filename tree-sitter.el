@@ -41,8 +41,8 @@
       (widen)
       (goto-char position)
       (let ((row (- (line-number-at-pos position) 1))
-            ;; TODO XXX: The doc says this takes chars' width into account. tree-sitter probably
-            ;; only wants to count chars (bytes?). Triple-check!!!
+            ;; TODO XXX FIX: This takes characters' widths into account, while tree-sitter wants to
+            ;; count bytes.
             (column (current-column)))
         (vector row column)))))
 

@@ -25,6 +25,9 @@
   "Return full path from project RELATIVE-PATH."
   (concat (file-name-directory (locate-library "tree-sitter")) relative-path))
 
+(defun ts-test-tree-sexp (sexp)
+  (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
+
 (defmacro ts-test-with (name sym &rest body)
   "Eval BODY with SYM bound to a new parser for language NAME."
   (declare (indent 2))
@@ -66,6 +69,22 @@
           (should (equal [] (ts-changed-ranges tree old-tree))))
         (ert-info ("Incremental parsing shoud be faster than initial")
           (should (> (car initial) (car reparse))))))))
+
+(ert-deftest minor-mode::basic-editing ()
+  (with-temp-buffer
+    (setq tree-sitter-language (ts-load-language "rust"))
+    (tree-sitter-mode)
+    (ts-test-tree-sexp '(source_file))
+    (insert "fn")
+    (ts-test-tree-sexp '(source_file (ERROR)))
+    (insert " foo() {}")
+    (ts-test-tree-sexp '(source_file
+                         (function_item
+                          (identifier)
+                          (parameters)
+                          (block))))
+    (kill-region (point-min) (point-max))
+    (ts-test-tree-sexp '(source_file))))
 
 (ert-deftest node::using-without-tree ()
   "Test that a tree's nodes are still usable after no direct reference to the
