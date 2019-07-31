@@ -10,9 +10,12 @@
 
 ;;; Code:
 
-(require 'subr-x)
-
 (require 'tree-sitter)
+
+(require 'ert)
+
+(eval-when-compile
+  (require 'subr-x))
 
 (defun ts-test-make-parser (lang)
   "Return a new parser for LANG."

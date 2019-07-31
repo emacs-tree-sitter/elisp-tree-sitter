@@ -13,6 +13,9 @@
 (require 'tree-sitter-dyn)
 (require 'pp)
 
+(eval-when-compile
+  (require 'subr-x))
+
 (defun ts-buffer-input (byte _row _column)
   "Return current buffer's text starting from the given (0-based indexed) BYTE."
   (let* ((max-position (1+ (buffer-size)))
