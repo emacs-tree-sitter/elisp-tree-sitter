@@ -220,6 +220,7 @@ macro_rules! impl_pred {
     };
 }
 
+// TODO: Add docstring for these.
 impl_pred!(language_p, Language);
 impl_pred!(range_p, Range);
 impl_pred!(point_p, Point);

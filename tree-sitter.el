@@ -34,16 +34,18 @@
 (defvar-local tree-sitter--old-end-point [0 0])
 (defvar-local tree-sitter--new-end-point [0 0])
 
+;;; TODO: Consider putting this in core, e.g. as `ts-position-point`.
 (defun tree-sitter--point (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point."
+  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
+The returned column counts bytes, which is different from `current-column'."
   (save-excursion
     (save-restriction
       (widen)
       (goto-char position)
       (let ((row (- (line-number-at-pos position) 1))
-            ;; TODO XXX FIX: This takes characters' widths into account, while tree-sitter wants to
-            ;; count bytes.
-            (column (current-column)))
+            ;; TODO: Add tests that fail if `current-column' is used instead.
+            (column (- (position-bytes position)
+                       (position-bytes (line-beginning-position)))))
         (vector row column)))))
 
 (defun tree-sitter--before-change (begin end)

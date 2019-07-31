@@ -84,7 +84,7 @@ A `symbol` in the C API is actually the ID of a type, so it's called `type-id` i
 
 This package exposes the following types:
 
-- `point`: a vector in the form of `[row column]`, where `row` and `column` are zero-based. Note that this is different from Emacs's concept of "point".
+- `point`: a vector in the form of `[row column]`, where `row` and `column` are zero-based. This is different from Emacs's concept of "point". Also note that `column` counts bytes, unlike the current built-in function `current-column`.
 - `range`: a vector in the form of `[start-point end-point]`.
 - `language`, `parser`, `tree`, `node`, `cursor`: corresponding tree-sitter types, embedded in `user-ptr` objects.
 
