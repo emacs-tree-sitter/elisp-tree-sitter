@@ -36,37 +36,6 @@ macro_rules! impl_newtype_traits {
     };
 }
 
-macro_rules! impl_wrapper {
-    ($inner:path, $raw:path, $wrapper:path) => {
-        impl $wrapper {
-            #[inline]
-            pub unsafe fn new(tree: SharedTree, inner: $inner) -> Self {
-                let ptr = (&inner as *const $inner) as *const $raw;
-                let raw = ptr.read();
-                Self { tree, raw }
-            }
-
-            #[inline]
-            pub unsafe fn wrap(&self, inner: $inner) -> Self {
-                let tree = self.tree.clone();
-                Self::new(tree, inner)
-            }
-
-            #[inline]
-            pub fn inner(&self) -> &$inner {
-                let ptr = (&self.raw as *const $raw) as *const $inner;
-                unsafe { &*ptr }
-            }
-
-            #[inline]
-            pub fn inner_mut(&mut self) -> &mut $inner {
-                let ptr = (&mut self.raw as *mut $raw) as *mut $inner;
-                unsafe { &mut *ptr }
-            }
-        }
-    };
-}
-
 // -------------------------------------------------------------------------------------------------
 // Point
 
@@ -174,7 +143,33 @@ pub struct WrappedNode {
     raw: RawNode,
 }
 
-impl_wrapper!(Node, RawNode, WrappedNode);
+impl WrappedNode {
+    #[inline]
+    pub unsafe fn new(tree: SharedTree, inner: Node) -> Self {
+        let ptr = (&inner as *const Node) as *const RawNode;
+        // Safety: It's ok not to forget inner, because it's copyable.
+        let raw = ptr.read();
+        Self { tree, raw }
+    }
+
+    #[inline]
+    pub unsafe fn wrap(&self, inner: Node) -> Self {
+        let tree = self.tree.clone();
+        Self::new(tree, inner)
+    }
+
+    #[inline]
+    pub fn inner(&self) -> &Node {
+        let ptr = (&self.raw as *const RawNode) as *const Node;
+        unsafe { &*ptr }
+    }
+
+    #[inline]
+    pub fn inner_mut(&mut self) -> &mut Node {
+        let ptr = (&mut self.raw as *mut RawNode) as *mut Node;
+        unsafe { &mut *ptr }
+    }
+}
 
 // -------------------------------------------------------------------------------------------------
 // Cursor
@@ -185,14 +180,48 @@ pub type RawCursor = [u64; TREE_CURSOR_LEN];
 
 /// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
 /// ref-counted reference to the underlying tree.
-#[derive(Clone)]
 #[repr(C)]
 pub struct WrappedCursor {
     pub(crate) tree: SharedTree,
     raw: RawCursor,
 }
 
-impl_wrapper!(TreeCursor, RawCursor, WrappedCursor);
+impl WrappedCursor {
+    #[inline]
+    pub unsafe fn new(tree: SharedTree, inner: TreeCursor) -> Self {
+        let ptr = (&inner as *const TreeCursor) as *const RawCursor;
+        // Delay inner cursor's cleanup (until wrapper is dropped).
+        mem::forget(inner);
+        let raw = ptr.read();
+        Self { tree, raw }
+    }
+
+    #[inline]
+    pub unsafe fn wrap(&self, inner: TreeCursor) -> Self {
+        let tree = self.tree.clone();
+        Self::new(tree, inner)
+    }
+
+    #[inline]
+    pub fn inner(&self) -> &TreeCursor {
+        let ptr = (&self.raw as *const RawCursor) as *const TreeCursor;
+        unsafe { &*ptr }
+    }
+
+    #[inline]
+    pub fn inner_mut(&mut self) -> &mut TreeCursor {
+        let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
+        unsafe { &mut *ptr }
+    }
+}
+
+impl Drop for WrappedCursor {
+    #[inline]
+    fn drop(&mut self) {
+        let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
+        unsafe { ptr.read() };
+    }
+}
 
 // -------------------------------------------------------------------------------------------------
 

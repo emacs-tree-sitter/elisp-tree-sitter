@@ -107,5 +107,12 @@ tree is held (since nodes internally reference the tree)."
         (should (ts-cursor-p (ts-make-cursor tree)))
         (should (ts-cursor-p (ts-make-cursor node)))))))
 
+(ert-deftest cursor::using-without-tree ()
+  (ts-test-with "rust" parser
+    (let ((cursor (ts-make-cursor (ts-parse-string parser "fn foo() {}"))))
+      (garbage-collect)
+      (should (ts-goto-first-child cursor)))
+    (garbage-collect)))
+
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here
