@@ -1,7 +1,5 @@
 use emacs::{defun, Value, Result, IntoLisp, Vector};
 
-use std::{cell::RefCell, rc::Rc, mem};
-
 use tree_sitter::{InputEdit};
 
 use crate::types::{SharedTree, WrappedNode, Range, Point};

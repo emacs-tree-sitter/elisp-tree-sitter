@@ -17,7 +17,7 @@ fn make_parser() -> Result<Parser> {
 /// with an incompatible version of tree-sitter-cli.
 #[defun]
 fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
-    parser.set_language(language.into()).map_err(failure::err_msg);
+    parser.set_language(language.into()).map_err(failure::err_msg)?;
     Ok(())
 }
 

@@ -1,8 +1,8 @@
-use std::{mem, cell::RefCell};
+use std::cell::RefCell;
 
 use emacs::{defun, Value, Result, IntoLisp};
 
-use tree_sitter::{Node, InputEdit};
+use tree_sitter::InputEdit;
 
 use crate::types::{WrappedNode, Range, Point};
 
@@ -75,7 +75,6 @@ defun_node_props! {
 /// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
 fn mapc_children(node: &WrappedNode, function: Value) -> Result<()> {
-    let tree = &node.tree;
     let env = function.env;
     for child in node.inner().children() {
         let child = RefCell::new(unsafe { node.wrap(child) });

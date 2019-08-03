@@ -1,8 +1,6 @@
-use emacs::{defun, Value, Result, ErrorKind};
+use emacs::{defun, Result};
 
-use std::{cell::RefCell, mem};
-
-use tree_sitter::TreeCursor;
+use std::cell::RefCell;
 
 use crate::types::{SharedTree, WrappedCursor, WrappedNode};
 use crate::types::Either;

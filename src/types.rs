@@ -2,14 +2,12 @@ use std::{
     cell::RefCell,
     rc::Rc,
     mem,
-    ops::Deref,
-    convert::TryInto,
     marker::PhantomData,
 };
 
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
-use tree_sitter::{Tree, InputEdit, Node, TreeCursor, Parser};
+use tree_sitter::{Tree, Node, TreeCursor, Parser};
 
 pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(t))
@@ -194,12 +192,6 @@ impl WrappedCursor {
         mem::forget(inner);
         let raw = ptr.read();
         Self { tree, raw }
-    }
-
-    #[inline]
-    pub unsafe fn wrap(&self, inner: TreeCursor) -> Self {
-        let tree = self.tree.clone();
-        Self::new(tree, inner)
     }
 
     #[inline]
