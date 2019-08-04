@@ -45,10 +45,7 @@ impl_newtype_traits!(Point);
 impl IntoLisp<'_> for Point {
     fn into_lisp(self, env: &Env) -> Result<Value> {
         let inner = self.0;
-        env.call("vector", &[
-            inner.row.into_lisp(env)?,
-            inner.column.into_lisp(env)?,
-        ])
+        env.call("vector", (inner.row, inner.column))
     }
 }
 
@@ -72,12 +69,12 @@ impl_newtype_traits!(Range);
 impl IntoLisp<'_> for Range {
     fn into_lisp(self, env: &Env) -> Result<Value> {
         let inner = self.0;
-        env.call("vector", &[
-            inner.start_byte.into_lisp(env)?,
-            inner.end_byte.into_lisp(env)?,
-            Point(inner.start_point).into_lisp(env)?,
-            Point(inner.end_point).into_lisp(env)?,
-        ])
+        env.call("vector", (
+            inner.start_byte,
+            inner.end_byte,
+            Point(inner.start_point),
+            Point(inner.end_point),
+        ))
     }
 }
 

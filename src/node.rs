@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use emacs::{defun, Value, Result, IntoLisp};
+use emacs::{defun, Value, Result};
 
 use tree_sitter::InputEdit;
 
@@ -75,10 +75,9 @@ defun_node_props! {
 /// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
 fn mapc_children(node: &WrappedNode, function: Value) -> Result<()> {
-    let env = function.env;
     for child in node.inner().children() {
         let child = RefCell::new(unsafe { node.wrap(child) });
-        env.call("funcall", &[function, child.into_lisp(env)?])?;
+        function.call((child,))?;
     }
     Ok(())
 }

@@ -1,7 +1,8 @@
-use emacs::{defun, Result, Value, IntoLisp, ResultExt, Vector};
+use emacs::{defun, Result, Value, ResultExt, Vector};
 use emacs::failure;
 
 use tree_sitter::{Parser, Point};
+
 
 use crate::types::{SharedTree, shared, Language, Range};
 
@@ -42,7 +43,6 @@ fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
 /// one-based indexing for accessing buffer content.
 #[defun(user_ptr(direct))]
 fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&SharedTree>) -> Result<SharedTree> {
-    let env = input_function.env;
     let old_tree = match old_tree {
         Some(v) => Some(v.try_borrow()?),
         _ => None,
@@ -52,18 +52,8 @@ fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&SharedTre
         _ => None,
     };
     let input = |byte: usize, position: Point| -> String {
-        let fragment = env
-            .call(
-                "funcall",
-                &[
-                    input_function,
-                    byte.into_lisp(env).unwrap_or_propagate(),
-                    position.row.into_lisp(env).unwrap_or_propagate(),
-                    position.column.into_lisp(env).unwrap_or_propagate(),
-                ],
-            )
-            .unwrap_or_propagate();
-        fragment.into_rust::<String>().unwrap_or_propagate()
+        input_function.call((byte, position.row, position.column)).unwrap_or_propagate()
+            .into_rust().unwrap_or_propagate()
     };
     // TODO: Support error cases (None).
     let tree = parser.parse_buffering_with(input, old_tree).unwrap();

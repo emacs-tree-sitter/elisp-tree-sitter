@@ -1,4 +1,4 @@
-use emacs::{defun, Value, Result, IntoLisp, Vector};
+use emacs::{defun, Value, Result, Vector};
 
 use tree_sitter::{InputEdit};
 
@@ -64,7 +64,7 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: Tree<'e>) -> Result<Vector<'e>>
     let other_tree = old_tree.borrow();
     let ranges = tree.changed_ranges(&*other_tree);
     let len = ranges.len();
-    let vec = Vector(env.call("make-vector", &[len.into_lisp(env)?, env.intern("nil")?])?);
+    let vec = Vector(env.call("make-vector", (len, ()))?);
     for (i, range) in ranges.into_iter().enumerate() {
         vec.set(i, Range(range))?;
     }
