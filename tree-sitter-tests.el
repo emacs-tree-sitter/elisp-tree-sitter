@@ -37,6 +37,12 @@
   `(let ((,sym (ts-test-make-parser ,name)))
      ,@body))
 
+(defmacro ts-test-with-temp-buffer (relative-path &rest body)
+  (declare (indent 1))
+  `(with-temp-buffer
+     (insert-file-contents (ts-test-full-path ,relative-path))
+     ,@body))
+
 (ert-deftest creating-parser ()
   (should (ts-parser-p (ts-test-make-parser "rust"))))
 
@@ -57,8 +63,7 @@
 
 (ert-deftest parsing::rust-buffer ()
   (ts-test-with "rust" parser
-    (with-temp-buffer
-      (insert-file-contents (ts-test-full-path "src/types.rs"))
+    (ts-test-with-temp-buffer "src/types.rs"
       (let* ((tree) (old-tree)
              (initial (benchmark-run
                           (setq tree (ts-parse parser #'ts-buffer-input nil))))
@@ -113,6 +118,45 @@ tree is held (since nodes internally reference the tree)."
       (garbage-collect)
       (should (ts-goto-first-child cursor)))
     (garbage-collect)))
+
+(ert-deftest conversion::position<->ts-point ()
+  (ts-test-with-temp-buffer "tree-sitter-tests.el"
+    (ert-info ("Testing buffer boundaries")
+      (let ((min (point-min))
+            (max (point-max)))
+        (should (equal [0 0] (ts-point-from-position min)))
+        (should (= min (ts-point-to-position (ts-point-from-position min))))
+        (should (= max (ts-point-to-position (ts-point-from-position max))))))
+    (ert-info ("Testing arbitrary points")
+      (dotimes (_ 100)
+        (let ((p (1+ (random (buffer-size)))))
+          (should (= p (ts-point-to-position (ts-point-from-position p)))))))))
+
+(ert-deftest conversion::position<->ts-byte ()
+  (ts-test-with-temp-buffer "tree-sitter-tests.el"
+    ;; Some non-ascii texts to exercise this test:
+    ;; Nguyễn Tuấn Anh
+    ;; Нгуен Туан Ань
+    ;; 阮俊英
+    (ert-info ("Testing buffer boundaries")
+      (let ((min (point-min))
+            (max (point-max)))
+        (should (equal 0 (ts-byte-from-position min)))
+        (should (> (ts-byte-from-position max) (buffer-size)))
+        (should (= min (ts-byte-to-position (ts-byte-from-position min))))
+        (should (= max (ts-byte-to-position (ts-byte-from-position max))))))
+    (ert-info ("Testing arbitrary points")
+      (dotimes (_ 100)
+        (let* ((p0 (1+ (random (buffer-size))))
+               (p1 (1+ (random (buffer-size))))
+               (b0 (ts-byte-from-position p0))
+               (b1 (ts-byte-from-position p1)))
+          (should (>= (1+ b0) p0))
+          (should (= p0 (ts-byte-to-position b0)))
+          (ert-info ("Checking substrings")
+            (should (equal
+                     (buffer-substring-no-properties (min p0 p1) (max p0 p1))
+                     (ts-buffer-substring (min b0 b1) (max b0 b1))))))))))
 
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here

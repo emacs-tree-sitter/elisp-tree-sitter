@@ -34,26 +34,12 @@
 (defvar-local tree-sitter--old-end-point [0 0])
 (defvar-local tree-sitter--new-end-point [0 0])
 
-;;; TODO: Consider putting this in core, e.g. as `ts-position-point`.
-(defun tree-sitter--point (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-The returned column counts bytes, which is different from `current-column'."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char position)
-      (let ((row (- (line-number-at-pos position) 1))
-            ;; TODO: Add tests that fail if `current-column' is used instead.
-            (column (- (position-bytes position)
-                       (position-bytes (line-beginning-position)))))
-        (vector row column)))))
-
 (defun tree-sitter--before-change (begin end)
-  (setq tree-sitter--start-byte (- (position-bytes begin) 1)
-        tree-sitter--old-end-byte (- (position-bytes end) 1)
+  (setq tree-sitter--start-byte (ts-byte-from-position begin)
+        tree-sitter--old-end-byte (ts-byte-from-position end)
         ;; TODO: Keep mutating the same vector instead of creating a new one each time.
-        tree-sitter--start-point (tree-sitter--point begin)
-        tree-sitter--old-end-point (tree-sitter--point end)))
+        tree-sitter--start-point (ts-point-from-position begin)
+        tree-sitter--old-end-point (ts-point-from-position end)))
 
 ;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
 ;;; different regions enclosed in the region passed to `before-change-functions'. Therefore what we
@@ -71,8 +57,8 @@ The returned column counts bytes, which is different from `current-column'."
 ;;; 4. What's the deal with several primitives calling `after-change-functions' *zero* or more
 ;;; times? Does that mean we can't rely on this hook at all?
 (defun tree-sitter--after-change (_begin end _length)
-  (setq tree-sitter--new-end-byte (- (position-bytes end) 1)
-        tree-sitter--new-end-point (tree-sitter--point end))
+  (setq tree-sitter--new-end-byte (ts-byte-from-position end)
+        tree-sitter--new-end-point (ts-point-from-position end))
   (when tree-sitter-tree
     (ts-edit-tree tree-sitter-tree
                   tree-sitter--start-byte

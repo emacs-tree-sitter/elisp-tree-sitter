@@ -16,18 +16,55 @@
 (eval-when-compile
   (require 'subr-x))
 
+(defun ts-point-from-position (position)
+  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
+The returned column counts bytes, which is different from `current-column'."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char position)
+      (let ((row (- (line-number-at-pos position) 1))
+            ;; TODO: Add tests that fail if `current-column' is used instead.
+            (column (- (position-bytes position)
+                       (position-bytes (line-beginning-position)))))
+        (vector row column)))))
+
+(defun ts-point-to-position (point)
+  "Convert tree-sitter POINT to buffer position."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (let ((row (aref point 0))
+            (column (aref point 1)))
+        (goto-char 1)
+        (forward-line row)
+        (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position))))))))
+
+(defsubst ts-byte-from-position (position)
+  "Return tree-sitter (0-based) byte offset for character at POSITION."
+  (- (position-bytes position) 1))
+
+(defsubst ts-byte-to-position (byte)
+  "Return the character position for tree-sitter (0-based) BYTE offset."
+  (byte-to-position (1+ byte)))
+
+(defsubst ts-buffer-substring (beg-byte end-byte)
+  "Return current buffer's text between (0-based) BEG-BYTE and END-BYTE."
+  (buffer-substring-no-properties
+   (ts-byte-to-position beg-byte)
+   (ts-byte-to-position end-byte)))
+
 (defun ts-buffer-input (byte _row _column)
-  "Return current buffer's text starting from the given (0-based indexed) BYTE."
-  (let* ((max-position (1+ (buffer-size)))
-         ;; Make sure start-byte is positive.
-         (start-byte (max 1 (1+ byte)))
+  "Return a portion of current buffer's text starting from the given (0-based)
+BYTE offset.
+
+BYTE is clamped to the valid range, from 0 to (buffer-size)."
+  (let* ((max-byte (buffer-size))
+         ;; Make sure beg-byte is in the valid range.
+         (beg-byte (min max-byte (max 0 byte)))
          ;; TODO: Don't hard-code read length.
-         (end-byte (+ 1024 start-byte))
-         ;; nil means > max-position, since we already made sure they are positive.
-         (start (or (byte-to-position start-byte) max-position))
-         (end (or (byte-to-position end-byte) max-position)))
-    ;; (message "%s [%s %s] -> [%s %s] %s" byte _row _column start-byte end-byte (- end-byte start-byte))
-    (buffer-substring-no-properties start end)))
+         (end-byte (min max-byte (+ 1024 beg-byte))))
+    (ts-buffer-substring beg-byte end-byte)))
 
 (defun ts-get-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.
