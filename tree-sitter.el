@@ -23,13 +23,29 @@
 
 (require 'tree-sitter-core)
 
-(defvar-local tree-sitter-tree nil)
-(defvar-local tree-sitter-parser nil)
-(defvar-local tree-sitter-language nil)
+(defgroup tree-sitter nil
+  "Incremental parsing system."
+  :group 'languages)
+
+(defcustom tree-sitter-after-change-functions nil
+  "Functions to call each time `tree-sitter-tree' is updated.
+Each function will be called with a single argument: the old tree."
+  :type 'hook
+  :group 'tree-sitter)
+
+(defvar-local tree-sitter-tree nil
+  "Tree-sitter syntax tree.")
+
+(defvar-local tree-sitter-parser nil
+  "Tree-sitter parser.")
+
+(defvar-local tree-sitter-language nil
+  "Tree-sitter language.")
 
 (defvar-local tree-sitter--start-byte 0)
 (defvar-local tree-sitter--old-end-byte 0)
 (defvar-local tree-sitter--new-end-byte 0)
+
 (defvar-local tree-sitter--start-point [0 0])
 (defvar-local tree-sitter--old-end-point [0 0])
 (defvar-local tree-sitter--new-end-point [0 0])
@@ -67,21 +83,20 @@
                   tree-sitter--start-point
                   tree-sitter--old-end-point
                   tree-sitter--new-end-point)
-    (let ((old-tree tree-sitter-tree))
-      (tree-sitter--do-parse))))
+    (tree-sitter--do-parse)))
 
 (defun tree-sitter--do-parse ()
-  (setq tree-sitter-tree
-        (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree))
-  ;; (let ((inhibit-message t))
-  ;;   (message "--------------------------------------------------\n%s"
-  ;;            (ts-pp-to-string tree-sitter-tree)))
-  )
+  "Parse the current buffer and update the syntax tree."
+  (let ((old-tree tree-sitter-tree))
+    (setq tree-sitter-tree
+          (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree))
+    (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
 (defun tree-sitter--enable ()
+  "Enable `tree-sitter' in the current buffer."
   ;; TODO: Determine the language symbol based on `major-mode' and some fallback rules.
   (unless tree-sitter-language
-    (error "tree-sitter-language must be set"))
+    (error "Variable tree-sitter-language must be set"))
   (setq tree-sitter-parser (ts-make-parser)
         tree-sitter-tree nil)
   (ts-set-language tree-sitter-parser tree-sitter-language)
@@ -90,6 +105,7 @@
   (add-hook 'after-change-functions #'tree-sitter--after-change 'append 'local))
 
 (defun tree-sitter--disable ()
+  "Disable `tree-sitter' in the current buffer."
   (remove-hook 'before-change-functions #'tree-sitter--before-change 'local)
   (remove-hook 'after-change-functions #'tree-sitter--after-change 'local)
   (setq tree-sitter-tree nil
