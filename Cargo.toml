@@ -13,9 +13,9 @@ crate-type = ["cdylib"]
 [dependencies]
 emacs = "0.11.0"
 libloading = "0.5.1"
+tree-sitter = "0.3.10"
 
-[dependencies.tree-sitter]
-version = "0.3.10"
+[patch.crates-io.tree-sitter]
 git = "https://github.com/ubolonton/tree-sitter"
 branch = "rust-binding"
 
