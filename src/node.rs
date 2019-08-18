@@ -74,7 +74,7 @@ defun_node_props! {
 
 /// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
-fn mapc_children(node: &WrappedNode, function: Value) -> Result<()> {
+fn mapc_children(function: Value, node: &WrappedNode) -> Result<()> {
     for child in node.inner().children() {
         let child = RefCell::new(unsafe { node.wrap(child) });
         function.call((child,))?;
