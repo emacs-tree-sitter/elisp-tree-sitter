@@ -34,10 +34,17 @@ strategy:
 pool:
   vmImage: $(IMAGE_NAME)
 
+resources:
+  repositories:
+  - repository: emacs-module-rs
+    type: github
+    name: ubolonton/emacs-module-rs
+    endpoint: ubolonton
+
 steps:
-- template: steps/install-rust.yml
-- template: steps/set-up-llvm.yml
+- template: .azure-pipelines/steps/install-rust.yml@emacs-module-rs
+- template: .azure-pipelines/steps/set-up-llvm.yml@emacs-module-rs
 - template: steps/-build.yml
-- template: steps/install-emacs.yml
+- template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
 - template: steps/set-up-tree-sitter-cli.yml
 - template: steps/-test.yml
