@@ -49,22 +49,22 @@ The returned column counts bytes, which is different from `current-column'."
   (byte-to-position (1+ byte)))
 
 (defsubst ts-buffer-substring (beg-byte end-byte)
-  "Return current buffer's text between (0-based) BEG-BYTE and END-BYTE."
+  "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE."
   (buffer-substring-no-properties
    (ts-byte-to-position beg-byte)
    (ts-byte-to-position end-byte)))
 
 (defun ts-buffer-input (byte _row _column)
-  "Return a portion of current buffer's text starting from the given (0-based)
-BYTE offset.
-
-BYTE is clamped to the valid range, from 0 to (buffer-size)."
-  (let* ((max-byte (buffer-size))
-         ;; Make sure beg-byte is in the valid range.
-         (beg-byte (min max-byte (max 0 byte)))
-         ;; TODO: Don't hard-code read length.
-         (end-byte (min max-byte (+ 1024 beg-byte))))
-    (ts-buffer-substring beg-byte end-byte)))
+  "Return a portion of the current buffer's text starting from the given (0-based) BYTE offset.
+BYTE is automatically clamped to the valid range."
+  (let* ((max-position (1+ (buffer-size)))
+         (beg-byte (max 0 byte))
+         ;; ;; TODO: Don't hard-code read length.
+         (end-byte (+ 1024 beg-byte))
+         ;; nil means > max-position, since we already made sure they are non-negative.
+         (start (or (ts-byte-to-position beg-byte) max-position))
+         (end (or (ts-byte-to-position end-byte) max-position)))
+    (buffer-substring-no-properties start end)))
 
 (defun ts-get-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.
