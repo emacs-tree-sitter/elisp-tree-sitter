@@ -47,6 +47,8 @@ install:
 before_script:
   - npm install -g tree-sitter-cli
   - ./bin/ensure-lang rust
+  - ./bin/ensure-lang javascript
+  - ./bin/ensure-lang bash
 
 script:
   - ./bin/test

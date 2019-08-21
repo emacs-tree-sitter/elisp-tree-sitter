@@ -115,6 +115,8 @@ Note that these types are understood only by this package. They are not recogniz
 - Make sure necessary languages are installed for tests:
     ```bash
     ./bin/ensure-lang rust
+    ./bin/ensure-lang javascript
+    ./bin/ensure-lang bash
     ```
 - Testing:
     ```bash
