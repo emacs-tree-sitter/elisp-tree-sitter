@@ -52,10 +52,12 @@ Each function will be called with a single argument: the old tree."
 
 (defun tree-sitter--before-change (begin end)
   (setq tree-sitter--start-byte (ts-byte-from-position begin)
-        tree-sitter--old-end-byte (ts-byte-from-position end)
-        ;; TODO: Keep mutating the same vector instead of creating a new one each time.
-        tree-sitter--start-point (ts-point-from-position begin)
-        tree-sitter--old-end-point (ts-point-from-position end)))
+        tree-sitter--old-end-byte (ts-byte-from-position end))
+  ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
+  (save-restriction
+    (widen)
+    (setq tree-sitter--start-point (ts-point-from-position begin)
+          tree-sitter--old-end-point (ts-point-from-position end))))
 
 ;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
 ;;; different regions enclosed in the region passed to `before-change-functions'. Therefore what we
@@ -74,7 +76,9 @@ Each function will be called with a single argument: the old tree."
 ;;; times? Does that mean we can't rely on this hook at all?
 (defun tree-sitter--after-change (_begin end _length)
   (setq tree-sitter--new-end-byte (ts-byte-from-position end)
-        tree-sitter--new-end-point (ts-point-from-position end))
+        tree-sitter--new-end-point (save-restriction
+                                     (widen)
+                                     (ts-point-from-position end)))
   (when tree-sitter-tree
     (ts-edit-tree tree-sitter-tree
                   tree-sitter--start-byte
@@ -89,7 +93,10 @@ Each function will be called with a single argument: the old tree."
   "Parse the current buffer and update the syntax tree."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
-          (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree))
+          ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
+          (save-restriction
+            (widen)
+            (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
 (defun tree-sitter--enable ()

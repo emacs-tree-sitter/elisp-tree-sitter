@@ -158,12 +158,21 @@ tree is held (since nodes internally reference the tree)."
                      (buffer-substring-no-properties (min p0 p1) (max p0 p1))
                      (ts-buffer-substring (min b0 b1) (max b0 b1))))))))))
 
-(ert-deftest conversion::buffer-input ()
+(ert-deftest buffer-input::non-ascii-characters ()
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
     (setq tree-sitter-language (ts-load-language "javascript"))
     (tree-sitter-mode)
     (ts-test-tree-sexp '(program (expression_statement (string))))))
+
+;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
+(ert-deftest buffer-input::narrowing ()
+  (ts-test-with-temp-buffer "bin/build"
+    (sh-mode)
+    (setq tree-sitter-language (ts-load-language "bash"))
+    (tree-sitter-mode)
+    (mark-whole-buffer)
+    (call-interactively #'comment-or-uncomment-region)))
 
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here

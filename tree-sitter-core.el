@@ -18,27 +18,27 @@
 
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-The returned column counts bytes, which is different from `current-column'."
+The returned column counts bytes, which is different from `current-column'.
+Narrowing must be removed before calling this function, using `save-restriction'
+and `widen'."
   (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char position)
-      (let ((row (- (line-number-at-pos position) 1))
-            ;; TODO: Add tests that fail if `current-column' is used instead.
-            (column (- (position-bytes position)
-                       (position-bytes (line-beginning-position)))))
-        (vector row column)))))
+    (goto-char position)
+    (let ((row (- (line-number-at-pos position) 1))
+          ;; TODO: Add tests that fail if `current-column' is used instead.
+          (column (- (position-bytes position)
+                     (position-bytes (line-beginning-position)))))
+      (vector row column))))
 
 (defun ts-point-to-position (point)
-  "Convert tree-sitter POINT to buffer position."
+  "Convert tree-sitter POINT to buffer position.
+Narrowing must be removed before calling this function, using `save-restriction'
+and `widen'."
   (save-excursion
-    (save-restriction
-      (widen)
-      (let ((row (aref point 0))
-            (column (aref point 1)))
-        (goto-char 1)
-        (forward-line row)
-        (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position))))))))
+    (let ((row (aref point 0))
+          (column (aref point 1)))
+      (goto-char 1)
+      (forward-line row)
+      (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
 
 (defsubst ts-byte-from-position (position)
   "Return tree-sitter (0-based) byte offset for character at POSITION."
@@ -49,15 +49,20 @@ The returned column counts bytes, which is different from `current-column'."
   (byte-to-position (1+ byte)))
 
 (defsubst ts-buffer-substring (beg-byte end-byte)
-  "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE."
+  "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.
+Narrowing must be removed before calling this function, using `save-restriction'
+and `widen'."
   (buffer-substring-no-properties
    (ts-byte-to-position beg-byte)
    (ts-byte-to-position end-byte)))
 
 (defun ts-buffer-input (byte _row _column)
   "Return a portion of the current buffer's text starting from the given (0-based) BYTE offset.
-BYTE is automatically clamped to the valid range."
-  (let* ((max-position (1+ (buffer-size)))
+BYTE is automatically clamped to the valid range.
+
+Narrowing must be removed before calling this function, using `save-restriction'
+and `widen'."
+  (let* ((max-position (point-max))
          (beg-byte (max 0 byte))
          ;; ;; TODO: Don't hard-code read length.
          (end-byte (+ 1024 beg-byte))
