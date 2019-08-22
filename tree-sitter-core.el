@@ -16,6 +16,14 @@
 (eval-when-compile
   (require 'subr-x))
 
+(defsubst ts-byte-from-position (position)
+  "Return tree-sitter (0-based) byte offset for character at POSITION."
+  (- (position-bytes position) 1))
+
+(defsubst ts-byte-to-position (byte)
+  "Return the character position for tree-sitter (0-based) BYTE offset."
+  (byte-to-position (1+ byte)))
+
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
 The returned column counts bytes, which is different from `current-column'.
@@ -39,14 +47,6 @@ and `widen'."
       (goto-char 1)
       (forward-line row)
       (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
-
-(defsubst ts-byte-from-position (position)
-  "Return tree-sitter (0-based) byte offset for character at POSITION."
-  (- (position-bytes position) 1))
-
-(defsubst ts-byte-to-position (byte)
-  "Return the character position for tree-sitter (0-based) BYTE offset."
-  (byte-to-position (1+ byte)))
 
 (defsubst ts-buffer-substring (beg-byte end-byte)
   "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.

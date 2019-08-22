@@ -22,7 +22,7 @@
                         (tree-sitter-debug--display-node c (1+ depth))))
                     node))
 
-(defun tree-sitter-debug--display-tree (old-tree)
+(defun tree-sitter-debug--display-tree (_old-tree)
   ;; TODO: Re-render only affected nodes.
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer

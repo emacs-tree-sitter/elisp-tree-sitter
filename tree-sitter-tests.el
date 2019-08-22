@@ -171,7 +171,7 @@ tree is held (since nodes internally reference the tree)."
     (sh-mode)
     (setq tree-sitter-language (ts-load-language "bash"))
     (tree-sitter-mode)
-    (mark-whole-buffer)
+    (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))
 
 (provide 'tree-sitter-tests)
