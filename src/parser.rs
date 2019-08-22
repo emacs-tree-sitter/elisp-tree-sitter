@@ -51,13 +51,24 @@ fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&SharedTre
         Some(r) => Some(&**r),
         _ => None,
     };
+    // This is used to hold potential error, because the callback cannot return a Result, and
+    // unwinding across FFI boundary during a panic is UB (future Rust versions will abort).
+    // See https://github.com/rust-lang/rust/issues/52652.
+    let mut input_error = None;
     let input = |byte: usize, position: Point| -> String {
-        input_function.call((byte, position.row, position.column)).unwrap_or_propagate()
-            .into_rust().unwrap_or_propagate()
+        input_function.call((byte, position.row, position.column))
+            .and_then(|v| v.into_rust())
+            .unwrap_or_else(|e| {
+                input_error = Some(e);
+                "".to_owned()
+            })
     };
     // TODO: Support error cases (None).
     let tree = parser.parse_buffering_with(input, old_tree).unwrap();
-    Ok(shared(tree))
+    match input_error {
+        None => Ok(shared(tree)),
+        Some(e) => Err(e),
+    }
 }
 
 /// Use PARSER to parse the INPUT string, returning a tree.
