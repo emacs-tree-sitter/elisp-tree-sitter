@@ -9,8 +9,8 @@ strategy:
   matrix:
     vs2017-win2016:
       IMAGE_NAME: 'vs2017-win2016'
-    windows-2019:
-      IMAGE_NAME: 'windows-2019'
+    # windows-2019:
+    #   IMAGE_NAME: 'windows-2019'
     macos-10.13-emacs-25.3:
       IMAGE_NAME: 'macos-10.13'
       EVM_EMACS: emacs-25.3
