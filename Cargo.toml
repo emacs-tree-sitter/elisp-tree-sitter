@@ -17,7 +17,7 @@ tree-sitter = "0.3.10"
 
 [patch.crates-io.tree-sitter]
 git = "https://github.com/ubolonton/tree-sitter"
-branch = "rust-binding"
+branch = "for-emacs-module-rs"
 
 [profile.release]
 opt-level = 3

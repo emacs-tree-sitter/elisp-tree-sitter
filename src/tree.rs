@@ -2,11 +2,17 @@ use emacs::{defun, Value, Result, Vector};
 
 use tree_sitter::{InputEdit};
 
-use crate::types::{SharedTree, WrappedNode, Range, Point};
+use crate::types::{SharedTree, WrappedNode, Range, Point, Language};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
 type Tree<'a> = &'a SharedTree;
+
+/// Return the language that was used to parse the syntax TREE.
+#[defun]
+fn tree_language(tree: Tree) -> Result<Language> {
+    Ok(tree.borrow().language().into())
+}
 
 /// Return the sexp representation of the syntax TREE, in a string.
 #[defun]

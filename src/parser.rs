@@ -1,4 +1,4 @@
-use emacs::{defun, Result, Value, ResultExt, Vector};
+use emacs::{defun, Result, Value, Vector};
 use emacs::failure;
 
 use tree_sitter::{Parser, Point};
@@ -20,6 +20,12 @@ fn make_parser() -> Result<Parser> {
 fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
     parser.set_language(language.into()).map_err(failure::err_msg)?;
     Ok(())
+}
+
+/// Return PARSER's current language.
+#[defun]
+fn parser_language(parser: &Parser) -> Result<Option<Language>> {
+    Ok(parser.language().map(|l| l.into()))
 }
 
 // TODO: Add a version that reuses a single byte buffer to avoid multiple allocations. Also allow

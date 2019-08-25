@@ -87,8 +87,10 @@ defun_node_navs! {
 "get-nth-child" fn child(i: usize)
 /// Return NODE's named child at the given zero-based index.
 "get-nth-named-child" fn named_child(i: usize)
-/// Return NODE's child under the given FIELD-NAME.
+/// Return NODE's child with the given FIELD-NAME.
 "get-child-by-field-name" fn child_by_field_name(field_name: String)
+/// Return NODE's child with the given numerical FIELD-ID.
+"get-child-by-field-id" fn child_by_field_id(field_id: u16)
 
 /// Return NODE's parent node.
 "get-parent" fn parent
