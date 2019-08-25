@@ -7,6 +7,8 @@
 ;;; Commentary:
 
 ;; This file contains debug utilities for tree-sitter.
+;;
+;; (tree-sitter-debug-enable)
 
 ;;; Code:
 
@@ -33,6 +35,8 @@
   "Enable debugging for the current buffer.
 This displays the syntax tree in another buffer, and keeps it up-to-date."
   (interactive)
+  (unless tree-sitter-mode
+    (error "`tree-sitter-mode' is not enabled"))
   (unless tree-sitter-debug--tree-buffer
     (setq tree-sitter-debug--tree-buffer
           (generate-new-buffer (format "*tree-sitter-tree %s*" (buffer-name)))))

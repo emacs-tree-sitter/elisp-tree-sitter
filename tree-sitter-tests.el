@@ -169,7 +169,6 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest buffer-input::narrowing ()
   (ts-test-with-temp-buffer "bin/build"
     (sh-mode)
-    (setq tree-sitter-language (ts-require-language 'bash))
     (tree-sitter-mode)
     (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))

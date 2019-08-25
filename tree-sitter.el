@@ -15,9 +15,8 @@
 ;; (https://tree-sitter.github.io/tree-sitter/). It includes both the core APIs, and a minor mode
 ;; that provides a buffer-local up-to-date syntax tree.
 ;;
-;; (progn
-;;   (setq tree-sitter-language (ts-require-language 'rust))
-;;   (tree-sitter-mode +1))
+;; (add-to-list 'tree-sitter-major-mode-language-alist '(rust-mode . rust))
+;; (add-hook 'rust-mode-hook #'tree-sitter-mode)
 
 ;;; Code:
 
@@ -32,6 +31,20 @@
 Each function will be called with a single argument: the old tree."
   :type 'hook
   :group 'tree-sitter)
+
+(defcustom tree-sitter-major-mode-language-alist
+  '((rust-mode . rust)
+    (js-mode . javascript)
+    (js2-mode . javascript)
+    (python-mode . python)
+    (ruby-mode . ruby)
+    (sh-mode . mode))
+  "Alist that maps major modes to tree-sitter language names.
+The corresponding language definitions should have been pre-installed with
+tree-sitter CLI."
+  :group 'tree-sitter
+  :type '(alist :key-type symbol
+                :value-type symbol))
 
 (defvar-local tree-sitter-tree nil
   "Tree-sitter syntax tree.")
@@ -101,9 +114,12 @@ Each function will be called with a single argument: the old tree."
 
 (defun tree-sitter--enable ()
   "Enable `tree-sitter' in the current buffer."
-  ;; TODO: Determine the language symbol based on `major-mode' and some fallback rules.
   (unless tree-sitter-language
-    (error "Variable tree-sitter-language must be set"))
+    ;; Determine the language symbol based on `major-mode' .
+    (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
+      (unless lang-symbol
+        (error "No language registered for major mode `%s'" major-mode))
+      (setq tree-sitter-language (ts-require-language lang-symbol))))
   (setq tree-sitter-parser (ts-make-parser)
         tree-sitter-tree nil)
   (ts-set-language tree-sitter-parser tree-sitter-language)
@@ -123,7 +139,12 @@ Each function will be called with a single argument: the old tree."
   :init-value nil
   :lighter "tree-sitter"
   (if tree-sitter-mode
-      (tree-sitter--enable)
+      (let ((err t))
+        (unwind-protect
+            (prog1 (tree-sitter--enable)
+              (setq err nil))
+          (when err
+            (setq tree-sitter-mode nil))))
     (tree-sitter--disable)))
 
 (provide 'tree-sitter)
