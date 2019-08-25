@@ -127,7 +127,6 @@ defun_node_props! {
 /// and continue to use after an edit.
 ///
 /// Note that indexing must be zero-based.
-#[allow(clippy::too_many_arguments)]
 #[defun]
 fn edit_node(
     node: &mut WrappedNode,

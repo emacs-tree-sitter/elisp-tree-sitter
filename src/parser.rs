@@ -23,8 +23,8 @@ fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
 }
 
 /// Return PARSER's current language.
-#[defun]
-fn parser_language(parser: &Parser) -> Result<Option<Language>> {
+#[defun(mod_in_name = true)]
+fn language(parser: &Parser) -> Result<Option<Language>> {
     Ok(parser.language().map(|l| l.into()))
 }
 

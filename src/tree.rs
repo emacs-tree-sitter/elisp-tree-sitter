@@ -9,14 +9,14 @@ use crate::types::{SharedTree, WrappedNode, Range, Point, Language};
 type Tree<'a> = &'a SharedTree;
 
 /// Return the language that was used to parse the syntax TREE.
-#[defun]
-fn tree_language(tree: Tree) -> Result<Language> {
+#[defun(mod_in_name = true)]
+fn language(tree: Tree) -> Result<Language> {
     Ok(tree.borrow().language().into())
 }
 
 /// Return the sexp representation of the syntax TREE, in a string.
-#[defun]
-fn tree_to_sexp(tree: Tree) -> Result<String> {
+#[defun(mod_in_name = true)]
+fn to_sexp(tree: Tree) -> Result<String> {
     Ok(tree.borrow().root_node().to_sexp())
 }
 
@@ -30,7 +30,6 @@ fn root_node(tree: Tree) -> Result<WrappedNode> {
 ///
 /// You must describe the edit both in terms of byte offsets and in terms of
 /// [row column] coordinates, using zero-based indexing.
-#[allow(clippy::too_many_arguments)]
 #[defun]
 fn edit_tree(
     tree: Tree,

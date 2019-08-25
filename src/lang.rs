@@ -23,43 +23,43 @@ fn _load_language(file: String, symbol_name: String) -> Result<Language> {
 /// compatible version of tree-sitter. `ts-set-language' will fail if the language
 /// is incompatible, so there's rarely a need to use this function, except for
 /// debugging purposes.
-#[defun]
-fn language_version(lang: Language) -> Result<usize> {
+#[defun(mod_in_name = true)]
+fn version(lang: Language) -> Result<usize> {
     Ok(lang.0.version())
 }
 
 /// Return the number of distinct node types defined in LANG.
-#[defun]
+#[defun(mod_in_name = true)]
 fn count_types(lang: Language) -> Result<usize> {
     Ok(lang.0.node_kind_count())
 }
 
 /// Return the number of distinct field names defined in LANG.
-#[defun]
+#[defun(mod_in_name = true)]
 fn count_fields(lang: Language) -> Result<usize> {
     Ok(lang.0.field_count())
 }
 
-/// Return a LANG's node type string, given its numerical ID.
+/// Return the name of a node type, given its numerical TYPE-ID in LANG.
 #[defun]
-fn type_from_id(lang: Language, id: u16) -> Result<&'static str> {
-    Ok(lang.0.node_kind_for_id(id))
+fn type_name_for_id(lang: Language, type_id: u16) -> Result<&'static str> {
+    Ok(lang.0.node_kind_for_id(type_id))
 }
 
-/// Return t if the numeric ID identifies a named node type in LANG.
+/// Return t if the numerical TYPE-ID identifies a named node type in LANG.
 #[defun]
-fn type_named_p(lang: Language, id: u16) -> Result<bool> {
-    Ok(lang.0.node_kind_is_named(id))
+fn type_named_p(lang: Language, type_id: u16) -> Result<bool> {
+    Ok(lang.0.node_kind_is_named(type_id))
 }
 
 /// Return the numerical id of FIELD-NAME in LANG, nil if FIELD-NAME is invalid.
 #[defun]
-fn field_id_from_name(lang: Language, field_name: String) -> Result<Option<u16>> {
+fn field_id_for_name(lang: Language, field_name: String) -> Result<Option<u16>> {
     Ok(lang.0.field_id_for_name(field_name))
 }
 
 /// Return the field name for the given numerical FIELD-ID defined in LANG.
 #[defun]
-fn field_name_from_id(lang: Language, field_id: u16) -> Result<&'static str> {
+fn field_name_for_id(lang: Language, field_id: u16) -> Result<&'static str> {
     Ok(lang.0.field_name_for_id(field_id))
 }
