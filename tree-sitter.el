@@ -38,7 +38,7 @@ Each function will be called with a single argument: the old tree."
     (js2-mode . javascript)
     (python-mode . python)
     (ruby-mode . ruby)
-    (sh-mode . mode))
+    (sh-mode . bash))
   "Alist that maps major modes to tree-sitter language names.
 The corresponding language definitions should have been pre-installed with
 tree-sitter CLI."
