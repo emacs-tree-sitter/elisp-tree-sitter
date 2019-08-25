@@ -17,10 +17,10 @@
 (eval-when-compile
   (require 'subr-x))
 
-(defun ts-test-make-parser (lang)
+(defun ts-test-make-parser (lang-symbol)
   "Return a new parser for LANG."
   (let ((parser (ts-make-parser))
-        (language (ts-load-language lang)))
+        (language (ts-require-language lang-symbol)))
     (ts-set-language parser language)
     parser))
 
@@ -31,10 +31,10 @@
 (defun ts-test-tree-sexp (sexp)
   (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
 
-(defmacro ts-test-with (name sym &rest body)
+(defmacro ts-test-with (lang-symbol var &rest body)
   "Eval BODY with SYM bound to a new parser for language NAME."
   (declare (indent 2))
-  `(let ((,sym (ts-test-make-parser ,name)))
+  `(let ((,var (ts-test-make-parser ,lang-symbol)))
      ,@body))
 
 (defmacro ts-test-with-temp-buffer (relative-path &rest body)
@@ -44,10 +44,10 @@
      ,@body))
 
 (ert-deftest creating-parser ()
-  (should (ts-parser-p (ts-test-make-parser "rust"))))
+  (should (ts-parser-p (ts-test-make-parser 'rust))))
 
 (ert-deftest parsing::rust-string ()
-  (ts-test-with "rust" parser
+  (ts-test-with 'rust parser
     (let ((tree (ts-parse-string parser "fn foo() {}")))
       (should (equal (read (ts-tree-to-sexp tree))
                      '(source_file
@@ -62,7 +62,7 @@
     (should-error (ts-parse-string parser "fn foo() {}") :type 'rust-panic)))
 
 (ert-deftest parsing::rust-buffer ()
-  (ts-test-with "rust" parser
+  (ts-test-with 'rust parser
     (ts-test-with-temp-buffer "src/types.rs"
       (let* ((tree) (old-tree)
              (initial (benchmark-run
@@ -80,7 +80,7 @@
 
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
-    (setq tree-sitter-language (ts-load-language "rust"))
+    (setq tree-sitter-language (ts-require-language 'rust))
     (tree-sitter-mode)
     (ts-test-tree-sexp '(source_file))
     (insert "fn")
@@ -97,7 +97,7 @@
 (ert-deftest node::using-without-tree ()
   "Test that a tree's nodes are still usable after no direct reference to the
 tree is held (since nodes internally reference the tree)."
-  (ts-test-with "rust" parser
+  (ts-test-with 'rust parser
     (let ((node (ts-root-node
                  (ts-parse-string parser "fn foo() {}"))))
       (garbage-collect)
@@ -105,7 +105,7 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)))
 
 (ert-deftest cursor::walk ()
-  (ts-test-with "rust" parser
+  (ts-test-with 'rust parser
     (let* ((tree (ts-parse-string parser "fn foo() {}"))
            (node (ts-root-node tree)))
       (ert-info ("Should be able to get a cursor from either a tree or a node")
@@ -113,7 +113,7 @@ tree is held (since nodes internally reference the tree)."
         (should (ts-cursor-p (ts-make-cursor node)))))))
 
 (ert-deftest cursor::using-without-tree ()
-  (ts-test-with "rust" parser
+  (ts-test-with 'rust parser
     (let ((cursor (ts-make-cursor (ts-parse-string parser "fn foo() {}"))))
       (garbage-collect)
       (should (ts-goto-first-child cursor)))
@@ -161,7 +161,7 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest buffer-input::non-ascii-characters ()
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
-    (setq tree-sitter-language (ts-load-language "javascript"))
+    (setq tree-sitter-language (ts-require-language 'javascript))
     (tree-sitter-mode)
     (ts-test-tree-sexp '(program (expression_statement (string))))))
 
@@ -169,7 +169,7 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest buffer-input::narrowing ()
   (ts-test-with-temp-buffer "bin/build"
     (sh-mode)
-    (setq tree-sitter-language (ts-load-language "bash"))
+    (setq tree-sitter-language (ts-require-language 'bash))
     (tree-sitter-mode)
     (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))

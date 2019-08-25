@@ -11,6 +11,9 @@
 ;;; Code:
 
 (require 'tree-sitter-dyn)
+
+(require 'simple)
+(require 'map)
 (require 'pp)
 
 (eval-when-compile
@@ -71,9 +74,10 @@ and `widen'."
          (end (or (ts-byte-to-position end-byte) max-position)))
     (buffer-substring-no-properties start end)))
 
-(defun ts-get-cli-directory ()
+(defun ts--get-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.
-This is the directory where the CLI tool keeps compiled lang definitions."
+This is the directory where the CLI tool keeps compiled lang definitions, among
+other data."
   (file-name-as-directory
    (expand-file-name
     ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
@@ -81,27 +85,44 @@ This is the directory where the CLI tool keeps compiled lang definitions."
         dir
       "~/.tree-sitter"))))
 
-;;; TODO: Keep a global (symbol -> language) registry.
-(defun ts-load-language (name &optional file symbol-prefix)
-  "Load and return the language NAME from the shared lib FILE.
+(defvar ts--languages nil
+  "An alist of mappings from language name symbols to language objects.
+See `ts-require-language'.")
 
-It is assumed that language's symbol in the shared lib is prefixed with
-SYMBOL-PREFIX. If SYMBOL-PREFIX is nil, it is assumed to be \"tree_sitter_\".
+(defun ts--load-language-from-cli-dir (name &optional noerror)
+  "Load and return the language NAME from the tree-sitter CLI's dir.
+See `ts--get-cli-directory'.
 
-If FILE is nil, load from \"~/.tree-sitter/bin/NAME.so\". This is where the
-tree-sitter CLI tool stores the generated shared libs."
+If optional arg NOERROR is non-nil, report no error if loading fails."
   (let* ((ext (pcase system-type
                 ((or 'darwin 'gnu/linux) "so")
                 ('windows-nt "dll")
                 (_ (error "Unsupported system-type %s" system-type))))
-         (file (or file
-                   (concat (file-name-as-directory
-                            (concat (ts-get-cli-directory) "bin"))
-                           (format "%s.%s" name ext))))
-         (symbol-name (format "%s%s"
-                              (or symbol-prefix "tree_sitter_")
-                              name)))
-    (ts--load-language file symbol-name)))
+         (file (concat (file-name-as-directory
+                        (concat (ts--get-cli-directory) "bin"))
+                       (format "%s.%s" name ext)))
+         (symbol-name (format "tree_sitter_%s" name)))
+    (if noerror
+        (condition-case error
+            (ts--load-language file symbol-name)
+          (rust-error nil))
+      (ts--load-language file symbol-name))))
+
+;;; TODO: Support more loading mechanisms: bundled statically, packaged-together shared libs, shared
+;;; libs under ~/.emacs.d/.tree-sitter
+(defun ts-load-language (lang-symbol)
+  "Load and return a new language object identified by LANG-SYMBOL.
+The language should have been installed using tree-sitter CLI."
+  (ts--load-language-from-cli-dir (symbol-name lang-symbol)))
+
+(defun ts-require-language (lang-symbol)
+  "Return the language object identified by LANG-SYMBOL.
+If the language hasn't been loaded yet, this function attempts to load it."
+  (let ((language (alist-get lang-symbol ts--languages)))
+    (unless language
+      (setq language (ts-load-language lang-symbol))
+      (map-put ts--languages lang-symbol language))
+    language))
 
 (defun ts-pp-to-string (tree)
   "Return the pretty-printed string of TREE's sexp."

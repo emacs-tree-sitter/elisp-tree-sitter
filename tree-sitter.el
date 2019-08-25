@@ -16,7 +16,7 @@
 ;; that provides a buffer-local up-to-date syntax tree.
 ;;
 ;; (progn
-;;   (setq tree-sitter-language (ts-load-language "rust"))
+;;   (setq tree-sitter-language (ts-require-language 'rust))
 ;;   (tree-sitter-mode +1))
 
 ;;; Code:

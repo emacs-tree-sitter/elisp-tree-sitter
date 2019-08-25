@@ -14,6 +14,7 @@ fn _load_language(file: String, symbol_name: String) -> Result<Language> {
         unsafe { lib.get(symbol_name.as_bytes())? };
     let language: Language = unsafe { tree_sitter_lang() };
     // Avoid segmentation fault by not unloading the lib, as language is a static piece of data.
+    // TODO: Attach an Rc<Library> to Language instead.
     mem::forget(lib);
     Ok(language)
 }
