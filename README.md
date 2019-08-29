@@ -87,8 +87,6 @@ After that, load it with `tree-sitter`:
 
 ### Types
 
-This package exposes the following types:
-
 - `language`, `parser`, `tree`, `node`, `cursor`: corresponding tree-sitter types, embedded in `user-ptr` objects.
 - `point`: a vector in the form of `[row column]`, where `row` and `column` are zero-based. This is different from Emacs's concept of "point". Also note that `column` counts bytes, unlike the current built-in function `current-column`.
 - `range`: a vector in the form of `[start-point end-point]`.

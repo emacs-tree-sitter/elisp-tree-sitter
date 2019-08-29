@@ -70,7 +70,7 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: Tree<'e>) -> Result<Vector<'e>>
     let ranges = tree.changed_ranges(&*other_tree);
     let len = ranges.len();
     let vec = Vector(env.call("make-vector", (len, ()))?);
-    for (i, range) in ranges.into_iter().enumerate() {
+    for (i, range) in ranges.enumerate() {
         vec.set(i, Range(range))?;
     }
     Ok(vec)
