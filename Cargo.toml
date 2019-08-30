@@ -16,8 +16,7 @@ libloading = "0.5.1"
 tree-sitter = "0.3.10"
 
 [patch.crates-io.tree-sitter]
-git = "https://github.com/ubolonton/tree-sitter"
-branch = "for-emacs-module-rs"
+git = "https://github.com/tree-sitter/tree-sitter"
 
 [profile.release]
 opt-level = 3
