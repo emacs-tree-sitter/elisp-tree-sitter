@@ -14,9 +14,14 @@ crate-type = ["cdylib"]
 emacs = "0.11.0"
 libloading = "0.5.1"
 tree-sitter = "0.3.10"
+tree-sitter-highlight = "0.1.6"
 
 [patch.crates-io.tree-sitter]
-git = "https://github.com/tree-sitter/tree-sitter"
+git = "https://github.com/ubolonton/tree-sitter"
+branch = "for-emacs-module-rs"
+[patch.crates-io.tree-sitter-highlight]
+git = "https://github.com/ubolonton/tree-sitter"
+branch = "for-emacs-module-rs"
 
 [profile.release]
 opt-level = 3

@@ -6,7 +6,7 @@ use crate::types::{SharedTree, WrappedNode, Range, Point, Language};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
-type Tree<'a> = &'a SharedTree;
+pub type Tree<'a> = &'a SharedTree;
 
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]

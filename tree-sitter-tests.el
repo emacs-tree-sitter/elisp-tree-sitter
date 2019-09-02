@@ -173,5 +173,32 @@ tree is held (since nodes internally reference the tree)."
     (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))
 
+(ert-deftest highlight::javascript ()
+  (ts-test-with-temp-buffer "samples/book.js"
+    (let* ((language (ts-require-language 'javascript))
+           (property-sheet (ts-highlight--load-property-sheet
+                            language
+                            (ts-test-full-path "grammars/tree-sitter-javascript/src/highlights.json"))))
+      (setq tree-sitter-language language)
+      (message
+       "  parsing: %s"
+       (benchmark-run 1
+         (tree-sitter-mode)))
+      (message
+       "highlight: %s"
+       (benchmark-run 1
+         (ts-highlight-print-events
+          tree-sitter-tree
+          property-sheet
+          #'ts-buffer-input
+          (lambda (start end)
+            (save-restriction
+              (widen)
+              (ts-buffer-substring start end)))
+          (lambda ()
+            (save-restriction
+              (widen)
+              (ts-byte-from-position (point-max))))))))))
+
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here

@@ -188,7 +188,8 @@ version = "0.1.0"
 dependencies = [
  "emacs 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "tree-sitter 0.3.10 (git+https://github.com/tree-sitter/tree-sitter)",
+ "tree-sitter 0.3.10 (git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs)",
+ "tree-sitter-highlight 0.1.6 (git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs)",
 ]
 
 [[package]]
@@ -475,13 +476,25 @@ dependencies = [
 [[package]]
 name = "tree-sitter"
 version = "0.3.10"
-source = "git+https://github.com/tree-sitter/tree-sitter#2430733ee8c8a1a7afc145371ce8d5dbdefaf976"
+source = "git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs#b59db0e05ad9a8f1149d2fd829890474c4bbb8e0"
 dependencies = [
  "cc 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.99 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.99 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tree-sitter-highlight"
+version = "0.1.6"
+source = "git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs#b59db0e05ad9a8f1149d2fd829890474c4bbb8e0"
+dependencies = [
+ "regex 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.99 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.99 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tree-sitter 0.3.10 (git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs)",
 ]
 
 [[package]]
@@ -612,7 +625,8 @@ dependencies = [
 "checksum termcolor 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "96d6098003bde162e4277c70665bd87c326f5a0c3f3fbfb285787fa482d54e6e"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 "checksum thread_local 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
-"checksum tree-sitter 0.3.10 (git+https://github.com/tree-sitter/tree-sitter)" = "<none>"
+"checksum tree-sitter 0.3.10 (git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs)" = "<none>"
+"checksum tree-sitter-highlight 0.1.6 (git+https://github.com/ubolonton/tree-sitter?branch=for-emacs-module-rs)" = "<none>"
 "checksum unicode-width 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "7007dbd421b92cc6e28410fe7362e2e0a2503394908f417b68ec8d1c364c4e20"
 "checksum unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 "checksum unicode-xid 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
