@@ -19,6 +19,9 @@
 (eval-when-compile
   (require 'subr-x))
 
+
+;;; Type conversion.
+
 (defsubst ts-byte-from-position (position)
   "Return tree-sitter (0-based) byte offset for character at POSITION."
   (- (position-bytes position) 1))
@@ -51,6 +54,9 @@ and `widen'."
       (forward-line row)
       (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
 
+
+;;; Extracting buffer's text.
+
 (defsubst ts-buffer-substring (beg-byte end-byte)
   "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.
 Narrowing must be removed before calling this function, using `save-restriction'
@@ -73,6 +79,39 @@ and `widen'."
          (start (or (ts-byte-to-position beg-byte) max-position))
          (end (or (ts-byte-to-position end-byte) max-position)))
     (buffer-substring-no-properties start end)))
+
+
+;;; Convenient versions of some functions.
+
+(defun ts-get-descendant-for-position-range (node beg end)
+  "Return the smallest node within NODE that spans the given range of positions."
+  (ts-get-descendant-for-byte-range
+   node
+   (ts-byte-from-position beg)
+   (ts-byte-from-position end)))
+
+(defun ts-get-named-descendant-for-position-range (node beg end)
+  "Return the smallest named node within NODE that spans the given range of positions."
+  (ts-get-named-descendant-for-byte-range
+   node
+   (ts-byte-from-position beg)
+   (ts-byte-from-position end)))
+
+(defun ts-node-start-position (node)
+  "Return NODE's start position."
+  (ts-byte-to-position (ts-node-start-byte node)))
+
+(defun ts-node-end-position (node)
+  "Return NODE's end position."
+  (ts-byte-to-position (ts-node-end-byte node)))
+
+(defun ts-goto-first-child-for-position (cursor position)
+  "Move CURSOR to the first child that extends beyond the given POSITION.
+Return the index of the child node if one was found, nil otherwise."
+  (ts-goto-first-child-for-byte (ts-byte-from-position position)))
+
+
+;;; Language loading mechanism.
 
 (defun ts--get-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.
@@ -123,6 +162,9 @@ If the language hasn't been loaded yet, this function attempts to load it."
       (setq language (ts-load-language lang-symbol))
       (map-put ts--languages lang-symbol language))
     language))
+
+
+;;; Utilities.
 
 (defun ts-pp-to-string (tree)
   "Return the pretty-printed string of TREE's sexp."
