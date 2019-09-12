@@ -142,3 +142,6 @@ These types are understood only by this package. They are not recognized by `typ
     ```
 
 On Windows, use PowerShell to run the corresponding `.ps1` scripts.
+
+## Alternative
+Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
