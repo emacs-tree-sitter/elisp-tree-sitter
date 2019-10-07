@@ -12,6 +12,7 @@
 
 (require 'tree-sitter-dyn)
 (require 'pp)
+(require 'subr-x)
 
 (defun ts-buffer-input (byte _row _column)
   "Return current buffer's text starting from the given (0-based indexed) BYTE."
