@@ -22,7 +22,7 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 - Clone this repo.
 - Build:
     ```bash
-    ./bin/build
+    make build
     ```
 - Add this repo's directory to `load-path`.
 
@@ -40,7 +40,7 @@ This package is currently not bundled with any language. Parsers for individual 
 - Use the wrapper script [`bin/ensure-lang`](bin/ensure-lang) to download the grammar from [tree-sitter's GitHub org](https://github.com/tree-sitter) and build the parser:
     ```bash
     # The shared lib will be at ~/.tree-sitter/bin/rust.so (.dll on Windows)
-    ./bin/ensure-lang rust
+    make ensure/rust
     ```
 - Load it in Emacs:
     ```emacs-lisp
@@ -127,19 +127,13 @@ These types are understood only by this package. They are not recognized by `typ
     + `ts-node-to-sexp`: debug utility.
 
 ## Development
-- Make sure necessary languages are installed for tests:
-    ```bash
-    ./bin/ensure-lang rust
-    ./bin/ensure-lang javascript
-    ./bin/ensure-lang bash
-    ```
 - Testing:
     ```bash
-    ./bin/test
+    make test
     ```
 - Continuous testing (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
     ```shell
-    ./bin/test watch
+    make watch
     ```
 
 On Windows, use PowerShell to run the corresponding `.ps1` scripts.
