@@ -136,7 +136,7 @@ These types are understood only by this package. They are not recognized by `typ
     make watch
     ```
 
-On Windows, use PowerShell to run the corresponding `.ps1` scripts.
+On Windows, use PowerShell to run the corresponding `.ps1` scripts which are `./bin/build.ps1`, `./bin/ensure-lang.ps1` (this is used like this `./bin/ensure-lang.ps1 rust`) and `./bin/test.ps1`.
 
 ## Alternative
 Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
