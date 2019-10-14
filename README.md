@@ -15,6 +15,7 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 - Emacs 25.1 or above, built with module support. This can be checked with `(functionp 'module-load)`.
 - [Rust toolchain](https://rustup.rs/), to build the dynamic module.
 - [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation), to build loadable language files from grammar repos.
+- `clang`, to generate the raw Rust binding for `emacs-module.h`.
 
 ## Building and Installation
 
