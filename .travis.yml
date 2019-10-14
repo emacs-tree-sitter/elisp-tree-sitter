@@ -40,15 +40,20 @@ before_install:
   - git clone -b max-26.2 https://github.com/ubolonton/evm.git $HOME/.evm
   - evm config path /tmp
   - evm install $EVM_EMACS --use --skip
+  - sudo apt-get install -y make
+addons:
+  apt:
+    update: true
+  homebrew:
+    packages:
+      - make
+    update: true
 
 install:
-  - ./bin/build
+  - make build
 
 before_script:
   - npm install -g tree-sitter-cli
-  - ./bin/ensure-lang rust
-  - ./bin/ensure-lang javascript
-  - ./bin/ensure-lang bash
 
 script:
-  - ./bin/test
+  - make test
