@@ -46,9 +46,9 @@ addons:
     packages:
       - make
   homebrew:
+    update: true
     packages:
       - make
-    update: true
 
 install:
   - make build
