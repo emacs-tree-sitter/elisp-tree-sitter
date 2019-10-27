@@ -52,9 +52,9 @@
       (should (equal (read (ts-tree-to-sexp tree))
                      '(source_file
                        (function_item
-                        (identifier)
-                        (parameters)
-                        (block))))))))
+                        name: (identifier)
+                        parameters: (parameters)
+                        body: (block))))))))
 
 (ert-deftest parsing::without-setting-language ()
   (ert-skip "Need to distinguish between this and timeout/cancellation")
@@ -88,9 +88,9 @@
     (insert " foo() {}")
     (ts-test-tree-sexp '(source_file
                          (function_item
-                          (identifier)
-                          (parameters)
-                          (block))))
+                          name: (identifier)
+                          parameters: (parameters)
+                          body: (block))))
     (kill-region (point-min) (point-max))
     (ts-test-tree-sexp '(source_file))))
 
