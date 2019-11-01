@@ -21,4 +21,6 @@ export MODULE_ORIGINAL=${MODULE_ORIGINAL:-libtree_sitter_dyn.$ext}
 export MODULE_NAME=${MODULE_NAME:-tree-sitter-dyn}
 export MODULE_RENAMED=${MODULE_NAME}.so
 export MODULE_FULL="$MODULE_DIR/$MODULE_RENAMED"
-export EMACS=${EMACS:-emacs}
+if [ -z ${EMACS+x} ]; then ## $EMACS is not set
+    export EMACS=${EMACS:-emacs}
+fi
