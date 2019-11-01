@@ -135,6 +135,8 @@ These types are understood only by this package. They are not recognized by `typ
     ```shell
     make watch
     ```
+    
+you can optionally export an environment variable called `EMACS` which will make tests to use a different binary of GNU Emacs (i.e.: `EMACS=/snap/bin/emacs make test`), otherwise the binary located with `which emacs` will be used instead.
 
 On Windows, use PowerShell to run the corresponding `.ps1` scripts which are `./bin/build.ps1`, `./bin/ensure-lang.ps1` (this is used like this `./bin/ensure-lang.ps1 rust`) and `./bin/test.ps1`.
 
