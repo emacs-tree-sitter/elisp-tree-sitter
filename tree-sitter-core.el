@@ -10,7 +10,9 @@
 ;;
 ;;; Code:
 
-(require 'tree-sitter-dyn)
+(if (functionp 'module-load)
+    (require 'tree-sitter-dyn t)
+  (error "dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
 (require 'simple)
 (require 'map)
