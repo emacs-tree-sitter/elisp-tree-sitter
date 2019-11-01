@@ -3,6 +3,7 @@
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 
 ;;; Commentary:
 
