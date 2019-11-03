@@ -73,11 +73,12 @@ tree-sitter CLI."
 (defun tree-sitter--before-change (begin end)
   (setq tree-sitter--start-byte (ts-byte-from-position begin)
         tree-sitter--old-end-byte (ts-byte-from-position end))
-  ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
-  (save-restriction
-    (widen)
-    (setq tree-sitter--start-point (ts-point-from-position begin)
-          tree-sitter--old-end-point (ts-point-from-position end))))
+  (save-excursion
+    (save-restriction
+     (widen)
+     ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
+     (setq tree-sitter--start-point (ts--point-from-position begin)
+           tree-sitter--old-end-point (ts--point-from-position end)))))
 
 ;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
 ;;; different regions enclosed in the region passed to `before-change-functions'. Therefore what we
@@ -96,9 +97,7 @@ tree-sitter CLI."
 ;;; times? Does that mean we can't rely on this hook at all?
 (defun tree-sitter--after-change (_begin end _length)
   (setq tree-sitter--new-end-byte (ts-byte-from-position end)
-        tree-sitter--new-end-point (save-restriction
-                                     (widen)
-                                     (ts-point-from-position end)))
+        tree-sitter--new-end-point (ts-point-from-position end))
   (when tree-sitter-tree
     (ts-edit-tree tree-sitter-tree
                   tree-sitter--start-byte

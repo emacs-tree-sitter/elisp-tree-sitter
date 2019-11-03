@@ -35,27 +35,32 @@
 
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-The returned column counts bytes, which is different from `current-column'.
-Narrowing must be removed before calling this function, using `save-restriction'
-and `widen'."
+The returned column counts bytes, which is different from `current-column'."
   (save-excursion
-    (goto-char position)
-    (let ((row (- (line-number-at-pos position) 1))
-          ;; TODO: Add tests that fail if `current-column' is used instead.
-          (column (- (position-bytes position)
-                     (position-bytes (line-beginning-position)))))
-      (vector row column))))
+    (save-restriction
+      (widen)
+      (ts--point-from-position position))))
+
+(defun ts--point-from-position (position)
+  "Internal implementation of `ts-point-from-position'.
+Useful for internal code that wants to batch `save-excursion' and `save-restriction'."
+  (goto-char position)
+  (let ((row (- (line-number-at-pos position) 1))
+        ;; TODO: Add tests that fail if `current-column' is used instead.
+        (column (- (position-bytes position)
+                   (position-bytes (line-beginning-position)))))
+    (vector row column)))
 
 (defun ts-point-to-position (point)
-  "Convert tree-sitter POINT to buffer position.
-Narrowing must be removed before calling this function, using `save-restriction'
-and `widen'."
+  "Convert tree-sitter POINT to buffer position."
   (save-excursion
-    (let ((row (aref point 0))
-          (column (aref point 1)))
-      (goto-char 1)
-      (forward-line row)
-      (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
+    (save-restriction
+      (widen)
+      (let ((row (aref point 0))
+            (column (aref point 1)))
+        (goto-char 1)
+        (forward-line row)
+        (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position))))))))
 
 
 ;;; Extracting buffer's text.
