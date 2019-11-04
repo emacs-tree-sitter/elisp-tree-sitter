@@ -3,6 +3,7 @@
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 
 ;;; Commentary:
 
@@ -10,8 +11,10 @@
 ;;
 ;;; Code:
 
-(require 'tree-sitter-dyn)
+(unless (functionp 'module-load)
+  (error "Dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
+(require 'tree-sitter-dyn)
 (require 'simple)
 (require 'map)
 (require 'pp)
