@@ -11,10 +11,10 @@
 ;;
 ;;; Code:
 
-(if (functionp 'module-load)
-    (require 'tree-sitter-dyn nil t)
-  (error "dynamic module feature not available, please compile Emacs --with-modules option turned on"))
+(unless (functionp 'module-load)
+  (error "Dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
+(require 'tree-sitter-dyn)
 (require 'simple)
 (require 'map)
 (require 'pp)
