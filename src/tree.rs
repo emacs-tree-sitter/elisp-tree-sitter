@@ -29,7 +29,7 @@ fn root_node(tree: Tree) -> Result<WrappedNode> {
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte offsets and in terms of
-/// [row column] coordinates, using zero-based indexing.
+/// `[row column]' coordinates, using zero-based indexing.
 #[defun]
 fn edit_tree(
     tree: Tree,

@@ -60,18 +60,21 @@ macro_rules! defun_cursor_walks {
 }
 
 defun_cursor_walks! {
-/// Move CURSOR to the first child of its current node.
-/// Return t if CURSOR successfully moved, nil if there were no children.
-fn goto_first_child -> bool
-/// Move CURSOR to the parent node of its current node.
-/// Return t if CURSOR successfully moved, nil if it was already on the root node.
-fn goto_parent -> bool
-/// Move CURSOR to the next sibling of its current node.
-/// Return t if CURSOR successfully moved, nil if there was no next sibling node.
-fn goto_next_sibling -> bool
-/// Move CURSOR to the first child that extends beyond the given byte offset.
-/// Return the index of the child node if one was found, nil otherwise.
-"goto-first-child-for-byte" fn goto_first_child_for_index(index: usize) -> Option<usize>
+    /// Move CURSOR to the first child of its current node.
+    /// Return t if CURSOR successfully moved, nil if there were no children.
+    fn goto_first_child -> bool
+
+    /// Move CURSOR to the parent node of its current node.
+    /// Return t if CURSOR successfully moved, nil if it was already on the root node.
+    fn goto_parent -> bool
+
+    /// Move CURSOR to the next sibling of its current node.
+    /// Return t if CURSOR successfully moved, nil if there was no next sibling node.
+    fn goto_next_sibling -> bool
+
+    /// Move CURSOR to the first child that extends beyond the given byte offset.
+    /// Return the index of the child node if one was found, nil otherwise.
+    "goto-first-child-for-byte" fn goto_first_child_for_byte(index: usize) -> Option<usize>
 }
 
 /// Re-initialize CURSOR to start at a different NODE.
