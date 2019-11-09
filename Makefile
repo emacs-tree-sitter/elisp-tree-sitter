@@ -18,5 +18,5 @@ test: ensure/rust ensure/javascript ensure/bash ## Run tests
 	@./bin/test
 
 .PHONY: watch
-watch: test ## Continuous testing (requires cargo-watch)
+watch: ## Continuous testing (requires cargo-watch)
 	@./bin/test watch
