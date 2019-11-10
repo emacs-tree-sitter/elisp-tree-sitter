@@ -140,7 +140,8 @@ See `ts-require-language'.")
   "Load and return the language NAME from the tree-sitter CLI's dir.
 See `ts--get-cli-directory'.
 
-If optional arg NOERROR is non-nil, report no error if loading fails."
+If the optional arg NOERROR is non-nil, then return nil if the language is not
+found or cannot be loaded, instead of signaling an error."
   (let* ((ext (pcase system-type
                 ((or 'darwin 'gnu/linux) "so")
                 ('windows-nt "dll")
@@ -150,7 +151,7 @@ If optional arg NOERROR is non-nil, report no error if loading fails."
                        (format "%s.%s" name ext)))
          (symbol-name (format "tree_sitter_%s" name)))
     (if noerror
-        (condition-case error
+        (condition-case nil
             (ts--load-language file symbol-name)
           (rust-error nil))
       (ts--load-language file symbol-name))))
