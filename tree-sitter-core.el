@@ -116,7 +116,7 @@ and `widen'."
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
-  (ts-goto-first-child-for-byte (ts-byte-from-position position)))
+  (ts-goto-first-child-for-byte cursor (ts-byte-from-position position)))
 
 
 ;;; Language loading mechanism.
