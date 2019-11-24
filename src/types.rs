@@ -8,7 +8,7 @@ use std::{
 
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
-use tree_sitter::{Tree, Node, TreeCursor, Parser};
+use tree_sitter::{Tree, Node, TreeCursor, Parser, Query, QueryCursor, QueryMatch, QueryCapture};
 
 pub fn shared<T>(t: T) -> Shared<T> {
     Rc::new(RefCell::new(t))
@@ -284,6 +284,66 @@ impl RCursor {
 
 // -------------------------------------------------------------------------------------------------
 
+pub struct RQueryMatch {
+    #[allow(unused)]
+    tree: Shared<Tree>,
+    #[allow(unused)]
+    cursor: Shared<QueryCursor>,
+    #[allow(unused)]
+    query: Shared<Query>,
+    inner: QueryMatch<'static>,
+}
+
+impl Transfer for RQueryMatch {
+    fn type_name() -> &'static str {
+        "TreeSitterQueryMatch"
+    }
+}
+
+impl IntoLisp<'_> for RQueryMatch {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        Box::new(self).into_lisp(env)
+    }
+}
+
+impl RQueryMatch {
+    pub fn new<'e, F>(tree: Shared<Tree>, cursor: Shared<QueryCursor>, query: Shared<Query>, f: F) -> Self
+        where F: FnOnce(&'e Tree, &'e QueryCursor, &'e Query) -> QueryMatch<'e> {
+        let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
+        let rcursor = unsafe { erase_lifetime(&*cursor.borrow()) };
+        let rquery = unsafe { erase_lifetime(&*query.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree, rcursor, rquery)) };
+        Self { tree, cursor, query, inner }
+    }
+}
+
+pub struct RQueryCapture {
+    pub(crate) tree: Shared<Tree>,
+    inner: QueryCapture<'static>,
+}
+
+impl Transfer for RQueryCapture {
+    fn type_name() -> &'static str {
+        "TreeSitterQueryCapture"
+    }
+}
+
+impl IntoLisp<'_> for RQueryCapture {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        Box::new(self).into_lisp(env)
+    }
+}
+
+impl RQueryCapture {
+    pub fn new<'e, F>(tree: Shared<Tree>, f: F) -> Self where F: FnOnce(&'e Tree) -> QueryCapture<'e> {
+        let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree)) };
+        Self { tree, inner }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+
 pub enum Either<'e, L, R> where L: FromLisp<'e>, R: FromLisp<'e> {
     Left(L, PhantomData<&'e ()>),
     Right(R, PhantomData<&'e ()>),
@@ -316,3 +376,7 @@ impl_pred!(parser_p, &RefCell<Parser>);
 impl_pred!(tree_p, &Shared<Tree>);
 impl_pred!(node_p, &RefCell<RNode>);
 impl_pred!(cursor_p, &RefCell<RCursor>);
+impl_pred!(query_p, Borrowed<Query>);
+impl_pred!(query_cursor_p, Borrowed<QueryCursor>);
+impl_pred!(query_match_p, &RefCell<RQueryMatch>);
+impl_pred!(query_capture_p, &RefCell<RQueryCapture>);
