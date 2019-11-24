@@ -2,7 +2,7 @@ use emacs::{defun, Value, Result, Vector};
 
 use tree_sitter::{InputEdit};
 
-use crate::types::{SharedTree, WrappedNode, Range, Point, Language};
+use crate::types::{SharedTree, Range, Point, Language, RNode};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
@@ -22,8 +22,8 @@ fn to_sexp(tree: Tree) -> Result<String> {
 
 /// Return the root node of the syntax TREE.
 #[defun(user_ptr)]
-fn root_node(tree: Tree) -> Result<WrappedNode> {
-    Ok(unsafe { WrappedNode::new(tree.clone(), tree.borrow().root_node()) })
+fn root_node(tree: Tree) -> Result<RNode> {
+    Ok(RNode::new(tree.clone(), |tree| tree.root_node()))
 }
 
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.

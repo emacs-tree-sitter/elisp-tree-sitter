@@ -8,9 +8,15 @@ use std::{
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
 use tree_sitter::{Tree, Node, TreeCursor, Parser};
+use std::cell::{Ref, RefMut};
+use std::ops::{Deref, DerefMut};
 
 pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(t))
+}
+
+unsafe fn erase_lifetime<'t, T>(x: &'t T) -> &'static T {
+    mem::transmute(x)
 }
 
 macro_rules! impl_newtype_traits {
@@ -125,44 +131,74 @@ pub type SharedTree = Rc<RefCell<Tree>>;
 // -------------------------------------------------------------------------------------------------
 // Node
 
-// XXX: Find a better way to make 2 types have the same alignment.
-const NODE_LEN: usize = mem::size_of::<Node>() / 8;
-pub type RawNode = [u64; NODE_LEN];
-
 /// Wrapper around `tree_sitter::Node` that can have 'static lifetime, by keeping a ref-counted
 /// reference to the underlying tree.
 #[derive(Clone)]
-#[repr(C)]
-pub struct WrappedNode {
+pub struct RNode {
     pub(crate) tree: SharedTree,
-    raw: RawNode,
+    inner: Node<'static>,
 }
 
-impl WrappedNode {
+pub struct RNodeBorrow<'e> {
+    #[allow(unused)]
+    reft: Ref<'e, Tree>,
+    node: &'e Node<'e>,
+}
+
+impl<'e> Deref for RNodeBorrow<'e> {
+    type Target = Node<'e>;
+
     #[inline]
-    pub unsafe fn new(tree: SharedTree, inner: Node) -> Self {
-        let ptr = (&inner as *const Node) as *const RawNode;
-        // Safety: It's ok not to forget inner, because it's copyable.
-        let raw = ptr.read();
-        Self { tree, raw }
+    fn deref(&self) -> &Self::Target {
+        self.node
+    }
+}
+
+pub struct RNodeBorrowMut<'e> {
+    #[allow(unused)]
+    reft: RefMut<'e, Tree>,
+    node: Node<'e>,
+}
+
+impl<'e> Deref for RNodeBorrowMut<'e> {
+    type Target = Node<'e>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.node
+    }
+}
+
+impl<'e> DerefMut for RNodeBorrowMut<'e> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node
+    }
+}
+
+impl RNode {
+    pub fn new<'e, F: Fn(&'e Tree) -> Node<'e>>(tree: SharedTree, f: F) -> Self {
+        let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree)) };
+        Self { tree, inner }
+    }
+
+    pub fn map<'e, F: Fn(&Node<'e>) -> Node<'e>>(&self, f: F) -> Self {
+        Self::new(self.tree.clone(), |_| f(&self.inner))
     }
 
     #[inline]
-    pub unsafe fn wrap(&self, inner: Node) -> Self {
-        let tree = self.tree.clone();
-        Self::new(tree, inner)
+    pub fn borrow(&self) -> RNodeBorrow {
+        let reft = self.tree.borrow();
+        let node = &self.inner;
+        RNodeBorrow { reft, node }
     }
 
     #[inline]
-    pub fn inner(&self) -> &Node {
-        let ptr = (&self.raw as *const RawNode) as *const Node;
-        unsafe { &*ptr }
-    }
-
-    #[inline]
-    pub fn inner_mut(&mut self) -> &mut Node {
-        let ptr = (&mut self.raw as *mut RawNode) as *mut Node;
-        unsafe { &mut *ptr }
+    pub fn borrow_mut(&mut self) -> RNodeBorrowMut {
+        let reft = self.tree.borrow_mut();
+        let node = self.inner;
+        RNodeBorrowMut { reft, node }
     }
 }
 
@@ -244,5 +280,5 @@ impl_pred!(range_p, Range);
 impl_pred!(point_p, Point);
 impl_pred!(parser_p, &RefCell<Parser>);
 impl_pred!(tree_p, &SharedTree);
-impl_pred!(node_p, &RefCell<WrappedNode>);
+impl_pred!(node_p, &RefCell<RNode>);
 impl_pred!(cursor_p, &RefCell<WrappedCursor>);

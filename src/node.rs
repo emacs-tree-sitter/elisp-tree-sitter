@@ -4,7 +4,7 @@ use emacs::{defun, Value, Result};
 
 use tree_sitter::InputEdit;
 
-use crate::types::{WrappedNode, Range, Point};
+use crate::types::{Range, Point, RNode};
 
 /// Exposes methods that return a node's property.
 macro_rules! defun_node_props {
@@ -12,8 +12,8 @@ macro_rules! defun_node_props {
         $(
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
-            fn $name(node: &WrappedNode) -> Result<$type> {
-                Ok(node.inner().$name()$(.$into())?)
+            fn $name(node: &RNode) -> Result<$type> {
+                Ok(node.borrow().$name()$(.$into())?)
             }
         )*
     };
@@ -25,9 +25,9 @@ macro_rules! defun_node_navs {
         $(
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
-            fn $name(node: &WrappedNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<WrappedNode>>> {
-                Ok(node.inner().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
-                    RefCell::new(unsafe { node.wrap(other) })
+            fn $name(node: &RNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<RNode>>> {
+                Ok(node.borrow().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
+                    RefCell::new(node.map(|_| other))
                 }))
             }
         )*
@@ -97,12 +97,12 @@ defun_node_props! {
 
 /// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
-fn mapc_children(function: Value, node: &WrappedNode) -> Result<()> {
-    let inner = node.inner();
+fn mapc_children(function: Value, node: &RNode) -> Result<()> {
+    let inner = node.borrow();
     // TODO: Reuse cursor.
     let cursor = &mut inner.walk();
     for child in inner.children(cursor) {
-        let child = RefCell::new(unsafe { node.wrap(child) });
+        let child = RefCell::new(node.map(|_| child));
         function.call((child,))?;
     }
     Ok(())
@@ -174,7 +174,7 @@ defun_node_props! {
 /// Note that indexing must be zero-based.
 #[defun]
 fn edit_node(
-    node: &mut WrappedNode,
+    node: &mut RNode,
     start_byte: usize,
     old_end_byte: usize,
     new_end_byte: usize,
@@ -190,6 +190,6 @@ fn edit_node(
         old_end_position: old_end_point.into(),
         new_end_position: new_end_point.into(),
     };
-    node.inner_mut().edit(&edit);
+    node.borrow_mut().edit(&edit);
     Ok(())
 }

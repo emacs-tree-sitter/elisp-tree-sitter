@@ -2,7 +2,7 @@ use emacs::{defun, Result};
 
 use std::cell::RefCell;
 
-use crate::types::{SharedTree, WrappedCursor, WrappedNode};
+use crate::types::{SharedTree, WrappedCursor, RNode};
 use crate::types::Either;
 
 /// Create a new cursor starting from the given TREE-OR-NODE.
@@ -14,7 +14,7 @@ use crate::types::Either;
 /// If a tree is given, the returned cursor starts on its root node.
 #[defun(user_ptr)]
 fn make_cursor<'e>(
-    tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<WrappedNode>>,
+    tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<RNode>>,
 ) -> Result<WrappedCursor> {
     match tree_or_node {
         Either::Left(tree, ..) => {
@@ -22,15 +22,17 @@ fn make_cursor<'e>(
         }
         Either::Right(node, ..) => {
             let node = node.borrow();
-            Ok(unsafe { WrappedCursor::new(node.tree.clone(), node.inner().walk()) })
+            let tree = node.tree.clone();
+            let cursor = node.borrow().walk();
+            Ok(unsafe { WrappedCursor::new(tree, cursor) })
         }
     }
 }
 
 /// Return CURSOR's current node.
 #[defun(user_ptr)]
-fn current_node(cursor: &WrappedCursor) -> Result<WrappedNode> {
-    Ok(unsafe { WrappedNode::new(cursor.tree.clone(), cursor.inner().node()) })
+fn current_node(cursor: &WrappedCursor) -> Result<RNode> {
+    Ok(RNode::new(cursor.tree.clone(), |_| cursor.inner().node()))
 }
 
 /// Return the field id of CURSOR's current node.
@@ -79,6 +81,6 @@ defun_cursor_walks! {
 
 /// Re-initialize CURSOR to start at a different NODE.
 #[defun]
-fn reset_cursor(cursor: &mut WrappedCursor, node: &WrappedNode) -> Result<()> {
-    Ok(cursor.inner_mut().reset(*node.inner()))
+fn reset_cursor(cursor: &mut WrappedCursor, node: &RNode) -> Result<()> {
+    Ok(cursor.inner_mut().reset(*node.borrow()))
 }
