@@ -205,46 +205,70 @@ impl RNode {
 // -------------------------------------------------------------------------------------------------
 // Cursor
 
-// XXX: Find a better way to make 2 types have the same alignment.
-const TREE_CURSOR_LEN: usize = mem::size_of::<TreeCursor>() / 8;
-pub type RawCursor = [u64; TREE_CURSOR_LEN];
-
 /// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
 /// ref-counted reference to the underlying tree.
-#[repr(C)]
-pub struct WrappedCursor {
+pub struct RCursor {
     pub(crate) tree: SharedTree,
-    raw: RawCursor,
+    inner: TreeCursor<'static>,
 }
 
-impl WrappedCursor {
-    #[inline]
-    pub unsafe fn new(tree: SharedTree, inner: TreeCursor) -> Self {
-        let ptr = (&inner as *const TreeCursor) as *const RawCursor;
-        // Delay inner cursor's cleanup (until wrapper is dropped).
-        mem::forget(inner);
-        let raw = ptr.read();
-        Self { tree, raw }
-    }
+pub struct RCursorBorrow<'e> {
+    #[allow(unused)]
+    reft: Ref<'e, Tree>,
+    cursor: &'e TreeCursor<'e>,
+}
+
+impl<'e> Deref for RCursorBorrow<'e> {
+    type Target = TreeCursor<'e>;
 
     #[inline]
-    pub fn inner(&self) -> &TreeCursor {
-        let ptr = (&self.raw as *const RawCursor) as *const TreeCursor;
-        unsafe { &*ptr }
-    }
-
-    #[inline]
-    pub fn inner_mut(&mut self) -> &mut TreeCursor {
-        let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
-        unsafe { &mut *ptr }
+    fn deref(&self) -> &Self::Target {
+        self.cursor
     }
 }
 
-impl Drop for WrappedCursor {
+pub struct RCursorBorrowMut<'e> {
+    #[allow(unused)]
+    reft: RefMut<'e, Tree>,
+    cursor: &'e mut TreeCursor<'e>,
+}
+
+impl<'e> Deref for RCursorBorrowMut<'e> {
+    type Target = TreeCursor<'e>;
+
     #[inline]
-    fn drop(&mut self) {
-        let ptr = (&mut self.raw as *mut RawCursor) as *mut TreeCursor;
-        unsafe { ptr.read() };
+    fn deref(&self) -> &Self::Target {
+        self.cursor
+    }
+}
+
+impl<'e> DerefMut for RCursorBorrowMut<'e> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.cursor
+    }
+}
+
+impl RCursor {
+    pub fn new<'e, F: Fn(&'e Tree) -> TreeCursor<'e>>(tree: SharedTree, f: F) -> Self {
+        let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree)) };
+        Self { tree, inner }
+    }
+
+    #[inline]
+    pub fn borrow(&self) -> RCursorBorrow {
+        let reft = self.tree.borrow();
+        let cursor = &self.inner;
+        RCursorBorrow { reft, cursor }
+    }
+
+    #[inline]
+    pub fn borrow_mut<'e>(&'e mut self) -> RCursorBorrowMut {
+        let reft: RefMut<'e, Tree> = self.tree.borrow_mut();
+        // XXX: Explain the safety here.
+        let cursor: &'e mut _ = unsafe { mem::transmute(&mut self.inner) };
+        RCursorBorrowMut { reft, cursor }
     }
 }
 
@@ -281,4 +305,4 @@ impl_pred!(point_p, Point);
 impl_pred!(parser_p, &RefCell<Parser>);
 impl_pred!(tree_p, &SharedTree);
 impl_pred!(node_p, &RefCell<RNode>);
-impl_pred!(cursor_p, &RefCell<WrappedCursor>);
+impl_pred!(cursor_p, &RefCell<RCursor>);

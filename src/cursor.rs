@@ -2,7 +2,7 @@ use emacs::{defun, Result};
 
 use std::cell::RefCell;
 
-use crate::types::{SharedTree, WrappedCursor, RNode};
+use crate::types::{SharedTree, RCursor, RNode};
 use crate::types::Either;
 
 /// Create a new cursor starting from the given TREE-OR-NODE.
@@ -15,38 +15,37 @@ use crate::types::Either;
 #[defun(user_ptr)]
 fn make_cursor<'e>(
     tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<RNode>>,
-) -> Result<WrappedCursor> {
+) -> Result<RCursor> {
     match tree_or_node {
         Either::Left(tree, ..) => {
-            Ok(unsafe { WrappedCursor::new(tree.clone(), tree.borrow().walk()) })
+            Ok(RCursor::new(tree.clone(), |tree| tree.walk()))
         }
         Either::Right(node, ..) => {
             let node = node.borrow();
-            let tree = node.tree.clone();
-            let cursor = node.borrow().walk();
-            Ok(unsafe { WrappedCursor::new(tree, cursor) })
+            Ok(RCursor::new(node.tree.clone(), |_| node.borrow().walk()))
         }
     }
 }
 
 /// Return CURSOR's current node.
 #[defun(user_ptr)]
-fn current_node(cursor: &WrappedCursor) -> Result<RNode> {
-    Ok(RNode::new(cursor.tree.clone(), |_| cursor.inner().node()))
+fn current_node(cursor: &RCursor) -> Result<RNode> {
+    Ok(RNode::new(cursor.tree.clone(), |_| cursor.borrow().node()))
 }
 
 /// Return the field id of CURSOR's current node.
 /// Return nil if the current node doesn't have a field.
 #[defun]
-fn current_field_id(cursor: &WrappedCursor) -> Result<Option<u16>> {
-    Ok(cursor.inner().field_id())
+fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
+    Ok(cursor.borrow().field_id())
 }
 
 /// Return the field name of CURSOR's current node.
 /// Return nil if the current node doesn't have a field.
 #[defun]
-fn current_field_name(cursor: &WrappedCursor) -> Result<Option<&str>> {
-    Ok(cursor.inner().field_name())
+fn current_field_name(cursor: &RCursor) -> Result<Option<String>> {
+    // FIX: tree-sitter's `field_name` API should return Option<&'static str> not Option<&str>.
+    Ok(cursor.borrow().field_name().map(|s| s.to_owned()))
 }
 
 macro_rules! defun_cursor_walks {
@@ -54,8 +53,8 @@ macro_rules! defun_cursor_walks {
         $(
             $(#[$meta])*
             #[defun$((name = $lisp_name))?]
-            fn $name(cursor: &mut WrappedCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
-                Ok(cursor.inner_mut().$name( $( $( $param ),* )? ))
+            fn $name(cursor: &mut RCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
+                Ok(cursor.borrow_mut().$name( $( $( $param ),* )? ))
             }
         )*
     };
@@ -81,6 +80,6 @@ defun_cursor_walks! {
 
 /// Re-initialize CURSOR to start at a different NODE.
 #[defun]
-fn reset_cursor(cursor: &mut WrappedCursor, node: &RNode) -> Result<()> {
-    Ok(cursor.inner_mut().reset(*node.borrow()))
+fn reset_cursor(cursor: &mut RCursor, node: &RNode) -> Result<()> {
+    Ok(cursor.borrow_mut().reset(*node.borrow()))
 }
