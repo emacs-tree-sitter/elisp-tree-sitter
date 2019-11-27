@@ -6,23 +6,23 @@ use crate::types::{SharedTree, Range, Point, Language, RNode};
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
-type Tree<'a> = &'a SharedTree;
+type BorrowedTree<'a> = &'a SharedTree;
 
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]
-fn language(tree: Tree) -> Result<Language> {
+fn language(tree: BorrowedTree) -> Result<Language> {
     Ok(tree.borrow().language().into())
 }
 
 /// Return the sexp representation of the syntax TREE, in a string.
 #[defun(mod_in_name = true)]
-fn to_sexp(tree: Tree) -> Result<String> {
+fn to_sexp(tree: BorrowedTree) -> Result<String> {
     Ok(tree.borrow().root_node().to_sexp())
 }
 
 /// Return the root node of the syntax TREE.
 #[defun(user_ptr)]
-fn root_node(tree: Tree) -> Result<RNode> {
+fn root_node(tree: BorrowedTree) -> Result<RNode> {
     Ok(RNode::new(tree.clone(), |tree| tree.root_node()))
 }
 
@@ -32,7 +32,7 @@ fn root_node(tree: Tree) -> Result<RNode> {
 /// `[row column]' coordinates, using zero-based indexing.
 #[defun]
 fn edit_tree(
-    tree: Tree,
+    tree: BorrowedTree,
     start_byte: usize,
     old_end_byte: usize,
     new_end_byte: usize,
@@ -63,9 +63,9 @@ fn edit_tree(
 /// after calling one of the parsing functions, passing in the new tree that was
 /// returned and the old tree that was passed as a parameter.
 #[defun]
-fn changed_ranges<'e>(tree: Value<'e>, old_tree: Tree<'e>) -> Result<Vector<'e>> {
+fn changed_ranges<'e>(tree: Value<'e>, old_tree: BorrowedTree<'e>) -> Result<Vector<'e>> {
     let env = tree.env;
-    let tree = tree.into_rust::<&SharedTree>()?.borrow();
+    let tree = tree.into_rust::<BorrowedTree>()?.borrow();
     let other_tree = old_tree.borrow();
     let ranges = tree.changed_ranges(&*other_tree);
     let len = ranges.len();
@@ -80,6 +80,6 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: Tree<'e>) -> Result<Vector<'e>>
 ///
 /// This is not very useful currently, as Emacs Lisp threads are subjected to a GIL.
 #[defun(user_ptr(direct))]
-fn _clone_tree(tree: Tree) -> Result<SharedTree> {
+fn _clone_tree(tree: BorrowedTree) -> Result<SharedTree> {
     Ok(tree.clone())
 }
