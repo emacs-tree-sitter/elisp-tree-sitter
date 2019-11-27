@@ -177,7 +177,7 @@ impl<'e> DerefMut for RNodeBorrowMut<'e> {
 }
 
 impl RNode {
-    pub fn new<'e, F: Fn(&'e Tree) -> Node<'e>>(tree: SharedTree, f: F) -> Self {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: SharedTree, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
         let inner = unsafe { mem::transmute(f(rtree)) };
         Self { tree, inner }
@@ -187,7 +187,7 @@ impl RNode {
         self.tree.clone()
     }
 
-    pub fn map<'e, F: Fn(&Node<'e>) -> Node<'e>>(&self, f: F) -> Self {
+    pub fn map<'e, F: FnOnce(&Node<'e>) -> Node<'e>>(&self, f: F) -> Self {
         Self::new(self.clone_tree(), |_| f(&self.inner))
     }
 
@@ -254,7 +254,7 @@ impl<'e> DerefMut for RCursorBorrowMut<'e> {
 }
 
 impl RCursor {
-    pub fn new<'e, F: Fn(&'e Tree) -> TreeCursor<'e>>(tree: SharedTree, f: F) -> Self {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> TreeCursor<'e>>(tree: SharedTree, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
         let inner = unsafe { mem::transmute(f(rtree)) };
         Self { tree, inner }
