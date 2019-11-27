@@ -135,7 +135,7 @@ pub type SharedTree = Rc<RefCell<Tree>>;
 /// reference to the underlying tree.
 #[derive(Clone)]
 pub struct RNode {
-    pub(crate) tree: SharedTree,
+    tree: SharedTree,
     inner: Node<'static>,
 }
 
@@ -183,8 +183,12 @@ impl RNode {
         Self { tree, inner }
     }
 
+    pub fn clone_tree(&self) -> SharedTree {
+        self.tree.clone()
+    }
+
     pub fn map<'e, F: Fn(&Node<'e>) -> Node<'e>>(&self, f: F) -> Self {
-        Self::new(self.tree.clone(), |_| f(&self.inner))
+        Self::new(self.clone_tree(), |_| f(&self.inner))
     }
 
     #[inline]
@@ -208,7 +212,7 @@ impl RNode {
 /// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
 /// ref-counted reference to the underlying tree.
 pub struct RCursor {
-    pub(crate) tree: SharedTree,
+    tree: SharedTree,
     inner: TreeCursor<'static>,
 }
 
@@ -254,6 +258,10 @@ impl RCursor {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
         let inner = unsafe { mem::transmute(f(rtree)) };
         Self { tree, inner }
+    }
+
+    pub fn clone_tree(&self) -> SharedTree {
+        self.tree.clone()
     }
 
     #[inline]

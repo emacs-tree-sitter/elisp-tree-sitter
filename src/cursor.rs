@@ -22,7 +22,7 @@ fn make_cursor<'e>(
         }
         Either::Right(node, ..) => {
             let node = node.borrow();
-            Ok(RCursor::new(node.tree.clone(), |_| node.borrow().walk()))
+            Ok(RCursor::new(node.clone_tree(), |_| node.borrow().walk()))
         }
     }
 }
@@ -30,7 +30,7 @@ fn make_cursor<'e>(
 /// Return CURSOR's current node.
 #[defun(user_ptr)]
 fn current_node(cursor: &RCursor) -> Result<RNode> {
-    Ok(RNode::new(cursor.tree.clone(), |_| cursor.borrow().node()))
+    Ok(RNode::new(cursor.clone_tree(), |_| cursor.borrow().node()))
 }
 
 /// Return the field id of CURSOR's current node.
