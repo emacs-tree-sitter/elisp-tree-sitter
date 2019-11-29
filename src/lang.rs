@@ -4,7 +4,7 @@ use emacs::{defun, Result};
 
 use libloading::{Library, Symbol};
 
-use crate::types::Language;
+use crate::types::*;
 
 /// Load the shared lib FILE and return the language under SYMBOL-NAME.
 #[defun]

@@ -1,10 +1,9 @@
 use emacs::{defun, Result, Value, Vector};
 use emacs::failure;
 
-use tree_sitter::{Parser, Point};
+use tree_sitter::{Parser, Point, Tree};
 
-
-use crate::types::{SharedTree, shared, Language, Range};
+use crate::types::*;
 
 /// Create a new parser.
 #[defun(user_ptr)]
@@ -48,7 +47,7 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 /// Note that indexing is assumed to be zero-based, while Emacs normally uses
 /// one-based indexing for accessing buffer content.
 #[defun(user_ptr(direct))]
-fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&SharedTree>) -> Result<SharedTree> {
+fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&Shared<Tree>>) -> Result<Shared<Tree>> {
     let old_tree = match old_tree {
         Some(v) => Some(v.try_borrow()?),
         _ => None,
@@ -79,7 +78,7 @@ fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&SharedTre
 
 /// Use PARSER to parse the INPUT string, returning a tree.
 #[defun]
-fn parse_string(parser: &mut Parser, input: String) -> Result<SharedTree> {
+fn parse_string(parser: &mut Parser, input: String) -> Result<Shared<Tree>> {
     let tree = parser.parse(input, None).unwrap();
     Ok(shared(tree))
 }

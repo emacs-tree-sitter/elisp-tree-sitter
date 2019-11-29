@@ -1,9 +1,10 @@
-use emacs::{defun, Result, Value, IntoLisp};
-
 use std::cell::RefCell;
 
-use crate::types::{SharedTree, RCursor, RNode};
-use crate::types::Either;
+use emacs::{defun, Result, Value, IntoLisp};
+
+use tree_sitter::Tree;
+
+use crate::types::*;
 
 /// Create a new cursor starting from the given TREE-OR-NODE.
 ///
@@ -14,7 +15,7 @@ use crate::types::Either;
 /// If a tree is given, the returned cursor starts on its root node.
 #[defun(user_ptr)]
 fn make_cursor<'e>(
-    tree_or_node: Either<'e, &'e SharedTree, &'e RefCell<RNode>>,
+    tree_or_node: Either<'e, &'e Shared<Tree>, &'e RefCell<RNode>>,
 ) -> Result<RCursor> {
     match tree_or_node {
         Either::Left(tree, ..) => {

@@ -4,7 +4,7 @@ use emacs::{defun, Value, Result};
 
 use tree_sitter::InputEdit;
 
-use crate::types::{Range, Point, RNode};
+use crate::types::*;
 
 /// Exposes methods that return a node's property.
 macro_rules! defun_node_props {

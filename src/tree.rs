@@ -1,28 +1,28 @@
 use emacs::{defun, Value, Result, Vector};
 
-use tree_sitter::{InputEdit};
+use tree_sitter::{InputEdit, Tree};
 
-use crate::types::{SharedTree, Range, Point, Language, RNode};
+use crate::types::*;
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
-type BorrowedTree<'a> = &'a SharedTree;
+//type B<Tree><'a> = &'a SharedTree;
 
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]
-fn language(tree: BorrowedTree) -> Result<Language> {
+fn language(tree: Borrowed<Tree>) -> Result<Language> {
     Ok(tree.borrow().language().into())
 }
 
 /// Return the sexp representation of the syntax TREE, in a string.
 #[defun(mod_in_name = true)]
-fn to_sexp(tree: BorrowedTree) -> Result<String> {
+fn to_sexp(tree: Borrowed<Tree>) -> Result<String> {
     Ok(tree.borrow().root_node().to_sexp())
 }
 
 /// Return the root node of the syntax TREE.
 #[defun(user_ptr)]
-fn root_node(tree: BorrowedTree) -> Result<RNode> {
+fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
     Ok(RNode::new(tree.clone(), |tree| tree.root_node()))
 }
 
@@ -32,7 +32,7 @@ fn root_node(tree: BorrowedTree) -> Result<RNode> {
 /// `[row column]' coordinates, using zero-based indexing.
 #[defun]
 fn edit_tree(
-    tree: BorrowedTree,
+    tree: Borrowed<Tree>,
     start_byte: usize,
     old_end_byte: usize,
     new_end_byte: usize,
@@ -63,9 +63,9 @@ fn edit_tree(
 /// after calling one of the parsing functions, passing in the new tree that was
 /// returned and the old tree that was passed as a parameter.
 #[defun]
-fn changed_ranges<'e>(tree: Value<'e>, old_tree: BorrowedTree<'e>) -> Result<Vector<'e>> {
+fn changed_ranges<'e>(tree: Value<'e>, old_tree: Borrowed<'e, Tree>) -> Result<Vector<'e>> {
     let env = tree.env;
-    let tree = tree.into_rust::<BorrowedTree>()?.borrow();
+    let tree = tree.into_rust::<Borrowed<Tree>>()?.borrow();
     let other_tree = old_tree.borrow();
     let ranges = tree.changed_ranges(&*other_tree);
     let len = ranges.len();
@@ -80,6 +80,6 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: BorrowedTree<'e>) -> Result<Vec
 ///
 /// This is not very useful currently, as Emacs Lisp threads are subjected to a GIL.
 #[defun(user_ptr(direct))]
-fn _clone_tree(tree: BorrowedTree) -> Result<SharedTree> {
+fn _clone_tree(tree: Borrowed<Tree>) -> Result<Shared<Tree>> {
     Ok(tree.clone())
 }

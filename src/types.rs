@@ -1,5 +1,6 @@
 use std::{
-    cell::RefCell,
+    cell::{RefCell, Ref, RefMut},
+    ops::{Deref, DerefMut},
     rc::Rc,
     mem,
     marker::PhantomData,
@@ -8,10 +9,8 @@ use std::{
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
 use tree_sitter::{Tree, Node, TreeCursor, Parser};
-use std::cell::{Ref, RefMut};
-use std::ops::{Deref, DerefMut};
 
-pub fn shared<T>(t: T) -> Rc<RefCell<T>> {
+pub fn shared<T>(t: T) -> Shared<T> {
     Rc::new(RefCell::new(t))
 }
 
@@ -125,8 +124,11 @@ impl FromLisp<'_> for Language {
 // -------------------------------------------------------------------------------------------------
 // Tree
 
-// TODO: We probably don't need RefCell.
-pub type SharedTree = Rc<RefCell<Tree>>;
+pub type Shared<T> = Rc<RefCell<T>>;
+
+// XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
+// .into_rust() boilerplate. This is a trick to avoid both.
+pub type Borrowed<'e, T> = &'e Shared<T>;
 
 // -------------------------------------------------------------------------------------------------
 // Node
@@ -135,7 +137,7 @@ pub type SharedTree = Rc<RefCell<Tree>>;
 /// reference to the underlying tree.
 #[derive(Clone)]
 pub struct RNode {
-    tree: SharedTree,
+    tree: Shared<Tree>,
     inner: Node<'static>,
 }
 
@@ -177,13 +179,13 @@ impl<'e> DerefMut for RNodeBorrowMut<'e> {
 }
 
 impl RNode {
-    pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: SharedTree, f: F) -> Self {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: Shared<Tree>, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
         let inner = unsafe { mem::transmute(f(rtree)) };
         Self { tree, inner }
     }
 
-    pub fn clone_tree(&self) -> SharedTree {
+    pub fn clone_tree(&self) -> Shared<Tree> {
         self.tree.clone()
     }
 
@@ -212,7 +214,7 @@ impl RNode {
 /// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
 /// ref-counted reference to the underlying tree.
 pub struct RCursor {
-    tree: SharedTree,
+    tree: Shared<Tree>,
     inner: TreeCursor<'static>,
 }
 
@@ -254,13 +256,13 @@ impl<'e> DerefMut for RCursorBorrowMut<'e> {
 }
 
 impl RCursor {
-    pub fn new<'e, F: FnOnce(&'e Tree) -> TreeCursor<'e>>(tree: SharedTree, f: F) -> Self {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> TreeCursor<'e>>(tree: Shared<Tree>, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
         let inner = unsafe { mem::transmute(f(rtree)) };
         Self { tree, inner }
     }
 
-    pub fn clone_tree(&self) -> SharedTree {
+    pub fn clone_tree(&self) -> Shared<Tree> {
         self.tree.clone()
     }
 
@@ -311,6 +313,6 @@ impl_pred!(language_p, Language);
 impl_pred!(range_p, Range);
 impl_pred!(point_p, Point);
 impl_pred!(parser_p, &RefCell<Parser>);
-impl_pred!(tree_p, &SharedTree);
+impl_pred!(tree_p, &Shared<Tree>);
 impl_pred!(node_p, &RefCell<RNode>);
 impl_pred!(cursor_p, &RefCell<RCursor>);
