@@ -46,7 +46,7 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 ///
 /// Note that indexing is assumed to be zero-based, while Emacs normally uses
 /// one-based indexing for accessing buffer content.
-#[defun(user_ptr(direct))]
+#[defun]
 fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&Shared<Tree>>) -> Result<Shared<Tree>> {
     let old_tree = match old_tree {
         Some(v) => Some(v.try_borrow()?),
