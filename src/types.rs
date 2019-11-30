@@ -178,6 +178,12 @@ impl<'e> DerefMut for RNodeBorrowMut<'e> {
     }
 }
 
+impl IntoLisp<'_> for RNode {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        RefCell::new(self).into_lisp(env)
+    }
+}
+
 impl RNode {
     pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: Shared<Tree>, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };

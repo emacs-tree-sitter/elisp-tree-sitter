@@ -78,7 +78,7 @@ fn wrap_text_callback<'e>(
     error: &'e RefCell<Option<Error>>,
 ) -> impl FnMut(Node<'e>) -> String + 'e {
     move |child| {
-        let child = RefCell::new(node.map(|_| child));
+        let child = node.map(|_| child);
         text_callback.call((child,)).and_then(|v| v.into_rust()).unwrap_or_else(|e| {
             error.borrow_mut().replace(e);
             "".to_owned()
@@ -110,7 +110,7 @@ fn query_cursor_matches<'e>(
         for (ci, c) in m.captures.iter().enumerate() {
             let capture = make_vector(env, 2)?;
             capture.set(0, c.index)?;
-            capture.set(1, RefCell::new(node.map(|_| c.node)))?;
+            capture.set(1, node.map(|_| c.node))?;
             captures.set(ci, capture)?;
         }
         _match.set(0, m.pattern_index)?;
@@ -142,7 +142,7 @@ fn query_cursor_captures<'e>(
         let c = m.captures[capture_index];
         let capture = make_vector(env, 2)?;
         capture.set(0, c.index)?;
-        capture.set(1, RefCell::new(node.map(|_| c.node)))?;
+        capture.set(1, node.map(|_| c.node))?;
         vec.push(capture);
     }
     vec_to_vector(env, vec)

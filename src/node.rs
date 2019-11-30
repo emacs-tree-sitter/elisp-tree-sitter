@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use emacs::{defun, Value, Result};
 
 use tree_sitter::InputEdit;
@@ -25,9 +23,9 @@ macro_rules! defun_node_navs {
         $(
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
-            fn $name(node: &RNode, $( $( $param : $type ),* )? ) -> Result<Option<RefCell<RNode>>> {
+            fn $name(node: &RNode, $( $( $param : $type ),* )? ) -> Result<Option<RNode>> {
                 Ok(node.borrow().$name( $( $( $param $(.$into())? ),* )? ).map(|other| {
-                    RefCell::new(node.map(|_| other))
+                    node.map(|_| other)
                 }))
             }
         )*
@@ -102,7 +100,7 @@ fn mapc_children(function: Value, node: &RNode) -> Result<()> {
     // TODO: Reuse cursor.
     let cursor = &mut inner.walk();
     for child in inner.children(cursor) {
-        let child = RefCell::new(node.map(|_| child));
+        let child = node.map(|_| child);
         function.call((child,))?;
     }
     Ok(())
