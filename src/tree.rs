@@ -4,10 +4,6 @@ use tree_sitter::{InputEdit, Tree};
 
 use crate::types::*;
 
-// XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
-// .into_rust() boilerplate. This is a trick to avoid both.
-//type B<Tree><'a> = &'a SharedTree;
-
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]
 fn language(tree: Borrowed<Tree>) -> Result<Language> {
@@ -21,7 +17,7 @@ fn to_sexp(tree: Borrowed<Tree>) -> Result<String> {
 }
 
 /// Return the root node of the syntax TREE.
-#[defun(user_ptr)]
+#[defun]
 fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
     Ok(RNode::new(tree.clone(), |tree| tree.root_node()))
 }
@@ -79,7 +75,7 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: Borrowed<'e, Tree>) -> Result<V
 /// Create a shallow copy of the syntax TREE.
 ///
 /// This is not very useful currently, as Emacs Lisp threads are subjected to a GIL.
-#[defun(user_ptr(direct))]
+#[defun]
 fn _clone_tree(tree: Borrowed<Tree>) -> Result<Shared<Tree>> {
     Ok(tree.clone())
 }

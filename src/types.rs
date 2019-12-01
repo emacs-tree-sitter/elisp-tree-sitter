@@ -8,7 +8,7 @@ use std::{
 
 use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
 
-use tree_sitter::{Tree, Node, TreeCursor, Parser};
+use tree_sitter::{Tree, Node, TreeCursor, Parser, Query, QueryCursor};
 
 pub fn shared<T>(t: T) -> Shared<T> {
     Rc::new(RefCell::new(t))
@@ -178,6 +178,12 @@ impl<'e> DerefMut for RNodeBorrowMut<'e> {
     }
 }
 
+impl IntoLisp<'_> for RNode {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        RefCell::new(self).into_lisp(env)
+    }
+}
+
 impl RNode {
     pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: Shared<Tree>, f: F) -> Self {
         let rtree = unsafe { erase_lifetime(&*tree.borrow()) };
@@ -316,3 +322,5 @@ impl_pred!(parser_p, &RefCell<Parser>);
 impl_pred!(tree_p, &Shared<Tree>);
 impl_pred!(node_p, &RefCell<RNode>);
 impl_pred!(cursor_p, &RefCell<RCursor>);
+impl_pred!(query_p, &RefCell<Query>);
+impl_pred!(query_cursor_p, &RefCell<QueryCursor>);

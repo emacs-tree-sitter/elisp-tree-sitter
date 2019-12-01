@@ -46,7 +46,7 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 ///
 /// Note that indexing is assumed to be zero-based, while Emacs normally uses
 /// one-based indexing for accessing buffer content.
-#[defun(user_ptr(direct))]
+#[defun]
 fn parse(parser: &mut Parser, input_function: Value, old_tree: Option<&Shared<Tree>>) -> Result<Shared<Tree>> {
     let old_tree = match old_tree {
         Some(v) => Some(v.try_borrow()?),
@@ -99,7 +99,7 @@ fn _reset_parser(parser: &mut Parser) -> Result<()> {
 /// Return the duration in microseconds that PARSER is allowed to take each parse.
 /// Note: timeout and cancellation are not yet properly supported.
 #[defun]
-fn _timeout_micros(parser: &mut Parser) -> Result<u64> {
+fn _timeout_micros(parser: &Parser) -> Result<u64> {
     Ok(parser.timeout_micros())
 }
 

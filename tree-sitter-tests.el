@@ -11,6 +11,7 @@
 ;;; Code:
 
 (require 'tree-sitter)
+(require 'tree-sitter-debug)
 
 (require 'ert)
 
@@ -172,6 +173,24 @@ tree is held (since nodes internally reference the tree)."
     (tree-sitter-mode)
     (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))
+
+(ert-deftest query::basic ()
+  (ts-test-with-temp-buffer "src/query.rs"
+    (setq tree-sitter-language (ts-require-language 'rust))
+    (tree-sitter-mode)
+    (let* ((captures (tree-sitter-query
+                      [(function_item (identifier) @function)
+                       (macro_definition (identifier) @macro)]))
+           (node-texts (mapcar (lambda (capture)
+                                 (pcase-let ((`[_ ,node] capture))
+                                   (ts-node-text node)))
+                               captures))
+           (names (mapcar (lambda (capture)
+                            (pcase-let ((`[,name node] capture)) name))
+                          captures)))
+      (should (member "make_query" node-texts))
+      (should (member "make_query_cursor" node-texts))
+      (should (member "macro" names)))))
 
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here

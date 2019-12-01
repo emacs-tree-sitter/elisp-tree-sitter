@@ -173,6 +173,46 @@ If the language hasn't been loaded yet, this function attempts to load it."
     language))
 
 
+;;; Querying.
+
+(defun ts-query-matches (query node &optional cursor index-only text-function)
+  "Execute QUERY on NODE and return a vector of matches, in the order they were found.
+
+Each match is a `[pattern-index match-captures]' vector, where pattern-index is
+the position of the matched pattern within QUERY, and match-captures is a vector
+of captures by the match, similar to that returned by `ts-query-captures'. If
+the optional arg INDEX-ONLY is non-nil, positions of the capture patterns within
+QUERY are returned instead of their names.
+
+If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
+QUERY. Otherwise a new query-cursor is used.
+
+If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
+Otherwise `ts-node-text' is used."
+  (ts--query-cursor-matches
+   (or cursor (ts-make-query-cursor)) query node index-only text-function))
+
+(defun ts-query-captures (query node &optional cursor index-only text-function)
+  "Execute QUERY on NODE and return a vector of captures, in the order they appear.
+
+Each capture is a `[capture-name captured-node]' vector. If the optional arg
+INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is
+returned instead of its name.
+
+If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
+QUERY. Otherwise a new query-cursor is used.
+
+If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
+Otherwise `ts-node-text' is used."
+  (ts--query-cursor-captures
+   (or cursor (ts-make-query-cursor)) query node index-only text-function))
+
+(defun ts-node-text (node)
+  "Return NODE's text, assuming it's from a tree associated with the current buffer."
+  (pcase-let ((`[,beg ,end] (ts-node-range node)))
+    (ts-buffer-substring beg end)))
+
+
 ;;; Utilities.
 
 (defun ts-pp-to-string (tree)

@@ -29,7 +29,7 @@ fn make_cursor<'e>(
 }
 
 /// Return CURSOR's current node.
-#[defun(user_ptr)]
+#[defun]
 fn current_node(cursor: &RCursor) -> Result<RNode> {
     Ok(RNode::new(cursor.clone_tree(), |_| cursor.borrow().node()))
 }

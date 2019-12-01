@@ -7,6 +7,7 @@ mod parser;
 mod tree;
 mod node;
 mod cursor;
+mod query;
 
 emacs::plugin_is_GPL_compatible! {}
 
