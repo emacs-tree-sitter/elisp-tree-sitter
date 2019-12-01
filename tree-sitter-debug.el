@@ -52,6 +52,26 @@ This displays the syntax tree in another buffer, and keeps it up-to-date."
     (setq tree-sitter-debug--tree-buffer nil))
   (remove-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree 'local))
 
+(defun tree-sitter-query (patterns &optional matches index-only)
+  "Execute query PATTERNS against the current buffer's syntax tree and return captures.
+
+If the optional arg MATCHES is non-nil, matches (from `ts-query-matches') are
+returned instead of captures (from `ts-query-captures').
+
+If the optional arg INDEX-ONLY is non-nil, return positions of capture patterns
+within the constructed query, instead of their names.
+
+This function is primarily useful for debugging purpose. Other packages should
+build queries and cursors once, then reuse them."
+  (let* ((query-str (pcase (type-of patterns)
+                      ('vector (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
+                      (_ (format "%S" patterns))))
+         (query (ts-make-query tree-sitter-language query-str))
+         (root-node (ts-root-node tree-sitter-tree)))
+    (if matches
+        (ts-query-matches query root-node nil index-only)
+      (ts-query-captures query root-node nil index-only))))
+
 ;;; TODO: Kill tree-buffer when `tree-sitter' minor mode is turned off.
 
 (provide 'tree-sitter-debug)

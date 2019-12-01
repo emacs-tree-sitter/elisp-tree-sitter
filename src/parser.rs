@@ -99,7 +99,7 @@ fn _reset_parser(parser: &mut Parser) -> Result<()> {
 /// Return the duration in microseconds that PARSER is allowed to take each parse.
 /// Note: timeout and cancellation are not yet properly supported.
 #[defun]
-fn _timeout_micros(parser: &mut Parser) -> Result<u64> {
+fn _timeout_micros(parser: &Parser) -> Result<u64> {
     Ok(parser.timeout_micros())
 }
 
