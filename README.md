@@ -125,6 +125,11 @@ These types are understood only by this package. They are not recognized by `typ
     + `ts-count-` functions: count child nodes.
     + `ts-mapc-children`: loops through child nodes.
     + `ts-node-to-sexp`: debug utility.
+- Query:
+    + `ts-make-query`: create a new query.
+    + `ts-make-query-cursor`: create a new query cursor.
+    + `ts-query-matches`, `ts-query-captures`: execute a query, returning matches/captures.
+    + `ts-set-byte-range`, `ts-set-point-range`: limit query execution to a range.
 
 ## Development
 - Testing:
@@ -135,7 +140,7 @@ These types are understood only by this package. They are not recognized by `typ
     ```shell
     make watch
     ```
-    
+
 You can optionally export an environment variable called `EMACS` which will make tests to use a different binary of GNU Emacs (i.e.: `EMACS=/snap/bin/emacs make test`), otherwise the binary located with `which emacs` is used instead.
 
 On Windows, use PowerShell to run the corresponding `.ps1` scripts which are `./bin/build.ps1`, `./bin/ensure-lang.ps1` (this is used like this `./bin/ensure-lang.ps1 rust`) and `./bin/test.ps1`.

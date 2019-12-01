@@ -188,7 +188,7 @@ tree is held (since nodes internally reference the tree)."
            (names (mapcar (lambda (capture)
                             (pcase-let ((`[,name node] capture)) name))
                           captures)))
-      (should (member "make_query" node-texts))
+      (should (member "_make_query" node-texts))
       (should (member "make_query_cursor" node-texts))
       (should (member "macro" names)))))
 

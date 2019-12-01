@@ -26,7 +26,7 @@ fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vecto
 /// The query is associated with LANGUAGE, and can only be run on syntax nodes
 /// parsed with LANGUAGE.
 #[defun(user_ptr)]
-fn make_query(language: Language, source: String) -> Result<Query> {
+fn _make_query(language: Language, source: String) -> Result<Query> {
     // TODO: Better error message
     Ok(Query::new(language.into(), &source).unwrap())
 }

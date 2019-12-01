@@ -63,10 +63,7 @@ within the constructed query, instead of their names.
 
 This function is primarily useful for debugging purpose. Other packages should
 build queries and cursors once, then reuse them."
-  (let* ((query-str (pcase (type-of patterns)
-                      ('vector (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
-                      (_ (format "%S" patterns))))
-         (query (ts-make-query tree-sitter-language query-str))
+  (let* ((query (ts-make-query tree-sitter-language patterns))
          (root-node (ts-root-node tree-sitter-tree)))
     (if matches
         (ts-query-matches query root-node nil index-only)

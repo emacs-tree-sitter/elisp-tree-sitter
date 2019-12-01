@@ -175,6 +175,16 @@ If the language hasn't been loaded yet, this function attempts to load it."
 
 ;;; Querying.
 
+(defun ts-make-query (language patterns)
+  "Create a new query for LANGUAGE from a sequence of S-expression PATTERNS.
+The query is associated with LANGUAGE, and can only be run on syntax nodes
+parsed with LANGUAGE."
+  (let ((source (cond
+                 ((sequencep patterns) (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
+                 ((stringp patterns) patterns)
+                 (t (format "%S" patterns)))))
+    (ts--make-query language source)))
+
 (defun ts-query-matches (query node &optional cursor index-only text-function)
   "Execute QUERY on NODE and return a vector of matches, in the order they were found.
 
