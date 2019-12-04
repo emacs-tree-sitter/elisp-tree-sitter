@@ -6,12 +6,8 @@ use tree_sitter::{Query, QueryCursor, Node};
 
 use crate::types::*;
 
-fn make_vector(env: &Env, len: usize) -> Result<Vector> {
-    env.call("make-vector", (len, ())).map(Vector)
-}
-
 fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vector<'e>> {
-    let vector = make_vector(env, vec.len())?;
+    let vector = env.make_vector(vec.len(), ())?;
     for (i, v) in vec.into_iter().enumerate() {
         vector.set(i, v)?;
     }
@@ -57,8 +53,7 @@ fn capture_names(query: Value) -> Result<Vector> {
     let env = query.env;
     let query = query.into_ref::<Query>()?;
     let names = query.capture_names();
-    let len = names.len();
-    let vec = make_vector(env, len)?;
+    let vec = env.make_vector(names.len(), ())?;
     for (i, name) in names.iter().enumerate() {
         vec.set(i, name)?;
     }
@@ -121,20 +116,17 @@ fn _query_cursor_matches<'e>(
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
         }
-        let _match = make_vector(env, 2)?;
-        let captures = make_vector(env, m.captures.len())?;
+        let captures = env.make_vector(m.captures.len(), ())?;
         for (ci, c) in m.captures.iter().enumerate() {
-            let capture = make_vector(env, 2)?;
-            if index_only.is_some() {
-                capture.set(0, c.index)
+            let captured_node = node.map(|_| c.node);
+            let capture = if index_only.is_some() {
+                env.vector((c.index, captured_node))?
             } else {
-                capture.set(0, &capture_names[c.index as usize])
-            }?;
-            capture.set(1, node.map(|_| c.node))?;
+                env.vector((&capture_names[c.index as usize], captured_node))?
+            };
             captures.set(ci, capture)?;
         }
-        _match.set(0, m.pattern_index)?;
-        _match.set(1, captures)?;
+        let _match = env.vector((m.pattern_index, captures))?;
         vec.push(_match);
     }
     vec_to_vector(env, vec)
@@ -162,13 +154,12 @@ fn _query_cursor_captures<'e>(
             return Err(error);
         }
         let c = m.captures[capture_index];
-        let capture = make_vector(env, 2)?;
-        if index_only.is_some() {
-            capture.set(0, c.index)?;
+        let captured_node = node.map(|_| c.node);
+        let capture = if index_only.is_some() {
+            env.vector((c.index, captured_node))?
         } else {
-            capture.set(0, &capture_names[c.index as usize])?;
-        }
-        capture.set(1, node.map(|_| c.node))?;
+            env.vector((&capture_names[c.index as usize], captured_node))?
+        };
         vec.push(capture);
     }
     vec_to_vector(env, vec)

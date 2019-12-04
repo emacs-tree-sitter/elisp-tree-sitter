@@ -64,8 +64,7 @@ fn changed_ranges<'e>(tree: Value<'e>, old_tree: Borrowed<'e, Tree>) -> Result<V
     let tree = tree.into_rust::<Borrowed<Tree>>()?.borrow();
     let other_tree = old_tree.borrow();
     let ranges = tree.changed_ranges(&*other_tree);
-    let len = ranges.len();
-    let vec = Vector(env.call("make-vector", (len, ()))?);
+    let vec = env.make_vector(ranges.len(), ())?;
     for (i, range) in ranges.enumerate() {
         vec.set(i, Range(range))?;
     }
