@@ -9,9 +9,6 @@ steps:
 
 - bash: |
     set -e
-    ./bin/ensure-lang rust
-    ./bin/ensure-lang javascript
-    ./bin/ensure-lang bash
-    ./bin/test
+    make test
   displayName: Run tests
   condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
