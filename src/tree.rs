@@ -50,20 +50,21 @@ fn edit_tree(
 
 // TODO: walk_with_properties
 
-/// Compare a new syntax TREE to an OLD-TREE representing the same document.
+/// Compare an edited OLD-TREE to NEW-TREE, both representing the same document.
 ///
 /// This function returns a vector of ranges whose syntactic structure has changed.
 ///
 /// For this to work correctly, OLD-TREE must have been edited such that its ranges
-/// match up to the new TREE. Generally, you'll want to call this function right
-/// after calling one of the parsing functions, passing in the new tree that was
-/// returned and the old tree that was passed as a parameter.
+/// match up to NEW-TREE. Generally, you'll want to call this function right after
+/// calling one of the parsing functions, passing in the old tree that was passed
+/// as a parameter and the new tree that was returned.
 #[defun]
-fn changed_ranges<'e>(tree: Value<'e>, old_tree: Borrowed<'e, Tree>) -> Result<Vector<'e>> {
-    let env = tree.env;
-    let tree = tree.into_rust::<Borrowed<Tree>>()?.borrow();
-    let other_tree = old_tree.borrow();
-    let ranges = tree.changed_ranges(&*other_tree);
+fn changed_ranges<'e>(old_tree: Value<'e>, new_tree: Borrowed<'e, Tree>) -> Result<Vector<'e>> {
+    let env = old_tree.env;
+    let old_tree = old_tree.into_rust::<Borrowed<Tree>>()?.borrow();
+    let new_tree = new_tree.borrow();
+    // TODO: Add a test to show that order is importance.
+    let ranges = old_tree.changed_ranges(&*new_tree);
     let vec = env.make_vector(ranges.len(), ())?;
     for (i, range) in ranges.enumerate() {
         vec.set(i, Range(range))?;
