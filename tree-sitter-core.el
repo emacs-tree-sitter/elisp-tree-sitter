@@ -201,7 +201,7 @@ QUERY. Otherwise a new query-cursor is used.
 If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
 Otherwise `ts-node-text' is used."
   (ts--query-cursor-matches
-   (or cursor (ts-make-query-cursor)) query node index-only text-function))
+   (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
 
 (defun ts-query-captures (query node &optional cursor index-only text-function)
   "Execute QUERY on NODE and return a vector of captures, in the order they appear.
@@ -216,7 +216,7 @@ QUERY. Otherwise a new query-cursor is used.
 If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
 Otherwise `ts-node-text' is used."
   (ts--query-cursor-captures
-   (or cursor (ts-make-query-cursor)) query node index-only text-function))
+   (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
 
 (defun ts-node-text (node)
   "Return NODE's text, assuming it's from a tree associated with the current buffer."
