@@ -1,0 +1,19 @@
+steps:
+- bash: |
+    set -e
+    curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
+    echo "##vso[task.setvariable variable=PATH]$HOME/.cask/bin:$PATH"
+  displayName: Install cask
+  condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
+
+# TODO: Fix cask's issue with Python 3 on Windows. Basically, os.environb is not available.
+# (os.supports_bytes_environ is False). The workaround is manually calling emacs with Powershell.
+# For example:
+#
+#     emacs -Q --script' "$env:UserProfile\.cask\cask-cli.el -- package"
+#
+# See https://github.com/cask/cask/issues/285.
+- bash: |
+    git clone https://github.com/cask/cask $HOME/.cask
+  displayName: Install cask (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))

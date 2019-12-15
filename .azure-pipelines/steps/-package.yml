@@ -1,0 +1,10 @@
+steps:
+- powershell: |
+    .\bin\package
+  displayName: Package (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+- bash: |
+    ./bin/package
+  displayName: Package
+  condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
