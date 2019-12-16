@@ -180,8 +180,9 @@ If the language hasn't been loaded yet, this function attempts to load it."
 The query is associated with LANGUAGE, and can only be run on syntax nodes
 parsed with LANGUAGE."
   (let ((source (cond
-                 ((sequencep patterns) (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
                  ((stringp patterns) patterns)
+                 ;; FIX: This doesn't work with predicates, in which '?' would be escaped.
+                 ((sequencep patterns) (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
                  (t (format "%S" patterns)))))
     (ts--make-query language source)))
 

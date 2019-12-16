@@ -174,6 +174,19 @@ tree is held (since nodes internally reference the tree)."
     (call-interactively #'mark-whole-buffer)
     (call-interactively #'comment-or-uncomment-region)))
 
+(ert-deftest query::making ()
+  (let ((rust (ts-require-language 'rust)))
+    (ert-info ("Should work on string")
+      (should (= (ts-query-count-patterns
+                  (ts-make-query rust "(function_item (identifier) @function)
+                                       (macro_definition (identifier) @macro)"))
+                 2)))
+    (ert-info ("Should work on vector")
+      (should (= (ts-query-count-patterns
+                  (ts-make-query rust [(function_item (identifier) @function)
+                                       (macro_definition (identifier) @macro)]))
+                 2)))))
+
 (ert-deftest query::basic ()
   (ts-test-with-temp-buffer "src/query.rs"
     (setq tree-sitter-language (ts-require-language 'rust))
