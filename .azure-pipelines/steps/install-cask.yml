@@ -13,7 +13,10 @@ steps:
 #     emacs -Q --script' "$env:UserProfile\.cask\cask-cli.el -- package"
 #
 # See https://github.com/cask/cask/issues/285.
+#
+# TODO: Fix 'Select coding system' issue on Windows.
+# See https://github.com/cask/cask/issues/341.
 - bash: |
-    git clone https://github.com/cask/cask $HOME/.cask
+    git clone -b azure-pipelines https://github.com/ubolonton/cask $HOME/.cask
   displayName: Install cask (Windows)
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
