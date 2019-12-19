@@ -16,7 +16,14 @@ steps:
 #
 # TODO: Fix 'Select coding system' issue on Windows.
 # See https://github.com/cask/cask/issues/341.
-- bash: |
-    git clone -b azure-pipelines https://github.com/ubolonton/cask $HOME/.cask
+- powershell: |
+    git clone -b azure-pipelines https://github.com/ubolonton/cask "$env:UserProfile\.cask"
+    echo "##vso[task.prependpath]$env:UserProfile\.cask\bin"
   displayName: Install cask (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+- powershell: |
+    echo $env:Path
+    cask install
+  displayName: Run cask (Windows)
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
