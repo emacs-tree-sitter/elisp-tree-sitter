@@ -26,7 +26,7 @@ resources:
 
 steps:
 - template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
-- template: steps/install-cask.yml
+- template: .azure-pipelines/steps/install-cask.yml@emacs-module-rs
 - template: .azure-pipelines/steps/install-rust.yml@emacs-module-rs
 - template: .azure-pipelines/steps/set-up-llvm.yml@emacs-module-rs
 - template: steps/-package.yml
