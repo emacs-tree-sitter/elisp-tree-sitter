@@ -10,5 +10,12 @@ source "$here/env.bash"
 
     TARGET=release "$here/build"
 
-    cask build && cask package
+    cask build
+    cask package
+
+    tar_file="dist/tree-sitter-$(cask version).tar"
+
+    gzip --verbose "$tar_file" --stdout > "$tar_file.gz"
+
+    ls dist
 )
