@@ -1,4 +1,5 @@
 use std::{
+    os,
     cell::{RefCell, Ref, RefMut},
     ops::{Deref, DerefMut},
     rc::Rc,
@@ -6,7 +7,7 @@ use std::{
     marker::PhantomData,
 };
 
-use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Transfer, Vector};
+use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Vector, ErrorKind};
 
 use tree_sitter::{Tree, Node, TreeCursor, Parser, Query, QueryCursor};
 
@@ -103,21 +104,27 @@ pub struct Language(pub(crate) tree_sitter::Language);
 
 impl_newtype_traits!(Language);
 
-impl Transfer for Language {
-    fn type_name() -> &'static str {
-        "TreeSitterLanguage"
-    }
-}
+unsafe extern "C" fn no_op<T>(_: *mut os::raw::c_void) {}
 
 impl IntoLisp<'_> for Language {
     fn into_lisp(self, env: &Env) -> Result<Value> {
-        Box::new(self).into_lisp(env)
+        // Safety: Language has the same representation as the opaque pointer type.
+        let ptr: *mut os::raw::c_void = unsafe { mem::transmute(self) };
+        // Safety: The finalizer does nothing.
+        unsafe { env.make_user_ptr(Some(no_op::<Language>), ptr) }
     }
 }
 
 impl FromLisp<'_> for Language {
     fn from_lisp(value: Value) -> Result<Language> {
-        Ok(*value.into_rust::<&Language>()?)
+        match value.get_user_finalizer()? {
+            Some(fin) if fin == no_op::<Language> => {
+                let ptr = value.get_user_ptr()?;
+                // Safety: Language has the same representation as the opaque pointer type.
+                Ok(unsafe { mem::transmute(ptr) })
+            }
+            _ => Err(ErrorKind::WrongTypeUserPtr { expected: "TreeSitterLanguage" }.into())
+        }
     }
 }
 
