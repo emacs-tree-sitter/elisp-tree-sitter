@@ -20,5 +20,6 @@ export MODULE_DIR="$PROJECT_ROOT/target/$TARGET"
 export MODULE_ORIGINAL=${MODULE_ORIGINAL:-libtree_sitter_dyn.$ext}
 export MODULE_NAME=${MODULE_NAME:-tree-sitter-dyn}
 export MODULE_RENAMED=${MODULE_NAME}.so
-export MODULE_FULL="$MODULE_DIR/$MODULE_RENAMED"
+export TEST_FILE=tree-sitter-tests.el
+
 export EMACS=${EMACS:-emacs}
