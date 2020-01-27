@@ -11,7 +11,6 @@ cask package
 $version = ((cask version) | Out-String).Trim()
 $tar_file = "dist\tree-sitter-$version.tar"
 gzip --verbose $tar_file --stdout > "$tar_file.gz"
-
-ls dist
+tar --gzip --list --file "$tar_file"
 
 Pop-Location

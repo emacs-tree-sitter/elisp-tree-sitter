@@ -14,8 +14,6 @@ source "$here/env.bash"
     cask package
 
     tar_file="dist/tree-sitter-$(cask version).tar"
-
     gzip --verbose "$tar_file" --stdout > "$tar_file.gz"
-
-    ls dist
+    tar --gzip --list --file "$tar_file"
 )
