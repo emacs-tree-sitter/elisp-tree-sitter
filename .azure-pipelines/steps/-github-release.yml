@@ -1,0 +1,13 @@
+parameters:
+- name: endpoint
+  type: string
+
+steps:
+- task: GitHubRelease@0
+  inputs:
+    gitHubConnection: ${{ parameters.endpoint }}
+    repositoryName: ubolonton/emacs-tree-sitter
+    assetUploadMode: replace
+    assets: |
+      $(System.DefaultWorkingDirectory)/dist/*.tar.gz
+      $(System.DefaultWorkingDirectory)/tree-sitter-dyn.*

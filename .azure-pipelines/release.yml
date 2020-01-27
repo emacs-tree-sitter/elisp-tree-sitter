@@ -1,5 +1,10 @@
 trigger:
-- azure-pipelines
+  branches:
+    include:
+    - azure-pipelines
+  tags:
+    include:
+    - '*.*.*'
 
 resources:
   repositories:
@@ -51,3 +56,6 @@ jobs:
         - dylib
         - so
   - template: steps/-package.yml
+  - template: steps/-github-release.yml
+    parameters:
+      endpoint: github.com_ubolonton
