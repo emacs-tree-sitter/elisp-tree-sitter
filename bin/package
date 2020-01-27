@@ -8,8 +8,6 @@ source "$here/env.bash"
 (
     cd "$PROJECT_ROOT"
 
-    TARGET=release "$here/build"
-
     cask build
     cask package
 
