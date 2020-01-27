@@ -1,0 +1,8 @@
+steps:
+- bash: ./bin/package
+  displayName: Package
+- bash: |
+    echo "##vso[task.setvariable variable=EMACS_TREE_SITTER_VERSION]`cask version`"
+- publish: $(System.DefaultWorkingDirectory)/dist/tree-sitter-$(EMACS_TREE_SITTER_VERSION).tar.gz
+  artifact: tree-sitter-dyn
+  displayName: Save tree-sitter-dyn

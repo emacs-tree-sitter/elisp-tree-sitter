@@ -1,0 +1,4 @@
+steps:
+- publish: $(System.DefaultWorkingDirectory)/tree-sitter-dyn.$(DYN_EXT)
+  artifact: tree-sitter-dyn.$(DYN_EXT)
+  displayName: Save tree-sitter-dyn.$(DYN_EXT)

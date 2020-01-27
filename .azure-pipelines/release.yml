@@ -1,0 +1,61 @@
+trigger:
+  branches:
+    include:
+    - azure-pipelines
+  tags:
+    include:
+    - '*.*.*'
+
+resources:
+  repositories:
+  - repository: emacs-module-rs
+    type: github
+    name: ubolonton/emacs-module-rs
+    endpoint: ubolonton
+
+jobs:
+
+- job: Build
+  pool:
+    vmImage: $(IMAGE_NAME)
+  strategy:
+    matrix:
+      vs2017-win2016:
+        IMAGE_NAME: 'vs2017-win2016'
+        DYN_EXT: dll
+      macos-10.13-emacs-25.3:
+        IMAGE_NAME: 'macos-10.13'
+        EVM_EMACS: emacs-25.3
+        DYN_EXT: dylib
+      ubuntu-16.04-emacs-25.3:
+        IMAGE_NAME: 'ubuntu-16.04'
+        EVM_EMACS: emacs-25.3
+        DYN_EXT: so
+  steps:
+  - template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/install-rust.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/set-up-llvm.yml@emacs-module-rs
+  - template: steps/-build.yml
+    parameters:
+      target: release
+  - template: steps/-save-binaries.yml
+
+- job: Package
+  dependsOn: Build
+  pool:
+    vmImage: macos-10.14
+  variables:
+    EVM_EMACS: emacs-26.3
+  steps:
+  - template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/install-cask.yml@emacs-module-rs
+  - template: steps/-retrieve-binaries.yml
+    parameters:
+      extensions:
+        - dll
+        - dylib
+        - so
+  - template: steps/-package.yml
+  - template: steps/-github-release.yml
+    parameters:
+      endpoint: github.com_ubolonton

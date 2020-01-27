@@ -8,7 +8,10 @@ source "$here/env.bash"
 (
     cd "$PROJECT_ROOT"
 
-    TARGET=release "$here/build"
+    cask build
+    cask package
 
-    cask build && cask package
+    tar_file="dist/tree-sitter-$(cask version).tar"
+    gzip --verbose "$tar_file" --stdout > "$tar_file.gz"
+    tar --gzip --list --file "$tar_file"
 )
