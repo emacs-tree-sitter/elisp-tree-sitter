@@ -43,12 +43,13 @@ resources:
   - repository: emacs-module-rs
     type: github
     name: ubolonton/emacs-module-rs
+    ref: azure-pipelines
     endpoint: ubolonton
 
 steps:
-- template: .azure-pipelines/steps/install-rust.yml@emacs-module-rs
-- template: .azure-pipelines/steps/set-up-llvm.yml@emacs-module-rs
+- template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
+- template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
 - template: steps/-build.yml
-- template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
-- template: steps/set-up-tree-sitter-cli.yml
+- template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
+- template: steps/setup-tree-sitter-cli.yml
 - template: steps/-test.yml

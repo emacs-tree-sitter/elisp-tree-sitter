@@ -32,9 +32,9 @@ jobs:
         EVM_EMACS: emacs-25.3
         DYN_EXT: so
   steps:
-  - template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
-  - template: .azure-pipelines/steps/install-rust.yml@emacs-module-rs
-  - template: .azure-pipelines/steps/set-up-llvm.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
   - template: steps/-build.yml
     parameters:
       target: release
@@ -47,8 +47,8 @@ jobs:
   variables:
     EVM_EMACS: emacs-26.3
   steps:
-  - template: .azure-pipelines/steps/install-emacs.yml@emacs-module-rs
-  - template: .azure-pipelines/steps/install-cask.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
   - template: steps/-retrieve-binaries.yml
     parameters:
       extensions:
