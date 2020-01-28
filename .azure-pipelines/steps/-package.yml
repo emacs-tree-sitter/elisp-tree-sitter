@@ -1,3 +1,6 @@
 steps:
 - bash: ./bin/package
   displayName: Create package
+
+- bash: gzip -v tree-sitter-dyn.*
+  displayName: Compress platform-specific dynamic modules
