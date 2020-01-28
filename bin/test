@@ -6,10 +6,10 @@ here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
 echo "[!!] Using Emacs binary from $(which $EMACS) version: $($EMACS --version)"
-if [[ $@ == "watch" ]]; then
+if [[ $* == "watch" ]]; then
     (
         cd "$PROJECT_ROOT"
-        cargo watch --ignore "$MODULE_RENAMED"  -s bin/build -s bin/test
+        cargo watch -s bin/build -s bin/test
     )
 else
     $EMACS --batch \

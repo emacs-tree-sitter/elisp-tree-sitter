@@ -1,13 +1,9 @@
 $here = $PSScriptRoot
 $project_root = (Get-Item $here).Parent.FullName
-$module_name = "tree_sitter_dyn"
-$module_renamed = $module_name.replace("_", "-")
-$target = "debug"
-$module_dir = "$project_root\target\$target"
 
 if ($args[0] -eq "watch") {
     Push-Location $project_root
-    cargo watch --ignore "$module_renamed.dll"  -s "powershell bin\build.ps1" -s "powershell bin\test.ps1"
+    cargo watch -s "powershell bin\build.ps1" -s "powershell bin\test.ps1"
     Pop-Location
 } else {
     # XXX: It seems that Emacs writes to stderr, so PowerShell thinks it's an error. Redirecting to
