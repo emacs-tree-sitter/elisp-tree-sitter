@@ -171,19 +171,21 @@ other data."
   "An alist of mappings from language name symbols to language objects.
 See `ts-require-language'.")
 
+(defvar ts--language-grammar-ext
+  (pcase system-type
+    ((or 'darwin 'gnu/linux) ".so")
+    ('windows-nt ".dll")
+    (_ (error "Unsupported system-type %s" system-type))))
+
 (defun ts--load-language-from-cli-dir (name &optional noerror)
   "Load and return the language NAME from the tree-sitter CLI's dir.
 See `ts--get-cli-directory'.
 
 If the optional arg NOERROR is non-nil, then return nil if the language is not
 found or cannot be loaded, instead of signaling an error."
-  (let* ((ext (pcase system-type
-                ((or 'darwin 'gnu/linux) "so")
-                ('windows-nt "dll")
-                (_ (error "Unsupported system-type %s" system-type))))
-         (file (concat (file-name-as-directory
+  (let* ((file (concat (file-name-as-directory
                         (concat (ts--get-cli-directory) "bin"))
-                       (format "%s.%s" name ext)))
+                       (format "%s%s" name ts--language-grammar-ext)))
          (symbol-name (format "tree_sitter_%s" name)))
     (if noerror
         (condition-case nil
