@@ -73,12 +73,10 @@ tree-sitter CLI."
 (defun tree-sitter--before-change (begin end)
   (setq tree-sitter--start-byte (ts-byte-from-position begin)
         tree-sitter--old-end-byte (ts-byte-from-position end))
-  (save-excursion
-    (save-restriction
-     (widen)
-     ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
-     (setq tree-sitter--start-point (ts--point-from-position begin)
-           tree-sitter--old-end-point (ts--point-from-position end)))))
+  (ts--save-context
+    ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
+    (setq tree-sitter--start-point (ts--point-from-position begin)
+          tree-sitter--old-end-point (ts--point-from-position end))))
 
 ;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
 ;;; different regions enclosed in the region passed to `before-change-functions'. Therefore what we

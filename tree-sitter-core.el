@@ -31,6 +31,14 @@
 (eval-when-compile
   (require 'subr-x))
 
+(defmacro ts--save-context (&rest body)
+  "Execute BODY wrapped in a `save-excursion', with narrowing removed."
+  (declare (indent 0))
+  `(save-excursion
+     (save-restriction
+       (widen)
+       ,@body)))
+
 
 ;;; Type conversion.
 
@@ -45,10 +53,8 @@
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
 The returned column counts bytes, which is different from `current-column'."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (ts--point-from-position position))))
+  (ts--save-context
+    (ts--point-from-position position)))
 
 (defun ts--point-from-position (position)
   "Internal implementation of `ts-point-from-position'.
@@ -62,14 +68,12 @@ Useful for internal code that wants to batch `save-excursion' and `save-restrict
 
 (defun ts-point-to-position (point)
   "Convert tree-sitter POINT to buffer position."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (let ((row (aref point 0))
-            (column (aref point 1)))
-        (goto-char 1)
-        (forward-line row)
-        (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position))))))))
+  (ts--save-context
+    (let ((row (aref point 0))
+          (column (aref point 1)))
+      (goto-char 1)
+      (forward-line row)
+      (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
 
 
 ;;; Extracting buffer's text.
