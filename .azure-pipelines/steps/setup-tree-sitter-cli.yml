@@ -1,4 +1,8 @@
 steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+
 - script: |
     echo ##vso[task.setvariable variable=TREE_SITTER_DIR]%CD%\ci-tools\tree-sitter
     npm install -g tree-sitter-cli

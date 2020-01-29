@@ -177,6 +177,7 @@ See `ts-require-language'.")
     ('windows-nt ".dll")
     (_ (error "Unsupported system-type %s" system-type))))
 
+;;; TODO: Move this to `tree-sitter-cli', so that `tree-sitter-langs' can use it.
 (defun ts--load-language-from-cli-dir (name &optional noerror)
   "Load and return the language NAME from the tree-sitter CLI's dir.
 See `ts--get-cli-directory'.

@@ -13,10 +13,14 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'subr-x)
+  (require 'pcase))
+
 (require 'seq)
 (require 'dired-aux)
 
-(require 'tree-sitter)
+;; (require 'tree-sitter)
 
 (defvar tree-sitter-langs-repos
   '((agda       "origin/master" "https://github.com/tree-sitter/tree-sitter-agda")
@@ -33,13 +37,13 @@
     (javascript "origin/master")
     (jsdoc      "origin/master")
     (json       "origin/master")
-    (julia      "origin/master")
+    ;; (julia      "origin/master")
     (ocaml      "origin/master")
     (php        "origin/master")
     (python     "origin/master")
     (ruby       "origin/master")
     (rust       "origin/master")
-    (scala      "origin/master")
+    ;; (scala      "origin/master")
     (swift      "origin/master")
     ;; (typescript "origin/master")
     )
@@ -52,10 +56,10 @@
 
 (defun tree-sitter-langs--source (lang-symbol)
   "Return a pair of (REPO . VERSION) to download grammar for LANG-SYMBOL from."
-  (when-let* ((source (alist-get lang-symbol tree-sitter-langs-repos))
-              (version (or (first source) "origin/master"))
-              (repo (or (second source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
-    (cons repo version)))
+  (when-let ((source (alist-get lang-symbol tree-sitter-langs-repos)))
+    (let ((version (or (car source) "origin/master"))
+          (repo (or (cadr source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
+      (cons repo version))))
 
 (defun tree-sitter-langs--call (program out &rest args)
   "Call PROGRAM with ARGS, using OUT as stdout."
@@ -74,6 +78,23 @@ In batch mode, return stdout."
       (delete-region (point-min) (point-max))
       (redisplay)
       buf)))
+
+(defun ts--get-cli-directory ()
+  "Return tree-sitter CLI's directory, including the ending separator.
+This is the directory where the CLI tool keeps compiled lang definitions, among
+other data."
+  (file-name-as-directory
+   (expand-file-name
+    ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
+    (if-let ((dir (getenv "TREE_SITTER_DIR")))
+        dir
+      "~/.tree-sitter"))))
+
+(defvar ts--language-grammar-ext
+  (pcase system-type
+    ((or 'darwin 'gnu/linux) ".so")
+    ('windows-nt ".dll")
+    (_ (error "Unsupported system-type %s" system-type))))
 
 ;;; TODO: Load to check binary compatibility.
 (defun tree-sitter-langs-compile (lang-symbol)
@@ -115,10 +136,11 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (message "[tree-sitter-langs] Processing %s" lang-symbol)
     (tree-sitter-langs-compile lang-symbol))
   (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-  (let* ((tar-file (concat (file-name-as-directory (expand-file-name default-directory))
+  (let* ((tar-file (concat (file-name-as-directory
+                            (expand-file-name default-directory))
                            "tree-sitter-langs.tar"))
          (default-directory (file-name-as-directory
-                             (concat (ts--get-cli-directory) "bin")))
+                             (expand-file-name (concat (ts--get-cli-directory) "bin"))))
          (out (tree-sitter-langs--buf-or-stdout "*tree-sitter-langs-create-bundle*"))
          (files (seq-filter (lambda (file)
                               (when (string-suffix-p ts--language-grammar-ext file)

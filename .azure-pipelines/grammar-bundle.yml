@@ -1,0 +1,29 @@
+trigger:
+- grammar-bundle
+
+strategy:
+  matrix:
+    vs2017-win2016:
+      IMAGE_NAME: 'vs2017-win2016'
+    macos-10.13-emacs-25.3:
+      IMAGE_NAME: 'macos-10.13'
+      EVM_EMACS: emacs-25.3
+    ubuntu-16.04-emacs-25.3:
+      IMAGE_NAME: 'ubuntu-16.04'
+      EVM_EMACS: emacs-25.3
+pool:
+  vmImage: $(IMAGE_NAME)
+
+resources:
+  repositories:
+  - repository: emacs-module-rs
+    type: github
+    name: ubolonton/emacs-module-rs
+    ref: azure-pipelines
+    endpoint: ubolonton
+
+steps:
+- template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
+- template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
+- template: steps/setup-tree-sitter-cli.yml
+- template: steps/-create-grammar-bundle.yml

@@ -1,0 +1,11 @@
+steps:
+- powershell: |
+    cask eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-create-bundle))"
+  displayName: Create grammar bundle (Windows)
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+
+- bash: |
+    set -e
+    cask eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-create-bundle))"
+  displayName: Create grammar bundle
+  condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
