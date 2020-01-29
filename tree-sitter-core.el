@@ -31,12 +31,18 @@
 (eval-when-compile
   (require 'subr-x))
 
+(defmacro ts--without-restriction (&rest body)
+  "Execute BODY with narrowing disabled."
+  (declare (indent 0))
+  `(save-restriction
+     (widen)
+     ,@body))
+
 (defmacro ts--save-context (&rest body)
-  "Execute BODY wrapped in a `save-excursion', with narrowing removed."
+  "Execute BODY wrapped in a `save-excursion', with narrowing disabled."
   (declare (indent 0))
   `(save-excursion
-     (save-restriction
-       (widen)
+     (ts--without-restriction
        ,@body)))
 
 
@@ -57,9 +63,10 @@ The returned column counts bytes, which is different from `current-column'."
     (ts--point-from-position position)))
 
 (defun ts--point-from-position (position)
-  "Convert POSITION to a tree-sitter point.
-This is useful for internal code that wants to batch operations in
-`save-excursion' and `save-restriction' contexts."
+  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
+Prefer `ts-byte-to-position', unless there's a real performance bottleneck.
+
+This function must be called within a `ts--save-context' block."
   (goto-char position)
   (let ((row (- (line-number-at-pos position) 1))
         ;; TODO: Add tests that fail if `current-column' is used instead.
@@ -81,8 +88,8 @@ This is useful for internal code that wants to batch operations in
 
 (defsubst ts-buffer-substring (beg-byte end-byte)
   "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.
-Narrowing must be removed before calling this function, using `save-restriction'
-and `widen'."
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
   (buffer-substring-no-properties
    (ts-byte-to-position beg-byte)
    (ts-byte-to-position end-byte)))
@@ -92,8 +99,8 @@ and `widen'."
 BYTE is zero-based, and is automatically clamped to the range valid for the
 current buffer.
 
-Narrowing must be removed before calling this function, using `save-restriction'
-and `widen'."
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
   (let* ((max-position (point-max))
          (beg-byte (max 0 byte))
          ;; ;; TODO: Don't hard-code read length.
@@ -102,6 +109,19 @@ and `widen'."
          (start (or (ts-byte-to-position beg-byte) max-position))
          (end (or (ts-byte-to-position end-byte) max-position)))
     (buffer-substring-no-properties start end)))
+
+(defun ts--node-text (node)
+  "Return NODE's text, assuming it's from the current buffer's syntax tree.
+Prefer `ts-node-text', unless there's a real bottleneck.
+
+This function must be called within a `ts--without-restriction' block."
+  (pcase-let ((`[,beg ,end] (ts-node-range node)))
+    (ts-buffer-substring beg end)))
+
+(defun ts-node-text (node)
+  "Return NODE's text, assuming it's from the current buffer's syntax tree."
+  (ts--without-restriction
+    (ts--node-text node)))
 
 
 ;;; Convenient versions of some functions.
@@ -234,11 +254,6 @@ If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
 Otherwise `ts-node-text' is used."
   (ts--query-cursor-captures
    (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
-
-(defun ts-node-text (node)
-  "Return NODE's text, assuming it's from a tree associated with the current buffer."
-  (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (ts-buffer-substring beg end)))
 
 
 ;;; Utilities.

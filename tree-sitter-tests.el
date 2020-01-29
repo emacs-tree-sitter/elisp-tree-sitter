@@ -200,6 +200,8 @@ tree is held (since nodes internally reference the tree)."
   (ts-test-with-temp-buffer "src/query.rs"
     (setq tree-sitter-language (ts-require-language 'rust))
     (tree-sitter-mode)
+    ;; This is to make sure it works correctly with narrowing.
+    (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-query
                       "((function_item (identifier) @function)
                         (match? @function \"make_query\"))
