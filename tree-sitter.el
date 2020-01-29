@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
-;; Keywords: parser dynamic-module tree-sitter
+;; Keywords: languages tools parsers dynamic-modules tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "25.1"))
@@ -70,12 +70,14 @@ tree-sitter CLI."
 (defvar-local tree-sitter--old-end-point [0 0])
 (defvar-local tree-sitter--new-end-point [0 0])
 
-(defun tree-sitter--before-change (begin end)
-  (setq tree-sitter--start-byte (ts-byte-from-position begin)
+(defun tree-sitter--before-change (beg end)
+  "Update relevant editing states. Installed on `before-change-functions'.
+BEG and END are the begin and end of the text to be changed."
+  (setq tree-sitter--start-byte (ts-byte-from-position beg)
         tree-sitter--old-end-byte (ts-byte-from-position end))
   (ts--save-context
     ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
-    (setq tree-sitter--start-point (ts--point-from-position begin)
+    (setq tree-sitter--start-point (ts--point-from-position beg)
           tree-sitter--old-end-point (ts--point-from-position end))))
 
 ;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
@@ -93,7 +95,11 @@ tree-sitter CLI."
 ;;;
 ;;; 4. What's the deal with several primitives calling `after-change-functions' *zero* or more
 ;;; times? Does that mean we can't rely on this hook at all?
-(defun tree-sitter--after-change (_begin end _length)
+(defun tree-sitter--after-change (_beg end _length)
+  "Update relevant editing states and reparse the buffer (incrementally).
+Installed on `after-change-functions'.
+
+END is the end of the changed text."
   (setq tree-sitter--new-end-byte (ts-byte-from-position end)
         tree-sitter--new-end-point (ts-point-from-position end))
   (when tree-sitter-tree

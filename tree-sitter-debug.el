@@ -18,6 +18,7 @@
   "Buffer used to display the syntax tree of this buffer.")
 
 (defun tree-sitter-debug--display-node (node depth)
+  "Display NODE that appears at the given DEPTH in the syntax tree."
   (insert (format "%s%s: \n" (make-string (* 2 depth) ?\ ) (ts-node-type node)))
   (ts-mapc-children (lambda (c)
                       (when (ts-node-named-p c)
@@ -25,6 +26,7 @@
                     node))
 
 (defun tree-sitter-debug--display-tree (_old-tree)
+  "Display the current `tree-sitter-tree'."
   ;; TODO: Re-render only affected nodes.
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer
@@ -53,7 +55,7 @@ This displays the syntax tree in another buffer, and keeps it up-to-date."
   (remove-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree 'local))
 
 (defun tree-sitter-query (patterns &optional matches index-only)
-  "Execute query PATTERNS against the current buffer's syntax tree and return captures.
+  "Execute query PATTERNS against the current syntax tree and return captures.
 
 If the optional arg MATCHES is non-nil, matches (from `ts-query-matches') are
 returned instead of captures (from `ts-query-captures').

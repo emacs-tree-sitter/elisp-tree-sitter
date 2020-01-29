@@ -57,8 +57,9 @@ The returned column counts bytes, which is different from `current-column'."
     (ts--point-from-position position)))
 
 (defun ts--point-from-position (position)
-  "Internal implementation of `ts-point-from-position'.
-Useful for internal code that wants to batch `save-excursion' and `save-restriction'."
+  "Convert POSITION to a tree-sitter point.
+This is useful for internal code that wants to batch operations in
+`save-excursion' and `save-restriction' contexts."
   (goto-char position)
   (let ((row (- (line-number-at-pos position) 1))
         ;; TODO: Add tests that fail if `current-column' is used instead.
@@ -87,8 +88,9 @@ and `widen'."
    (ts-byte-to-position end-byte)))
 
 (defun ts-buffer-input (byte _row _column)
-  "Return a portion of the current buffer's text starting from the given (0-based) BYTE offset.
-BYTE is automatically clamped to the valid range.
+  "Return a portion of the current buffer's text, starting from BYTE.
+BYTE is zero-based, and is automatically clamped to the range valid for the
+current buffer.
 
 Narrowing must be removed before calling this function, using `save-restriction'
 and `widen'."
@@ -105,14 +107,14 @@ and `widen'."
 ;;; Convenient versions of some functions.
 
 (defun ts-get-descendant-for-position-range (node beg end)
-  "Return the smallest node within NODE that spans the given range of positions."
+  "Return the smallest node within NODE that spans the position range [BEG END]."
   (ts-get-descendant-for-byte-range
    node
    (ts-byte-from-position beg)
    (ts-byte-from-position end)))
 
 (defun ts-get-named-descendant-for-position-range (node beg end)
-  "Return the smallest named node within NODE that spans the given range of positions."
+  "Return the smallest named node within NODE that spans the position range [BEG END]."
   (ts-get-named-descendant-for-byte-range
    node
    (ts-byte-from-position beg)
@@ -200,7 +202,8 @@ parsed with LANGUAGE."
     (ts--make-query language source)))
 
 (defun ts-query-matches (query node &optional cursor index-only text-function)
-  "Execute QUERY on NODE and return a vector of matches, in the order they were found.
+  "Execute QUERY on NODE and return a vector of matches.
+Matches are sorted in the order they were found.
 
 Each match is a `[pattern-index match-captures]' vector, where pattern-index is
 the position of the matched pattern within QUERY, and match-captures is a vector
@@ -217,7 +220,8 @@ Otherwise `ts-node-text' is used."
    (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
 
 (defun ts-query-captures (query node &optional cursor index-only text-function)
-  "Execute QUERY on NODE and return a vector of captures, in the order they appear.
+  "Execute QUERY on NODE and return a vector of captures.
+Matches are sorted in the order they appear.
 
 Each capture is a `[capture-name captured-node]' vector. If the optional arg
 INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is

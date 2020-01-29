@@ -19,7 +19,7 @@
   (require 'subr-x))
 
 (defun ts-test-make-parser (lang-symbol)
-  "Return a new parser for LANG."
+  "Return a new parser for LANG-SYMBOL."
   (let ((parser (ts-make-parser))
         (language (ts-require-language lang-symbol)))
     (ts-set-language parser language)
@@ -30,15 +30,17 @@
   (concat (file-name-directory (locate-library "tree-sitter")) relative-path))
 
 (defun ts-test-tree-sexp (sexp)
+  "Check that the current syntax tree's sexp representation is SEXP."
   (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
 
 (defmacro ts-test-with (lang-symbol var &rest body)
-  "Eval BODY with SYM bound to a new parser for language NAME."
+  "Eval BODY with VAR bound to a new parser for LANG-SYMBOL."
   (declare (indent 2))
   `(let ((,var (ts-test-make-parser ,lang-symbol)))
      ,@body))
 
 (defmacro ts-test-with-temp-buffer (relative-path &rest body)
+  "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH."
   (declare (indent 1))
   `(with-temp-buffer
      (insert-file-contents (ts-test-full-path ,relative-path))
