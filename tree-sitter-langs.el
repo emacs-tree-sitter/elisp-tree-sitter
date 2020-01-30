@@ -61,18 +61,31 @@
           (repo (or (cadr source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
       (cons repo version))))
 
-(defun tree-sitter-langs--call (program out &rest args)
-  "Call PROGRAM with ARGS, using OUT as stdout."
-  (message "[tree-sitter-langs] Running %s %s" program args)
-  (let ((exit-code (apply #'call-process program nil out 'display args)))
+;;; TODO: Use (maybe make) an async library, with a proper event loop, instead
+;;; of busy-waiting.
+(defun tree-sitter-langs--call (program buffer &rest args)
+  "Call PROGRAM with ARGS, using BUFFER as stdout+stderr.
+If BUFFER is nil, `princ' is used to forward its stdout+stderr."
+  (let* ((command `(,program . ,args))
+         (_ (message "[tree-sitter-langs] Running %s" command))
+         (base `(:name ,program :command ,command))
+         (output (if buffer
+                     `(:buffer ,buffer)
+                   `(:filter (lambda (proc string)
+                               (princ string)))))
+         (proc (apply #'make-process (append base output)))
+         (exit-code (progn
+                      (while (not (memq (process-status proc)
+                                        '(exit failed signal)))
+                        (sleep-for 0.1))
+                      (process-exit-status proc))))
     (unless (= exit-code 0)
-      (error "%s %s exited with code %s" program args exit-code))))
+      (error "%s exited with code %s" command exit-code))))
 
-(defun tree-sitter-langs--buf-or-stdout (name)
+(defun tree-sitter-langs--buffer (name)
   "Return a buffer from NAME, as the DESTINATION of `call-process'.
 In batch mode, return stdout."
-  (if noninteractive
-      '(:file "/dev/stdout")
+  (unless noninteractive
     (let ((buf (get-buffer-create name)))
       (pop-to-buffer buf)
       (delete-region (point-min) (point-max))
@@ -97,7 +110,7 @@ Requires git and tree-sitter CLI."
                 (error "Unknown language `%s'" lang-name)))
          (repo (car source))
          (version (cdr source))
-         (out (tree-sitter-langs--buf-or-stdout
+         (out (tree-sitter-langs--buffer
                (format "*tree-sitter-langs-compile %s*" lang-name))))
     (if (file-directory-p dir)
         (let ((default-directory dir))
@@ -123,7 +136,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                             (expand-file-name default-directory))
                            "tree-sitter-langs.tar"))
          (default-directory (tree-sitter-cli-bin-directory))
-         (out (tree-sitter-langs--buf-or-stdout "*tree-sitter-langs-create-bundle*"))
+         (out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
          (files (seq-filter (lambda (file)
                               (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
                                 file))
