@@ -126,8 +126,7 @@ END is the end of the changed text."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
           ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
-          (save-restriction
-            (widen)
+          (ts--without-restriction
             (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
