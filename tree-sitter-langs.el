@@ -14,6 +14,7 @@
 ;;; Code:
 
 (require 'seq)
+(require 'pp)
 (require 'dired-aux)
 
 (require 'tree-sitter-cli)
@@ -29,24 +30,23 @@
     (c-sharp    "origin/master")
     (cpp        "v0.16.0" )
     (css        "origin/master")
-    ;; (fluent     "origin/master"
+    (fluent     "origin/master")
     (go         "origin/master")
-    ;; (haskell    "origin/master")
+    (haskell    "origin/master")
     (html       "origin/master")
     (java       "origin/master")
     (javascript "origin/master")
     (jsdoc      "origin/master")
     (json       "origin/master")
-    ;; (julia      "origin/master")
+    (julia      "origin/master")
     (ocaml      "origin/master")
     (php        "origin/master")
     (python     "origin/master")
     (ruby       "origin/master")
     (rust       "origin/master")
-    ;; (scala      "origin/master")
+    (scala      "origin/master")
     (swift      "origin/master")
-    ;; (typescript "origin/master")
-    )
+    (typescript "origin/master"))
   "List of language symbols and their corresponding grammar sources.")
 
 (defvar tree-sitter-langs--grammars-dir
@@ -80,7 +80,7 @@ If BUFFER is nil, `princ' is used to forward its stdout+stderr."
                         (sleep-for 0.1))
                       (process-exit-status proc))))
     (unless (= exit-code 0)
-      (error "%s exited with code %s" command exit-code))))
+      (error "Error calling %s, exit code is %s" command exit-code))))
 
 (defun tree-sitter-langs--buffer (name)
   "Return a buffer from NAME, as the DESTINATION of `call-process'.
@@ -127,22 +127,31 @@ Requires git and tree-sitter CLI."
 (defun tree-sitter-langs-create-bundle ()
   "Create a bundle of language grammars.
 The bundle includes all languages declared in `tree-sitter-langs-repos'."
-  (pcase-dolist (`(,lang-symbol . _) tree-sitter-langs-repos)
+  (let ((errors (thread-last tree-sitter-langs-repos
+                  (seq-map
+                   (lambda (source)
+                     (pcase-let ((`(,lang-symbol . _) source))
+                       (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                       (message "[tree-sitter-langs] Processing %s" lang-symbol)
+                       (condition-case err
+                           (tree-sitter-langs-compile lang-symbol)
+                         (error `[,lang-symbol ,err])))))
+                  (seq-filter #'identity))))
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    (message "[tree-sitter-langs] Processing %s" lang-symbol)
-    (tree-sitter-langs-compile lang-symbol))
-  (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-  (let* ((tar-file (concat (file-name-as-directory
-                            (expand-file-name default-directory))
-                           "tree-sitter-langs.tar"))
-         (default-directory (tree-sitter-cli-bin-directory))
-         (out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
-         (files (seq-filter (lambda (file)
-                              (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
-                                file))
-                            (directory-files default-directory))))
-    (apply #'tree-sitter-langs--call "tar" out "-cvf" tar-file files)
-    (dired-compress-file tar-file)))
+    (when errors
+      (display-warning 'tree-sitter
+                       (format "Could not compile grammars:\n%s" (pp-to-string errors))))
+    (let* ((tar-file (concat (file-name-as-directory
+                              (expand-file-name default-directory))
+                             "tree-sitter-langs.tar"))
+           (default-directory (tree-sitter-cli-bin-directory))
+           (out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
+           (files (seq-filter (lambda (file)
+                                (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
+                                  file))
+                              (directory-files default-directory))))
+      (apply #'tree-sitter-langs--call "tar" out "-cvf" tar-file files)
+      (dired-compress-file tar-file))))
 
 (defun tree-sitter-langs-install ()
   "Download and install the language grammar bundle."
