@@ -1,0 +1,48 @@
+;;; tree-sitter-cli.el --- Utilities for tree-sitter CLI -*- lexical-binding: t; coding: utf-8 -*-
+
+;; Copyright (C) 2020 Tuấn-Anh Nguyễn
+;;
+;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+
+;;; Commentary:
+
+;; This file contains functions to work with the tree-sitter CLI. It must not
+;; depend (directly on indirectly) on `tree-sitter-dyn'.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'subr-x)
+  (require 'pcase))
+
+(defun tree-sitter-cli-directory ()
+  "Return tree-sitter CLI's directory, including the ending separator.
+This is the directory where the CLI tool keeps compiled lang definitions, among
+other data."
+  (file-name-as-directory
+   (expand-file-name
+    ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
+    (if-let ((dir (getenv "TREE_SITTER_DIR")))
+        dir
+      "~/.tree-sitter"))))
+
+(defun tree-sitter-cli-bin-directory ()
+  "Return the directory used by tree-sitter CLI to store compiled grammars."
+  (file-name-as-directory
+   (concat (tree-sitter-cli-directory) "bin")))
+
+(defvar tree-sitter-cli-compiled-grammar-ext
+  (pcase system-type
+    ((or 'darwin 'gnu/linux) ".so")
+    ('windows-nt ".dll")
+    (_ (error "Unsupported system-type %s" system-type))))
+
+(defun tree-sitter-cli-locate-language (lang-name)
+  "Return a pair of (GRAMMAR-FILE . NATIVE-SYMBOL-NAME) to load LANG-NAME from."
+  (let ((file (format "%s%s" lang-name tree-sitter-cli-compiled-grammar-ext))
+        (symbol-name (format "tree_sitter_%s" lang-name)))
+    (cons (concat (tree-sitter-cli-bin-directory) file)
+          symbol-name)))
+
+(provide 'tree-sitter-cli)
+;;; tree-sitter-cli.el ends here

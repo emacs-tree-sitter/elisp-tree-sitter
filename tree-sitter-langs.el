@@ -13,14 +13,14 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'subr-x)
-  (require 'pcase))
-
 (require 'seq)
 (require 'dired-aux)
 
-;; (require 'tree-sitter)
+(require 'tree-sitter-cli)
+
+(eval-when-compile
+  (require 'subr-x)
+  (require 'pcase))
 
 (defvar tree-sitter-langs-repos
   '((agda       "origin/master" "https://github.com/tree-sitter/tree-sitter-agda")
@@ -79,23 +79,6 @@ In batch mode, return stdout."
       (redisplay)
       buf)))
 
-(defun ts--get-cli-directory ()
-  "Return tree-sitter CLI's directory, including the ending separator.
-This is the directory where the CLI tool keeps compiled lang definitions, among
-other data."
-  (file-name-as-directory
-   (expand-file-name
-    ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
-    (if-let ((dir (getenv "TREE_SITTER_DIR")))
-        dir
-      "~/.tree-sitter"))))
-
-(defvar ts--language-grammar-ext
-  (pcase system-type
-    ((or 'darwin 'gnu/linux) ".so")
-    ('windows-nt ".dll")
-    (_ (error "Unsupported system-type %s" system-type))))
-
 ;;; TODO: Load to check binary compatibility.
 (defun tree-sitter-langs-compile (lang-symbol)
   "Download and compile the grammar for LANG-SYMBOL.
@@ -139,11 +122,10 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
   (let* ((tar-file (concat (file-name-as-directory
                             (expand-file-name default-directory))
                            "tree-sitter-langs.tar"))
-         (default-directory (file-name-as-directory
-                             (expand-file-name (concat (ts--get-cli-directory) "bin"))))
+         (default-directory (tree-sitter-cli-bin-directory))
          (out (tree-sitter-langs--buf-or-stdout "*tree-sitter-langs-create-bundle*"))
          (files (seq-filter (lambda (file)
-                              (when (string-suffix-p ts--language-grammar-ext file)
+                              (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
                                 file))
                             (directory-files default-directory))))
     (apply #'tree-sitter-langs--call "tar" out "-cvf" tar-file files)
