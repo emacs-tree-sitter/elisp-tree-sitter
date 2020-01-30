@@ -25,7 +25,7 @@ fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte offsets and in terms of
-/// `[row column]' coordinates, using zero-based indexing.
+/// `[ROW COLUMN]' coordinates, using zero-based indexing.
 #[defun]
 fn edit_tree(
     tree: Borrowed<Tree>,

@@ -228,7 +228,7 @@ parsed with LANGUAGE."
   "Execute QUERY on NODE and return a vector of matches.
 Matches are sorted in the order they were found.
 
-Each match is a `[pattern-index match-captures]' vector, where pattern-index is
+Each match is a `[PATTERN-INDEX MATCH-CAPTURES]' vector, where pattern-index is
 the position of the matched pattern within QUERY, and match-captures is a vector
 of captures by the match, similar to that returned by `ts-query-captures'. If
 the optional arg INDEX-ONLY is non-nil, positions of the capture patterns within
@@ -246,7 +246,7 @@ Otherwise `ts-node-text' is used."
   "Execute QUERY on NODE and return a vector of captures.
 Matches are sorted in the order they appear.
 
-Each capture is a `[capture-name captured-node]' vector. If the optional arg
+Each capture is a `[CAPTURE-NAME CAPTURED-NODE]' vector. If the optional arg
 INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is
 returned instead of its name.
 
