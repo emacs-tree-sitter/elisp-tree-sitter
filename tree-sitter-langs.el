@@ -61,16 +61,18 @@
           (repo (or (cadr source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
       (cons repo version))))
 
+(defvar tree-sitter-langs--out nil)
+
 ;;; TODO: Use (maybe make) an async library, with a proper event loop, instead
 ;;; of busy-waiting.
-(defun tree-sitter-langs--call (program buffer &rest args)
+(defun tree-sitter-langs--call (program &rest args)
   "Call PROGRAM with ARGS, using BUFFER as stdout+stderr.
 If BUFFER is nil, `princ' is used to forward its stdout+stderr."
   (let* ((command `(,program . ,args))
          (_ (message "[tree-sitter-langs] Running %s" command))
          (base `(:name ,program :command ,command))
-         (output (if buffer
-                     `(:buffer ,buffer)
+         (output (if tree-sitter-langs--out
+                     `(:buffer ,tree-sitter-langs--out)
                    `(:filter (lambda (proc string)
                                (princ string)))))
          (proc (apply #'make-process (append base output)))
@@ -100,8 +102,6 @@ Requires git and tree-sitter CLI."
     (error "Could not find git (needed to download grammars)"))
   (unless (executable-find "tree-sitter")
     (error "Could not find tree-sitter executable (needed to compile grammars)"))
-  (unless (executable-find "tar")
-    (error "Could not find tar executable (needed to bundle compiled grammars)"))
   (let* ((source (tree-sitter-langs--source lang-symbol))
          (lang-name (symbol-name lang-symbol))
          (dir (if source
@@ -110,23 +110,25 @@ Requires git and tree-sitter CLI."
                 (error "Unknown language `%s'" lang-name)))
          (repo (car source))
          (version (cdr source))
-         (out (tree-sitter-langs--buffer
-               (format "*tree-sitter-langs-compile %s*" lang-name))))
+         (tree-sitter-langs--out (tree-sitter-langs--buffer
+                                  (format "*tree-sitter-langs-compile %s*" lang-name))))
     (if (file-directory-p dir)
         (let ((default-directory dir))
-          (tree-sitter-langs--call "git" out "remote" "-v" "update"))
-      (tree-sitter-langs--call "git" out "clone" "-v" repo dir))
+          (tree-sitter-langs--call "git" "remote" "-v" "update"))
+      (tree-sitter-langs--call "git" "clone" "-v" repo dir))
     (let ((default-directory dir))
-      (tree-sitter-langs--call "git" out "reset" "--hard" version)
-      (tree-sitter-langs--call "npm" out "install")
-      (tree-sitter-langs--call "tree-sitter" out "generate")
-      (tree-sitter-langs--call "tree-sitter" out "test")
-      (tree-sitter-langs--call "git" out "reset" "--hard" "HEAD")
-      (tree-sitter-langs--call "git" out "clean" "-f"))))
+      (tree-sitter-langs--call "git" "reset" "--hard" version)
+      (tree-sitter-langs--call "npm" "install")
+      (tree-sitter-langs--call "tree-sitter" "generate")
+      (tree-sitter-langs--call "tree-sitter" "test")
+      (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
+      (tree-sitter-langs--call "git" "clean" "-f"))))
 
 (defun tree-sitter-langs-create-bundle ()
   "Create a bundle of language grammars.
 The bundle includes all languages declared in `tree-sitter-langs-repos'."
+  (unless (executable-find "tar")
+    (error "Could not find tar executable (needed to bundle compiled grammars)"))
   (let ((errors (thread-last tree-sitter-langs-repos
                   (seq-map
                    (lambda (source)
@@ -145,12 +147,17 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                               (expand-file-name default-directory))
                              "tree-sitter-langs.tar"))
            (default-directory (tree-sitter-cli-bin-directory))
-           (out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
+           (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
            (files (seq-filter (lambda (file)
                                 (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
                                   file))
-                              (directory-files default-directory))))
-      (apply #'tree-sitter-langs--call "tar" out "-cvf" tar-file files)
+                              (directory-files default-directory)))
+           ;; Disk names in Windows can confuse tar, so we need this option. BSD
+           ;; tar (macOS) doesn't have it, so we don't set it everywhere.
+           ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
+           (tar-opts (pcase system-type
+                       ('windows-nt '("--force-local")))))
+      (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
       (dired-compress-file tar-file))))
 
 (defun tree-sitter-langs-install ()
