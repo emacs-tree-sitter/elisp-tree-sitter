@@ -9,3 +9,7 @@ steps:
     cask eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-create-bundle))"
   displayName: Create grammar bundle
   condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
+
+- publish: $(System.DefaultWorkingDirectory)/tree-sitter-langs.tar.gz
+  artifact: tree-sitter-langs-$(BUNDLE_SUFFIX)
+  displayName: "Save grammar bundle: $(BUNDLE_SUFFIX)"

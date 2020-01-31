@@ -140,9 +140,6 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                          (error `[,lang-symbol ,err])))))
                   (seq-filter #'identity))))
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    (when errors
-      (display-warning 'tree-sitter
-                       (format "Could not compile grammars:\n%s" (pp-to-string errors))))
     (let* ((tar-file (concat (file-name-as-directory
                               (expand-file-name default-directory))
                              "tree-sitter-langs.tar"))
@@ -158,7 +155,12 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
            (tar-opts (pcase system-type
                        ('windows-nt '("--force-local")))))
       (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
-      (dired-compress-file tar-file))))
+      (let ((dired-compress-file-suffixes '(("\\.tar\\'" ".tar.gz" nil))))
+        (dired-compress-file tar-file)))
+    (when errors
+      (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+      (display-warning 'tree-sitter
+                       (format "Could not compile grammars:\n%s" (pp-to-string errors))))))
 
 (defun tree-sitter-langs-install ()
   "Download and install the language grammar bundle."

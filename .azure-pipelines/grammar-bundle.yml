@@ -5,12 +5,15 @@ strategy:
   matrix:
     vs2017-win2016:
       IMAGE_NAME: 'vs2017-win2016'
+      BUNDLE_SUFFIX: windows
     macos-10.13-emacs-25.3:
       IMAGE_NAME: 'macos-10.13'
       EVM_EMACS: emacs-25.3
+      BUNDLE_SUFFIX: macos
     ubuntu-16.04-emacs-25.3:
       IMAGE_NAME: 'ubuntu-16.04'
       EVM_EMACS: emacs-25.3
+      BUNDLE_SUFFIX: linux
 pool:
   vmImage: $(IMAGE_NAME)
 
