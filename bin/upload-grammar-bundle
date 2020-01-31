@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+SUBJ=ubolonton
+REPO=emacs-tree-sitter
+PKG=grammar-bundle
+
+LOCAL_PATH="$PROJECT_ROOT/tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz"
+
+FILE_NAME=tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz
+
+URL="https://api.bintray.com/content/$SUBJ/$REPO/$PKG/$BUNDLE_VERSION/$FILE_NAME"
+echo "Uploading to $URL"
+
+curl -i -v -T "$LOCAL_PATH" -u"$SUBJ":"$BINTRAY_API_KEY" "$URL"

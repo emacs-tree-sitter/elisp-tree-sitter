@@ -1,0 +1,22 @@
+parameters:
+  oses: []
+
+steps:
+
+# TODO: Set $BUNDLE_VERSION from a previous job instead.
+- bash: |
+    BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs) (princ tree-sitter-langs--version))")
+    echo "##vso[task.setvariable variable=BUNDLE_VERSION]$BUNDLE_VERSION"
+
+- ${{ each os in parameters.oses }}:
+  - task: DownloadPipelineArtifact@2
+    displayName: Retrieve tree-sitter-grammars-${{ os }}
+    inputs:
+      artifact: tree-sitter-grammars-${{ os }}
+      path: $(System.DefaultWorkingDirectory)
+  # TODO: Publish as well, instead of having to do so manually afterwards.
+  - bash: ./bin/upload-grammar-bundle
+    env:
+      BINTRAY_API_KEY: $(BINTRAY_API_KEY)
+      BUNDLE_OS: ${{ os }}
+    displayName: Upload grammar bundle to bintray

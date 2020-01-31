@@ -23,6 +23,15 @@
   (require 'subr-x)
   (require 'pcase))
 
+(defvar tree-sitter-langs--version "0.0.4")
+
+(defvar tree-sitter-langs--os
+  (pcase system-type
+    ('darwin "macos")
+    ('gnu/linux "linux")
+    ('windows-nt "windows")
+    (_ (error "Unsupported system-type %s" system-type))))
+
 (defvar tree-sitter-langs-repos
   '((agda       "origin/master" "https://github.com/tree-sitter/tree-sitter-agda")
     (bash       "origin/master")
@@ -142,7 +151,9 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     (let* ((tar-file (concat (file-name-as-directory
                               (expand-file-name default-directory))
-                             "tree-sitter-langs.tar"))
+                             (format "tree-sitter-grammars-%s-%s.tar"
+                                     tree-sitter-langs--os
+                                     tree-sitter-langs--version)))
            (default-directory (tree-sitter-cli-bin-directory))
            (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
            (files (seq-filter (lambda (file)
