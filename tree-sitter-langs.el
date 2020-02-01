@@ -127,7 +127,9 @@ Requires git and tree-sitter CLI."
       (tree-sitter-langs--call "git" "clone" "-v" repo dir))
     (let ((default-directory dir))
       (tree-sitter-langs--call "git" "reset" "--hard" version)
-      (tree-sitter-langs--call "npm" "install")
+      ;; TODO: Figure out why we need to skip `npm install' for some repos.
+      (ignore-errors
+        (tree-sitter-langs--call "npm" "install"))
       (tree-sitter-langs--call "tree-sitter" "generate")
       (tree-sitter-langs--call "tree-sitter" "test")
       (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
