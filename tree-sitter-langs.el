@@ -23,45 +23,56 @@
   (require 'subr-x)
   (require 'pcase))
 
-(defvar tree-sitter-langs--version "0.0.4")
+(defconst tree-sitter-langs--version "0.0.5")
 
-(defvar tree-sitter-langs--os
+(defconst tree-sitter-langs--os
   (pcase system-type
     ('darwin "macos")
     ('gnu/linux "linux")
     ('windows-nt "windows")
     (_ (error "Unsupported system-type %s" system-type))))
 
+(defconst tree-sitter-langs--bundle-file
+  (format "tree-sitter-grammars-%s-%s.tar"
+          tree-sitter-langs--os
+          tree-sitter-langs--version))
+
+(defconst tree-sitter-langs--bundle-url
+  (format "https://dl.bintray.com/ubolonton/emacs-tree-sitter/%s.gz"
+          tree-sitter-langs--bundle-file))
+
+;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional REPO-URL).
 (defvar tree-sitter-langs-repos
-  '((agda       "origin/master" "https://github.com/tree-sitter/tree-sitter-agda")
-    (bash       "origin/master")
-    (c          "origin/master")
-    (c-sharp    "origin/master")
-    (cpp        "v0.16.0" )
-    (css        "origin/master")
-    (fluent     "origin/master")
-    (go         "origin/master")
-    (haskell    "origin/master")
-    (html       "origin/master")
-    (java       "origin/master")
-    (javascript "origin/master")
-    (jsdoc      "origin/master")
-    (json       "origin/master")
-    (julia      "origin/master")
-    (ocaml      "origin/master")
-    (php        "origin/master")
-    (python     "origin/master")
-    (ruby       "origin/master")
-    (rust       "origin/master")
-    (scala      "origin/master")
-    (swift      "origin/master")
-    (typescript "origin/master"))
+  '((agda       "v1.2.1")
+    (bash       "v0.16.0")
+    (c          "v0.16.0")
+    (c-sharp    "v0.16.1")
+    (cpp        "v0.16.0")
+    (css        "v0.16.0")
+    (fluent     "v0.12.0")
+    (go         "v0.16.0")
+    (haskell    "v0.13.0")
+    (html       "v0.16.0")
+    (java       "v0.16.0")
+    (javascript "v0.16.0")
+    (jsdoc      "v0.16.0")
+    (json       "v0.16.0")
+    (julia      "v0.0.3")
+    (ocaml      "v0.15.0")
+    (php        "v0.16.1")
+    (python     "v0.16.0")
+    (ruby       "v0.16.1")
+    (rust       "v0.16.0")
+    (scala      "v0.13.0")
+    (swift      "a22fa5e")
+    (typescript "v0.16.1"))
   "List of language symbols and their corresponding grammar sources.")
 
-(defvar tree-sitter-langs--grammars-dir
+(defconst tree-sitter-langs--grammars-dir
   (file-name-as-directory
    (concat (file-name-directory (locate-library "tree-sitter"))
-           "grammars")))
+           "grammars"))
+  "Directory to store grammar repos, for compilation.")
 
 (defun tree-sitter-langs--source (lang-symbol)
   "Return a pair of (REPO . VERSION) to download grammar for LANG-SYMBOL from."
@@ -92,6 +103,21 @@ If BUFFER is nil, `princ' is used to forward its stdout+stderr."
                       (process-exit-status proc))))
     (unless (= exit-code 0)
       (error "Error calling %s, exit code is %s" command exit-code))))
+
+(defun tree-sitter-langs--get-latest-tags ()
+  "Return the `tree-sitter-langs-repos' with versions replaced by latest tags.
+If there's no tag, return \"origin/master\"."
+  (require 'magit)
+  (seq-map
+   (lambda (desc)
+     (pcase-let*
+         ((`(,lang-symbol . _) desc)
+          (lang-name (symbol-name lang-symbol))
+          (default-directory (concat tree-sitter-langs--grammars-dir
+                                     (format "tree-sitter-%s" lang-name))))
+       `(,lang-symbol ,(or (magit-get-current-tag)
+                           "origin/master"))))
+   tree-sitter-langs-repos))
 
 (defun tree-sitter-langs--buffer (name)
   "Return a buffer from NAME, as the DESTINATION of `call-process'.
@@ -142,8 +168,8 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (error "Could not find tar executable (needed to bundle compiled grammars)"))
   (let ((errors (thread-last tree-sitter-langs-repos
                   (seq-map
-                   (lambda (source)
-                     (pcase-let ((`(,lang-symbol . _) source))
+                   (lambda (desc)
+                     (pcase-let ((`(,lang-symbol . _) desc))
                        (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                        (message "[tree-sitter-langs] Processing %s" lang-symbol)
                        (condition-case err
@@ -153,9 +179,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     (let* ((tar-file (concat (file-name-as-directory
                               (expand-file-name default-directory))
-                             (format "tree-sitter-grammars-%s-%s.tar"
-                                     tree-sitter-langs--os
-                                     tree-sitter-langs--version)))
+                             tree-sitter-langs--bundle-file))
            (default-directory (tree-sitter-cli-bin-directory))
            (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
            (files (seq-filter (lambda (file)

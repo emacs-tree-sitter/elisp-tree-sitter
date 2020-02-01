@@ -36,7 +36,7 @@ Each function will be called with a single argument: the old tree."
   '((agda-mode       . agda)
     (sh-mode         . bash)
     (c-mode          . c)
-    ;; (c++-mode        . cpp)
+    (c++-mode        . cpp)
     (css-mode        . css)
     (go-mode         . go)
     (haskell-mode    . haskell)
@@ -44,7 +44,6 @@ Each function will be called with a single argument: the old tree."
     (java-mode       . java)
     (js-mode         . javascript)
     (js2-mode        . javascript)
-    ;; jsdoc
     (json-mode       . json)
     (julia-mode      . julia)
     (ocaml-mode      . ocaml)
