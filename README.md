@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/ubolonton/emacs-tree-sitter.svg?branch=master)](https://travis-ci.org/ubolonton/emacs-tree-sitter)
 [![Build Status](https://dev.azure.com/ubolonton/emacs-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/ubolonton/emacs-tree-sitter/_build/latest?definitionId=2&branchName=master)
 
-This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library.
+This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library. It requires Emacs 25.1 or above, built with dynamic module support.
 
 It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
 - Faster, fine-grained code highlighting.
@@ -12,62 +12,36 @@ It aims to be the foundation for a new breed of Emacs packages that understand c
 
 The author of tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
 
-## Pre-requisites
+## Installation
 
-- Emacs 25.1 or above, built with module support. This can be checked with `(functionp 'module-load)`.
-- [Rust toolchain](https://rustup.rs/), to build the dynamic module.
-- [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation), to build loadable language files from grammar repos.
-- `clang`, to generate the raw Rust binding for `emacs-module.h`.
+At this stage of the project, there are few end-user-visible features, but you can already install it to play around with the APIs.
 
-## Building and Installation
-
-- Clone this repo.
-- Build:
-    ```bash
-    make build
-    ```
-- Add this repo's directory to `load-path`.
-
-## Getting Language Files
-This package is currently not bundled with any language. Parsers for individual languages are to be built and loaded from shared dynamic libraries, using `tree-sitter` CLI tool.
-
-- Install `tree-sitter` CLI tool (if you don't use NodeJS, you can download the binary directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases)):
-    ```bash
-    # For yarn user
-    yarn global add tree-sitter-cli
-
-    # For npm user
-    npm install -g tree-sitter-cli
-    ```
-- Use the wrapper script [`bin/ensure-lang`](bin/ensure-lang) to download the grammar from [tree-sitter's GitHub org](https://github.com/tree-sitter) and build the parser:
-    ```bash
-    # The shared lib will be at ~/.tree-sitter/bin/rust.so (.dll on Windows)
-    make ensure/rust
-    ```
-- Load it in Emacs:
+- Check that Emacs was built with module support: `(functionp 'module-load)`.
+- Download and extract the latest `.tar.gz` archive from the [release page](https://github.com/ubolonton/emacs-tree-sitter/releases).
+- Install it with `package-install-file`, or just add the extracted directory to `load-path`.
+- Evaluate this (once) to download language grammars:
     ```emacs-lisp
-    (require 'tree-sitter)
-    (ts-require-language 'rust)
+    (require 'tree-sitter-langs)
+    (tree-sitter-langs-install)
     ```
+
+The package is not yet on MELPA, because it currently doesn't have a convenient way to distribute packages with pre-compiled binaries.
+
+If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for Development](#setup-for-development) instead.
 
 ## Basic Usage
 
-- Enable `tree-sitter` in a major mode:
+- Enable `tree-sitter` in a supported major mode (defined in `tree-sitter-major-mode-language-alist`):
     ```emacs-lisp
     (require 'tree-sitter)
-    ;;; Assuming ~/.tree-sitter/bin/rust.so was already generated.
     (add-hook 'rust-mode-hook #'tree-sitter-mode)
     ```
-- Show the debug view of a buffer's parse tree:
+- Show the debug view of a buffer's parse tree
     ```emacs-lisp
     (require 'tree-sitter-debug)
     (tree-sitter-debug-enable)
     ```
-- Customize the language to use for a major mode:
-    ```emacs-lisp
-    (add-to-list 'tree-sitter-major-mode-language-alist '(scala-mode . scala))
-    ```
-- Use the lower-level APIs directly:
+- Use the APIs:
     ```emacs-lisp
     (setq rust (ts-require-language 'rust))
     (setq parser (ts-make-parser))
@@ -96,7 +70,7 @@ This package is currently not bundled with any language. Parsers for individual 
 
 ### Types
 
-- `language`, `parser`, `tree`, `node`, `cursor`: corresponding tree-sitter types, embedded in `user-ptr` objects.
+- `language`, `parser`, `tree`, `node`, `cursor`, `query`: corresponding tree-sitter types, embedded in `user-ptr` objects.
 - `point`: a vector in the form of `[row column]`, where `row` and `column` are zero-based. This is different from Emacs's concept of "point". Also note that `column` counts bytes, unlike the current built-in function `current-column`.
 - `range`: a vector in the form of `[start-point end-point]`.
 
@@ -133,19 +107,90 @@ These types are understood only by this package. They are not recognized by `typ
     + `ts-query-matches`, `ts-query-captures`: execute a query, returning matches/captures.
     + `ts-set-byte-range`, `ts-set-point-range`: limit query execution to a range.
 
-## Development
-- Testing:
+## Setup for Development
+
+Clone this repo and add it to `load-path`.
+
+If you want to hack on the high-level features (in Lisp) only:
+- Evaluate this (once) to download the necessary binaries:
+    ```emacs-lisp
+    (require 'tree-sitter-langs)
+    (tree-sitter-download-dyn-module)
+    (tree-sitter-langs-install)
+    ```
+- Make changes to the `.el` files.
+- Add tests to `tree-sitter-tests.el` and run them with `./bin/test` (`.\bin\test` on Windows).
+
+If you want to build addtional (or all) grammars from source, or work on the core dynamic module, see the next 2 sections.
+
+### Building grammars from source
+
+- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation) (if you don't use NodeJS, you can download the binary directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases)):
     ```bash
+    # For yarn user
+    yarn global add tree-sitter-cli
+
+    # For npm user
+    npm install -g tree-sitter-cli
+    ```
+- Download the grammar repo:
+    ```bash
+    git clone https://github.com/oakmac/tree-sitter-clojure
+    ```
+- Build the grammar:
+    ```bash
+    cd tree-sitter-clojure
+    tree-sitter generate && tree-sitter test
+    ```
+- Register it with the major mode mapping:
+    ```emacs-lisp
+    (add-to-list 'tree-sitter-major-mode-language-alist '((clojure-mode . clojure)))
+    (add-hook 'clojure-mode-hook #'tree-sitter-mode)
+    ```
+- Or load it directly:
+    ```emacs-lisp
+    (ts-require-language 'clojure)
+    ```
+
+### Working on the dynamic module
+
+- Install the [Rust toolchain](https://rustup.rs/).
+- Install `clang`, to generate the raw Rust binding for `emacs-module.h`.
+- Build:
+    ```bash
+    # macOS/Linux
+    make build
+    ```
+    ```powershell
+    # Windows
+    .\bin\build
+    ```
+- Test:
+    ```bash
+    # macOS/Linux
     make test
     ```
-- Continuous testing (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
-    ```shell
+    ```powershell
+    # Windows
+    .\bin\test
+    ```
+- Continuously rebuild and test on change (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
+    ```bash
+    # macOS/Linux
     make watch
     ```
+    ```powershell
+    # Windows
+    .\bin\test watch
+    ```
 
-You can optionally export an environment variable called `EMACS` which will make tests to use a different binary of GNU Emacs (i.e.: `EMACS=/snap/bin/emacs make test`), otherwise the binary located with `which emacs` is used instead.
-
-On Windows, use PowerShell to run the corresponding `.ps1` scripts which are `./bin/build.ps1`, `./bin/ensure-lang.ps1` (this is used like this `./bin/ensure-lang.ps1 rust`) and `./bin/test.ps1`.
+To test against a different version of Emacs, set the environment variable `EMACS` (e.g. `EMACS=/snap/bin/emacs make test`).
 
 ## Alternative
 Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
+
+## Contribution
+
+Contributions are welcomed. Please take a look at the [issue list](https://github.com/ubolonton/emacs-tree-sitter/issues) for ideas, or [create a new issue](https://github.com/ubolonton/emacs-tree-sitter/issues/new) to describe any idea you have for improvement.
+
+Show respect and empathy towards others. Both technical empathy and general empathy are highly valued.
