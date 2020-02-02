@@ -79,7 +79,7 @@ If VERSION and OS are not spcified, use the defaults of
 
 (defconst tree-sitter-langs--grammars-dir
   (file-name-as-directory
-   (concat (file-name-directory (locate-library "tree-sitter"))
+   (concat (file-name-directory (locate-library "tree-sitter-langs"))
            "grammars"))
   "Directory to store grammar repos, for compilation.")
 
@@ -241,6 +241,36 @@ non-nil."
         (with-current-buffer (find-file dir)
           (when (bound-and-true-p dired-omit-mode)
             (dired-omit-mode -1)))))))
+
+;;; This doesn't actually belong here, but for convenience we don't want to put
+;;; this in another `tree-sitter-bootstrap' module.
+(defun tree-sitter-download-dyn-module ()
+  "Download the pre-compiled `tree-sitter-dyn' module."
+  (let* ((main-file (locate-library "tree-sitter.el"))
+         (_ (unless main-file
+              (error "Could not find tree-sitter.el")))
+         (version (with-temp-buffer
+                    (insert-file-contents-literally main-file)
+                    (unless (re-search-forward ";; Version: \\(.+\\)")
+                      (error "Could not determine tree-sitter version"))
+                    (match-string 1)))
+         (ext (pcase system-type
+                ('windows-nt "dll")
+                ('darwin "dylib")
+                ('gnu/linux "so")
+                (_ (error "Unsupported system-type %s" system-type))))
+         (dyn-file (format "tree-sitter-dyn.%s" ext))
+         (gz-file (format "%s.gz" dyn-file))
+         (url (format "https://github.com/ubolonton/emacs-tree-sitter/releases/download/%s/%s"
+                      version gz-file))
+         (default-directory (file-name-directory main-file)))
+    (if (file-exists-p dyn-file)
+        (when (y-or-n-p (format "Overwrite %s? " dyn-file))
+          (url-copy-file url gz-file)
+          (delete-file dyn-file)
+          (dired-compress-file gz-file))
+      (url-copy-file url gz-file)
+      (dired-compress-file gz-file))))
 
 (provide 'tree-sitter-langs)
 ;;; tree-sitter-langs.el ends here
