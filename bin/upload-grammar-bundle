@@ -6,8 +6,8 @@ here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
 SUBJ=ubolonton
-REPO=emacs-tree-sitter
-PKG=grammar-bundle
+REPO=emacs
+PKG=tree-sitter-grammars
 
 LOCAL_PATH="$PROJECT_ROOT/tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz"
 

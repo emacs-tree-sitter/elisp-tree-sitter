@@ -25,7 +25,7 @@
   (require 'subr-x)
   (require 'pcase))
 
-(defconst tree-sitter-langs--version "0.0.6")
+(defconst tree-sitter-langs--version "0.0.7")
 
 (defconst tree-sitter-langs--os
   (pcase system-type
@@ -47,7 +47,7 @@ If VERSION and OS are not spcified, use the defaults of
   "Rterun the URL to download the grammar bundle.
 If VERSION and OS are not spcified, use the defaults of
 `tree-sitter-langs--version' and `tree-sitter-langs--os'."
-  (format "https://dl.bintray.com/ubolonton/emacs-tree-sitter/%s"
+  (format "https://dl.bintray.com/ubolonton/emacs/%s"
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
