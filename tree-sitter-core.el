@@ -24,12 +24,15 @@
 ;; We still call this on macOS, as it's useful for other things as well.
 (require 'tree-sitter-dyn)
 
+(require 'tree-sitter-cli)
+
 (require 'simple)
 (require 'map)
 (require 'pp)
 
 (eval-when-compile
-  (require 'subr-x))
+  (require 'subr-x)
+  (require 'pcase))
 
 (defmacro ts--without-restriction (&rest body)
   "Execute BODY with narrowing disabled."
@@ -156,43 +159,27 @@ Return the index of the child node if one was found, nil otherwise."
 
 ;;; Language loading mechanism.
 
-(defun ts--get-cli-directory ()
-  "Return tree-sitter CLI's directory, including the ending separator.
-This is the directory where the CLI tool keeps compiled lang definitions, among
-other data."
-  (file-name-as-directory
-   (expand-file-name
-    ;; https://github.com/tree-sitter/tree-sitter/blob/1bad6dc/cli/src/config.rs#L20
-    (if-let ((dir (getenv "TREE_SITTER_DIR")))
-        dir
-      "~/.tree-sitter"))))
-
 (defvar ts--languages nil
   "An alist of mappings from language name symbols to language objects.
 See `ts-require-language'.")
 
+;;; TODO: Move this to `tree-sitter-cli', so that `tree-sitter-langs' can use it.
 (defun ts--load-language-from-cli-dir (name &optional noerror)
   "Load and return the language NAME from the tree-sitter CLI's dir.
-See `ts--get-cli-directory'.
+See `tree-sitter-cli-directory'.
 
 If the optional arg NOERROR is non-nil, then return nil if the language is not
 found or cannot be loaded, instead of signaling an error."
-  (let* ((ext (pcase system-type
-                ((or 'darwin 'gnu/linux) "so")
-                ('windows-nt "dll")
-                (_ (error "Unsupported system-type %s" system-type))))
-         (file (concat (file-name-as-directory
-                        (concat (ts--get-cli-directory) "bin"))
-                       (format "%s.%s" name ext)))
-         (symbol-name (format "tree_sitter_%s" name)))
+  (pcase-let ((`(,file . ,symbol-name) (tree-sitter-cli-locate-language name)))
     (if noerror
         (condition-case nil
             (ts--load-language file symbol-name)
           (rust-error nil))
       (ts--load-language file symbol-name))))
 
-;;; TODO: Support more loading mechanisms: bundled statically, packaged-together shared libs, shared
-;;; libs under ~/.emacs.d/.tree-sitter
+;;; TODO: Support more loading mechanisms: bundled statically, packaged-together
+;;; shared libs, shared libs under ~/.emacs.d/.tree-sitter. Also, remove this
+;;; file's dependency on `tree-sitter-cli'.
 (defun ts-load-language (lang-symbol)
   "Load and return a new language object identified by LANG-SYMBOL.
 The language should have been installed using tree-sitter CLI."
@@ -225,7 +212,7 @@ parsed with LANGUAGE."
   "Execute QUERY on NODE and return a vector of matches.
 Matches are sorted in the order they were found.
 
-Each match is a `[pattern-index match-captures]' vector, where pattern-index is
+Each match is a `[PATTERN-INDEX MATCH-CAPTURES]' vector, where pattern-index is
 the position of the matched pattern within QUERY, and match-captures is a vector
 of captures by the match, similar to that returned by `ts-query-captures'. If
 the optional arg INDEX-ONLY is non-nil, positions of the capture patterns within
@@ -243,7 +230,7 @@ Otherwise `ts-node-text' is used."
   "Execute QUERY on NODE and return a vector of captures.
 Matches are sorted in the order they appear.
 
-Each capture is a `[capture-name captured-node]' vector. If the optional arg
+Each capture is a `[CAPTURE-NAME CAPTURED-NODE]' vector. If the optional arg
 INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is
 returned instead of its name.
 

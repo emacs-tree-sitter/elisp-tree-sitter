@@ -33,19 +33,27 @@ Each function will be called with a single argument: the old tree."
   :group 'tree-sitter)
 
 (defcustom tree-sitter-major-mode-language-alist
-  '((rust-mode . rust)
-    (js-mode . javascript)
-    (js2-mode . javascript)
-    (python-mode . python)
-    (ruby-mode . ruby)
-    (php-mode . php)
-    (c-mode . c)
-    (c++-mode . cpp)
-    (java-mode . java)
-    (go-mode . go)
-    (sh-mode . bash)
-    (css-mode . css)
-    (html-mode . html))
+  '((agda-mode       . agda)
+    (sh-mode         . bash)
+    (c-mode          . c)
+    (c++-mode        . cpp)
+    (css-mode        . css)
+    (go-mode         . go)
+    (haskell-mode    . haskell)
+    (html-mode       . html)
+    (java-mode       . java)
+    (js-mode         . javascript)
+    (js2-mode        . javascript)
+    (json-mode       . json)
+    (julia-mode      . julia)
+    (ocaml-mode      . ocaml)
+    (php-mode        . php)
+    (python-mode     . python)
+    (ruby-mode       . ruby)
+    (rust-mode       . rust)
+    (scala-mode      . scala)
+    (swift-mode      . swift)
+    (typescript-mode . typescript))
   "Alist that maps major modes to tree-sitter language names.
 The corresponding language definitions should have been pre-installed with
 tree-sitter CLI."
@@ -117,8 +125,7 @@ END is the end of the changed text."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
           ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
-          (save-restriction
-            (widen)
+          (ts--without-restriction
             (ts-parse tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
@@ -144,6 +151,7 @@ END is the end of the changed text."
   (setq tree-sitter-tree nil
         tree-sitter-parser nil))
 
+;;;###autoload
 (define-minor-mode tree-sitter-mode
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
   :init-value nil

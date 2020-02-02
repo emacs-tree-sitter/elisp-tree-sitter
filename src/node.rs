@@ -72,16 +72,16 @@ defun_node_props! {
     /// Return NODE's start byte.
     "node-start-byte" fn start_byte -> usize
 
-    /// Return NODE's start point, as a `[row column]' vector.
+    /// Return NODE's start point, as a `[ROW COLUMN]' vector.
     "node-start-point" fn start_position -> Point; into
 
     /// Return NODE's end byte.
     "node-end-byte" fn end_byte -> usize
 
-    /// Return NODE's end point, as a `[row column]' vector.
+    /// Return NODE's end point, as a `[ROW COLUMN]' vector.
     "node-end-point" fn end_position -> Point; into
 
-    /// Return NODE's `[start-byte end-byte start-point end-point]'.
+    /// Return NODE's `[START-BYTE END-BYTE START-POINT END-POINT]'.
     "node-range" fn range -> Range; into
 
     // Counting child nodes ------------------------------------------------------------------------
