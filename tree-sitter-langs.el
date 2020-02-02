@@ -44,7 +44,7 @@ If VERSION and OS are not spcified, use the defaults of
           (or ext "")))
 
 (defun tree-sitter-langs--bundle-url (&optional version os)
-  "Rterun the URL to download the grammar bundle.
+  "Return the URL to download the grammar bundle.
 If VERSION and OS are not spcified, use the defaults of
 `tree-sitter-langs--version' and `tree-sitter-langs--os'."
   (format "https://dl.bintray.com/ubolonton/emacs/%s"
@@ -215,6 +215,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
         (display-warning 'tree-sitter
                          (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
+;;;###autoload
 (defun tree-sitter-langs-install (&optional version os keep-bundle)
   "Download and install the specified VERSION of the language grammar bundle.
 If VERSION and OS are not spcified, use the defaults of

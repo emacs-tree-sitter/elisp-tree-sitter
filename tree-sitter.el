@@ -151,6 +151,7 @@ END is the end of the changed text."
   (setq tree-sitter-tree nil
         tree-sitter-parser nil))
 
+;;;###autoload
 (define-minor-mode tree-sitter-mode
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
   :init-value nil

@@ -33,6 +33,7 @@
       (erase-buffer)
       (tree-sitter-debug--display-node (ts-root-node tree) 0))))
 
+;;;###autoload
 (defun tree-sitter-debug-enable ()
   "Enable debugging for the current buffer.
 This displays the syntax tree in another buffer, and keeps it up-to-date."
@@ -46,6 +47,7 @@ This displays the syntax tree in another buffer, and keeps it up-to-date."
   (add-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree nil 'local)
   (tree-sitter-debug--display-tree nil))
 
+;;;###autoload
 (defun tree-sitter-debug-disable ()
   "Disable debugging for the current buffer."
   (interactive)
