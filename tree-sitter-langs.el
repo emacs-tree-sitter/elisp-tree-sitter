@@ -23,7 +23,7 @@
   (require 'subr-x)
   (require 'pcase))
 
-(defconst tree-sitter-langs--version "0.0.5")
+(defconst tree-sitter-langs--version "0.0.6")
 
 (defconst tree-sitter-langs--os
   (pcase system-type
@@ -41,7 +41,7 @@
   (format "https://dl.bintray.com/ubolonton/emacs-tree-sitter/%s.gz"
           tree-sitter-langs--bundle-file))
 
-;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional REPO-URL).
+;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
 (defvar tree-sitter-langs-repos
   '((agda       "v1.2.1")
     (bash       "v0.16.0")
@@ -65,7 +65,7 @@
     (rust       "v0.16.0")
     (scala      "v0.13.0")
     (swift      "a22fa5e")
-    (typescript "v0.16.1"))
+    (typescript "v0.16.1" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.")
 
 (defconst tree-sitter-langs--grammars-dir
@@ -75,11 +75,12 @@
   "Directory to store grammar repos, for compilation.")
 
 (defun tree-sitter-langs--source (lang-symbol)
-  "Return a pair of (REPO . VERSION) to download grammar for LANG-SYMBOL from."
+  "Return a plist describing the source of the grammar for LANG-SYMBOL."
   (when-let ((source (alist-get lang-symbol tree-sitter-langs-repos)))
-    (let ((version (or (car source) "origin/master"))
-          (repo (or (cadr source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
-      (cons repo version))))
+    (let ((version (or (nth 0 source) "origin/master"))
+          (paths (or (nth 1 source) (list "")))
+          (repo (or (nth 2 source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
+      (list :repo repo :version version :paths paths))))
 
 (defvar tree-sitter-langs--out nil)
 
@@ -89,7 +90,7 @@
   "Call PROGRAM with ARGS, using BUFFER as stdout+stderr.
 If BUFFER is nil, `princ' is used to forward its stdout+stderr."
   (let* ((command `(,program . ,args))
-         (_ (message "[tree-sitter-langs] Running %s" command))
+         (_ (message "[tree-sitter-langs] Running %s in %s" command default-directory))
          (base `(:name ,program :command ,command))
          (output (if tree-sitter-langs--out
                      `(:buffer ,tree-sitter-langs--out)
@@ -133,6 +134,7 @@ In batch mode, return stdout."
 (defun tree-sitter-langs-compile (lang-symbol)
   "Download and compile the grammar for LANG-SYMBOL.
 Requires git and tree-sitter CLI."
+  (message "[tree-sitter-langs] Processing %s" lang-symbol)
   (unless (executable-find "git")
     (error "Could not find git (needed to download grammars)"))
   (unless (executable-find "tree-sitter")
@@ -140,11 +142,13 @@ Requires git and tree-sitter CLI."
   (let* ((source (tree-sitter-langs--source lang-symbol))
          (lang-name (symbol-name lang-symbol))
          (dir (if source
-                  (concat tree-sitter-langs--grammars-dir
-                          (format "tree-sitter-%s" lang-name))
+                  (file-name-as-directory
+                   (concat tree-sitter-langs--grammars-dir
+                           (format "tree-sitter-%s" lang-name)))
                 (error "Unknown language `%s'" lang-name)))
-         (repo (car source))
-         (version (cdr source))
+         (repo (plist-get source :repo))
+         (paths (plist-get source :paths))
+         (version (plist-get source :version))
          (tree-sitter-langs--out (tree-sitter-langs--buffer
                                   (format "*tree-sitter-langs-compile %s*" lang-name))))
     (if (file-directory-p dir)
@@ -156,8 +160,11 @@ Requires git and tree-sitter CLI."
       ;; TODO: Figure out why we need to skip `npm install' for some repos.
       (ignore-errors
         (tree-sitter-langs--call "npm" "install"))
-      (tree-sitter-langs--call "tree-sitter" "generate")
-      (tree-sitter-langs--call "tree-sitter" "test")
+      ;; A repo can have multiple grammars (e.g. typescript + tsx).
+      (dolist (path paths)
+        (let ((default-directory (file-name-as-directory (concat dir path))))
+          (tree-sitter-langs--call "tree-sitter" "generate")
+          (tree-sitter-langs--call "tree-sitter" "test")))
       (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
       (tree-sitter-langs--call "git" "clean" "-f"))))
 
@@ -171,33 +178,33 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                    (lambda (desc)
                      (pcase-let ((`(,lang-symbol . _) desc))
                        (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                       (message "[tree-sitter-langs] Processing %s" lang-symbol)
                        (condition-case err
                            (tree-sitter-langs-compile lang-symbol)
                          (error `[,lang-symbol ,err])))))
                   (seq-filter #'identity))))
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    (let* ((tar-file (concat (file-name-as-directory
-                              (expand-file-name default-directory))
-                             tree-sitter-langs--bundle-file))
-           (default-directory (tree-sitter-cli-bin-directory))
-           (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
-           (files (seq-filter (lambda (file)
-                                (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
-                                  file))
-                              (directory-files default-directory)))
-           ;; Disk names in Windows can confuse tar, so we need this option. BSD
-           ;; tar (macOS) doesn't have it, so we don't set it everywhere.
-           ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
-           (tar-opts (pcase system-type
-                       ('windows-nt '("--force-local")))))
-      (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
-      (let ((dired-compress-file-suffixes '(("\\.tar\\'" ".tar.gz" nil))))
-        (dired-compress-file tar-file)))
-    (when errors
-      (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-      (display-warning 'tree-sitter
-                       (format "Could not compile grammars:\n%s" (pp-to-string errors))))))
+    (unwind-protect
+        (let* ((tar-file (concat (file-name-as-directory
+                                  (expand-file-name default-directory))
+                                 tree-sitter-langs--bundle-file))
+               (default-directory (tree-sitter-cli-bin-directory))
+               (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
+               (files (seq-filter (lambda (file)
+                                    (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
+                                      file))
+                                  (directory-files default-directory)))
+               ;; Disk names in Windows can confuse tar, so we need this option. BSD
+               ;; tar (macOS) doesn't have it, so we don't set it everywhere.
+               ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
+               (tar-opts (pcase system-type
+                           ('windows-nt '("--force-local")))))
+          (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
+          (let ((dired-compress-file-suffixes '(("\\.tar\\'" ".tar.gz" nil))))
+            (dired-compress-file tar-file)))
+      (when errors
+        (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        (display-warning 'tree-sitter
+                         (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
 (defun tree-sitter-langs-install ()
   "Download and install the language grammar bundle."
