@@ -16,6 +16,8 @@
 (require 'seq)
 (require 'pp)
 (require 'dired-aux)
+(require 'url)
+(require 'tar-mode)
 
 (require 'tree-sitter-cli)
 
@@ -32,14 +34,21 @@
     ('windows-nt "windows")
     (_ (error "Unsupported system-type %s" system-type))))
 
-(defconst tree-sitter-langs--bundle-file
-  (format "tree-sitter-grammars-%s-%s.tar"
-          tree-sitter-langs--os
-          tree-sitter-langs--version))
+(defun tree-sitter-langs--bundle-file (&optional ext version os)
+  "Return the grammar bundle file's name, with optional EXT.
+If VERSION and OS are not spcified, use the defaults of
+`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+  (format "tree-sitter-grammars-%s-%s.tar%s"
+          (or os tree-sitter-langs--os)
+          (or version tree-sitter-langs--version)
+          (or ext "")))
 
-(defconst tree-sitter-langs--bundle-url
-  (format "https://dl.bintray.com/ubolonton/emacs-tree-sitter/%s.gz"
-          tree-sitter-langs--bundle-file))
+(defun tree-sitter-langs--bundle-url (&optional version os)
+  "Rterun the URL to download the grammar bundle.
+If VERSION and OS are not spcified, use the defaults of
+`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+  (format "https://dl.bintray.com/ubolonton/emacs-tree-sitter/%s"
+          (tree-sitter-langs--bundle-file ".gz" version os)))
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
 (defvar tree-sitter-langs-repos
@@ -186,7 +195,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (unwind-protect
         (let* ((tar-file (concat (file-name-as-directory
                                   (expand-file-name default-directory))
-                                 tree-sitter-langs--bundle-file))
+                                 (tree-sitter-langs--bundle-file)))
                (default-directory (tree-sitter-cli-bin-directory))
                (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
                (files (seq-filter (lambda (file)
@@ -206,9 +215,32 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
         (display-warning 'tree-sitter
                          (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
-(defun tree-sitter-langs-install ()
-  "Download and install the language grammar bundle."
-  TODO)
+(defun tree-sitter-langs-install (&optional version os keep-bundle)
+  "Download and install the specified VERSION of the language grammar bundle.
+If VERSION and OS are not spcified, use the defaults of
+`tree-sitter-langs--version' and `tree-sitter-langs--os'.
+
+The download bundle file is deleted after installation, unless KEEP-BUNDLE is
+non-nil."
+  (interactive)
+  (let ((dir (tree-sitter-cli-bin-directory)))
+    (unless (file-directory-p dir)
+      (make-directory dir t))
+    (let ((default-directory dir)
+          (bundle-file (tree-sitter-langs--bundle-file ".gz" version os)))
+      ;; FIX: Handle HTTP errors properly.
+      (url-copy-file (tree-sitter-langs--bundle-url version os)
+                     bundle-file 'ok-if-already-exists)
+      (with-temp-buffer
+        (insert-file-contents bundle-file)
+        (tar-mode)
+        (tar-untar-buffer))
+      (unless keep-bundle
+        (delete-file bundle-file 'trash))
+      (when (y-or-n-p (format "Show installed grammars in %s? " dir))
+        (with-current-buffer (find-file dir)
+          (when (bound-and-true-p dired-omit-mode)
+            (dired-omit-mode -1)))))))
 
 (provide 'tree-sitter-langs)
 ;;; tree-sitter-langs.el ends here
