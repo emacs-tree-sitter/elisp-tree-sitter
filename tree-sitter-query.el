@@ -57,11 +57,14 @@ The buffer on focus when the command is called is set as the target buffer"
         (builder-buffer (get-buffer-create "*tree-sitter-query-builder*")))
     (with-selected-window builder-window
       (switch-to-buffer builder-buffer))
+    (with-current-buffer target-buffer
+      (unless tree-sitter-mode
+        (tree-sitter-mode)))
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
       (insert "[]")
-      (add-hook post-command-hook 'tree-sitter-query--after-post-command nil t))
+      (add-hook 'post-command-hook 'tree-sitter-query--after-post-command nil t))
     (setf tree-sitter-query--target-buffer target-buffer)
     (select-window builder-window)))
 
