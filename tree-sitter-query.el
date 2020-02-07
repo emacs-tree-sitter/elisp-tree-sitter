@@ -44,8 +44,11 @@
         (message "[ERR] no matches found or invalid query")))))
 
 (defun tree-sitter-query--after-post-command ()
-  (when (eq this-command 'self-insert-command)
-    (message "this is a test")))
+  (when (or (eq this-command 'self-insert-command)
+            (eq this-command 'insert-buffer))
+    (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
+      (with-demoted-errors
+          (tree-sitter-query--eval-query pattern)))))
 
 (defun tree-sitter-query-builder ()
   "Provide means for developers to write and test tree-sitter queries.
