@@ -25,7 +25,7 @@
   "face for highlighting matches")
 
 (defvar tree-sitter-query--target-buffer nil
-  "Target buffer to run the queries against")
+  "Target buffer to run the queries against.")
 
 (defun tree-sitter-query--highlight-node (node)
   "Highlight a node match in the current buffer"
