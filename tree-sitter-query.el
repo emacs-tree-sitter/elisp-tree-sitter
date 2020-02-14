@@ -43,30 +43,32 @@
             (tree-sitter-query--highlight-node (elt match 1)))
         (message "[ERR] no matches found or invalid query")))))
 
-(defun tree-sitter-query--after-post-command ()
-  (when (or (eq this-command 'self-insert-command)
-            (eq this-command 'insert-buffer))
-    (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
-      (with-demoted-errors
-          (tree-sitter-query--eval-query pattern)))))
+(defun tree-sitter-query--after-change (&rest args)
+  "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
+  (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
+    (with-demoted-errors
+        (tree-sitter-query--eval-query pattern))))
 
 (defun tree-sitter-query-builder ()
   "Provide means for developers to write and test tree-sitter queries.
 
 The buffer on focus when the command is called is set as the target buffer"
   (interactive)
-  (let ((target-buffer (current-buffer))
-        (builder-window (split-window-vertically -7))
-        (builder-buffer (get-buffer-create "*tree-sitter-query-builder*")))
-    (with-selected-window builder-window
-      (switch-to-buffer builder-buffer))
+  (let* ((target-buffer (current-buffer))
+         (builder-buffer (get-buffer-create "*tree-sitter-query-builder*"))
+         (builder-window-is-visible (get-buffer-window builder-buffer))
+         (builder-window))
+    (unless builder-window-is-visible
+      (setf builder-window (split-window-vertically -7))
+      (with-selected-window builder-window
+        (switch-to-buffer builder-buffer)))
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
         (tree-sitter-mode)))
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
-      (add-hook 'post-command-hook 'tree-sitter-query--after-post-command nil t))
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t))
     (setf tree-sitter-query--target-buffer target-buffer)
     (select-window builder-window)))
 
