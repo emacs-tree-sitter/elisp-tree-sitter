@@ -165,14 +165,14 @@ fn _query_cursor_captures<'e>(
     vec_to_vector(env, vec)
 }
 
-/// Set the byte range (BEG, END) in which queries will be executed by CURSOR.
+/// Limit CURSOR's query executions to the byte range [BEG END].
 #[defun]
 fn set_byte_range(cursor: &mut QueryCursor, beg: usize, end: usize) -> Result<()> {
     cursor.set_byte_range(beg, end);
     Ok(())
 }
 
-/// Set the point range (BEG, END) in which queries will be executed by CURSOR.
+/// Limit CURSOR's query executions to the point range [BEG END].
 #[defun]
 fn set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());
