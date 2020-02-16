@@ -17,8 +17,11 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 At this stage of the project, there are few end-user-visible features, but you can already install it to play around with the APIs.
 
 - Check that Emacs was built with module support: `(functionp 'module-load)`.
-- Download and extract the latest `.tar.gz` archive from the [release page](https://github.com/ubolonton/emacs-tree-sitter/releases).
-- Install it with `package-install-file`, or just add the extracted directory to `load-path`.
+- Add the tree-sitter ELPA to `package-archives` (remember to run `package-refresh-contents` afterwards):
+    ```emacs-lisp
+    (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
+    ```
+- Install `tree-sitter` like other normal packages.
 - Evaluate this (once) to download language grammars:
     ```emacs-lisp
     (require 'tree-sitter-langs)
