@@ -56,6 +56,7 @@ This displays the syntax tree in another buffer, and keeps it up-to-date."
     (setq tree-sitter-debug--tree-buffer nil))
   (remove-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree 'local))
 
+;;;###autoload
 (defun tree-sitter-query (patterns &optional matches index-only)
   "Execute query PATTERNS against the current syntax tree and return captures.
 
