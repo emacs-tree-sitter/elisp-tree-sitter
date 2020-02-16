@@ -189,7 +189,20 @@ If you want to build addtional (or all) grammars from source, or work on the cor
 
 To test against a different version of Emacs, set the environment variable `EMACS` (e.g. `EMACS=/snap/bin/emacs make test`).
 
+## Overall Plan
+
+Targeting lib authors:
+- Publish a `tree-sitter-grammars` package that bundles pre-compiled grammars, for ease of experimentation.
+- Write a guide on using the tree-sitter APIs.
+
+Targeting end users:
+- Pick a language, make a "killer" minor mode that extends its major mode in multiple ways.
+- Make minor modes for most common languages.
+- Extract common patterns from the language minor modes into helper language-diagnostic minor modes.
+- Get a language major mode to use tree-sitter for optional features.
+
 ## Alternative
+
 Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
 
 ## Contribution
