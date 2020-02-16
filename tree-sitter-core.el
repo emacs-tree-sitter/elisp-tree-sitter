@@ -84,7 +84,7 @@ This function must be called within a `ts--save-context' block."
           (column (aref point 1)))
       (goto-char 1)
       (forward-line row)
-      (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
+      (byte-to-position (+ column (position-bytes (line-beginning-position)))))))
 
 
 ;;; Extracting buffer's text.
