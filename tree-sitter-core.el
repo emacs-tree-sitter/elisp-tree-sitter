@@ -51,14 +51,6 @@
 
 ;;; Type conversion.
 
-(defsubst ts-byte-from-position (position)
-  "Return tree-sitter (0-based) byte offset for character at POSITION."
-  (- (position-bytes position) 1))
-
-(defsubst ts-byte-to-position (byte)
-  "Return the character position for tree-sitter (0-based) BYTE offset."
-  (byte-to-position (1+ byte)))
-
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
 The returned column counts bytes, which is different from `current-column'."
@@ -67,7 +59,7 @@ The returned column counts bytes, which is different from `current-column'."
 
 (defun ts--point-from-position (position)
   "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-Prefer `ts-byte-to-position', unless there's a real performance bottleneck.
+Prefer `ts-point-from-position', unless there's a real performance bottleneck.
 
 This function must be called within a `ts--save-context' block."
   (goto-char position)
@@ -89,29 +81,20 @@ This function must be called within a `ts--save-context' block."
 
 ;;; Extracting buffer's text.
 
-(defsubst ts-buffer-substring (beg-byte end-byte)
-  "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.
-This function must be called with narrowing disabled, e.g. within a
-`ts--without-restriction' block."
-  (buffer-substring-no-properties
-   (ts-byte-to-position beg-byte)
-   (ts-byte-to-position end-byte)))
-
-(defun ts-buffer-input (byte _row _column)
-  "Return a portion of the current buffer's text, starting from BYTE.
-BYTE is zero-based, and is automatically clamped to the range valid for the
-current buffer.
+(defun ts-buffer-input (bytepos _row _column)
+  "Return a portion of the current buffer's text, starting from BYTEPOS.
+BYTEPOS is automatically clamped to the range valid for the current buffer.
 
 This function must be called with narrowing disabled, e.g. within a
 `ts--without-restriction' block."
-  (let* ((max-position (point-max))
-         (beg-byte (max 0 byte))
+  (let* ((max-pos (point-max))
+         (beg-byte (max 1 bytepos))
          ;; ;; TODO: Don't hard-code read length.
          (end-byte (+ 1024 beg-byte))
-         ;; nil means > max-position, since we already made sure they are non-negative.
-         (start (or (ts-byte-to-position beg-byte) max-position))
-         (end (or (ts-byte-to-position end-byte) max-position)))
-    (buffer-substring-no-properties start end)))
+         ;; nil means > max-pos, since we already made sure they are non-negative.
+         (beg-pos (or (byte-to-position beg-byte) max-pos))
+         (end-pos (or (byte-to-position end-byte) max-pos)))
+    (buffer-substring-no-properties beg-pos end-pos)))
 
 (defun ts--node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree.
@@ -119,7 +102,9 @@ Prefer `ts-node-text', unless there's a real bottleneck.
 
 This function must be called within a `ts--without-restriction' block."
   (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (ts-buffer-substring beg end)))
+    (buffer-substring-no-properties
+     (byte-to-position beg)
+     (byte-to-position end))))
 
 (defun ts-node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree."
@@ -133,28 +118,28 @@ This function must be called within a `ts--without-restriction' block."
   "Return the smallest node within NODE that spans the position range [BEG END]."
   (ts-get-descendant-for-byte-range
    node
-   (ts-byte-from-position beg)
-   (ts-byte-from-position end)))
+   (position-bytes beg)
+   (position-bytes end)))
 
 (defun ts-get-named-descendant-for-position-range (node beg end)
   "Return the smallest named node within NODE that spans the position range [BEG END]."
   (ts-get-named-descendant-for-byte-range
    node
-   (ts-byte-from-position beg)
-   (ts-byte-from-position end)))
+   (position-bytes beg)
+   (position-bytes end)))
 
 (defun ts-node-start-position (node)
   "Return NODE's start position."
-  (ts-byte-to-position (ts-node-start-byte node)))
+  (byte-to-position (ts-node-start-byte node)))
 
 (defun ts-node-end-position (node)
   "Return NODE's end position."
-  (ts-byte-to-position (ts-node-end-byte node)))
+  (byte-to-position (ts-node-end-byte node)))
 
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
-  (ts-goto-first-child-for-byte cursor (ts-byte-from-position position)))
+  (ts-goto-first-child-for-byte cursor (position-bytes position)))
 
 
 ;;; Language loading mechanism.

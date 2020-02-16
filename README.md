@@ -74,8 +74,9 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 ### Types
 
 - `language`, `parser`, `tree`, `node`, `cursor`, `query`: corresponding tree-sitter types, embedded in `user-ptr` objects.
-- `point`: a vector in the form of `[row column]`, where `row` and `column` are zero-based. This is different from Emacs's concept of "point". Also note that `column` counts bytes, unlike the current built-in function `current-column`.
+- `point`: a vector in the form of `[row column]`, where `row` and `column` are 0-based. This is different from Emacs's concept of "point". Also note that `column` counts bytes, unlike the current built-in function `current-column`.
 - `range`: a vector in the form of `[start-point end-point]`.
+- Unlike tree-sitter's C/Rust APIs, this binding deals with Emacs's 1-based byte positions, instead of 0-based byte offsets.
 
 These types are understood only by this package. They are not recognized by `type-of`, but have corresponding type-checking predicates, which are useful for debugging: `ts-language-p`, `ts-tree-p`, `ts-node-p`...
 

@@ -24,22 +24,26 @@ fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
 
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.
 ///
-/// You must describe the edit both in terms of byte offsets and in terms of
-/// `[ROW COLUMN]' coordinates, using zero-based indexing.
+/// You must describe the edit both in terms of byte positions and in terms of
+/// `[ROW COLUMN]' coordinates.
+///
+/// Notes:
+/// - ROW is 0-based, which is different from Emacs's 1-based `line-number-at-pos'.
+/// - COLUMN counts bytes, unlike Emacs's `current-column', which works with chars.
 #[defun]
 fn edit_tree(
     tree: Borrowed<Tree>,
-    start_byte: usize,
-    old_end_byte: usize,
-    new_end_byte: usize,
+    start_bytepos: BytePos,
+    old_end_bytepos: BytePos,
+    new_end_bytepos: BytePos,
     start_point: Point,
     old_end_point: Point,
     new_end_point: Point,
 ) -> Result<()> {
     let edit = InputEdit {
-        start_byte,
-        old_end_byte,
-        new_end_byte,
+        start_byte: start_bytepos.into(),
+        old_end_byte: old_end_bytepos.into(),
+        new_end_byte: new_end_bytepos.into(),
         start_position: start_point.into(),
         old_end_position: old_end_point.into(),
         new_end_position: new_end_point.into(),
@@ -47,8 +51,6 @@ fn edit_tree(
     tree.borrow_mut().edit(&edit);
     Ok(())
 }
-
-// TODO: walk_with_properties
 
 /// Compare an edited OLD-TREE to NEW-TREE, both representing the same document.
 ///

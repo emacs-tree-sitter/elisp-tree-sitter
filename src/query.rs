@@ -28,20 +28,20 @@ fn _make_query(language: Language, source: String) -> Result<Query> {
 }
 
 macro_rules! defun_query_methods {
-    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident : $type:ty ),* ) )? -> $rtype:ty )*) => {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident : $type:ty ),* ) )? -> $rtype:ty $(; $into:ident)? )*) => {
         $(
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
             fn $name(query: &Query, $( $( $param : $type ),* )? ) -> Result<$rtype> {
-                Ok(query.$name( $( $( $param ),* )? ))
+                Ok(query.$name( $( $( $param ),* )? )$(.$into())?)
             }
         )*
     };
 }
 
 defun_query_methods! {
-    /// Return the byte offset where the NTH pattern starts in QUERY's source.
-    "query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> usize
+    /// Return the byte position where the NTH pattern starts in QUERY's source.
+    "query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> BytePos; into
 
     /// Return the number of patterns in QUERY.
     "query-count-patterns" fn pattern_count -> usize
@@ -165,10 +165,10 @@ fn _query_cursor_captures<'e>(
     vec_to_vector(env, vec)
 }
 
-/// Limit CURSOR's query executions to the byte range [BEG END].
+/// Limit CURSOR's query executions to the range of byte positions [BEG END].
 #[defun]
-fn set_byte_range(cursor: &mut QueryCursor, beg: usize, end: usize) -> Result<()> {
-    cursor.set_byte_range(beg, end);
+fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Result<()> {
+    cursor.set_byte_range(beg.into(), end.into());
     Ok(())
 }
 
