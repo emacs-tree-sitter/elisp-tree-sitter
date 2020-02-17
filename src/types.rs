@@ -50,17 +50,28 @@ impl_newtype_traits!(Point);
 
 impl IntoLisp<'_> for Point {
     fn into_lisp(self, env: &Env) -> Result<Value> {
-        let inner = self.0;
-        env.call("vector", (inner.row, inner.column))
+        env.call("vector", (self.line_number(), self.byte_column()))
     }
 }
 
 impl FromLisp<'_> for Point {
     fn from_lisp(value: Value) -> Result<Point> {
         let vector = Vector(value);
-        let row = vector.get(0)?;
+        let row = vector.get::<usize>(0)? - 1;
         let column = vector.get(1)?;
         Ok(tree_sitter::Point { row, column }.into())
+    }
+}
+
+impl Point {
+    #[inline(always)]
+    pub(crate) fn line_number(&self) -> usize {
+        self.0.row + 1
+    }
+
+    #[inline(always)]
+    pub(crate) fn byte_column(&self) -> usize {
+        self.0.column
     }
 }
 

@@ -72,16 +72,16 @@ defun_node_props! {
     /// Return NODE's start byte position.
     "node-start-byte" fn start_byte -> BytePos; into
 
-    /// Return NODE's start point, as a `[ROW COLUMN]' vector.
+    /// Return NODE's start point, as a [LINE-NUMBER BYTE-COLUMN] vector.
     "node-start-point" fn start_position -> Point; into
 
     /// Return NODE's end byte position.
     "node-end-byte" fn end_byte -> BytePos; into
 
-    /// Return NODE's end point, as a `[ROW COLUMN]' vector.
+    /// Return NODE's end point, as a [LINE-NUMBER BYTE-COLUMN] vector.
     "node-end-point" fn end_position -> Point; into
 
-    /// Return NODE's `[START-BYTEPOS END-BYTEPOS START-POINT END-POINT]'.
+    /// Return a vector of NODE's [START-BYTEPOS END-BYTEPOS START-POINT END-POINT].
     "node-range" fn range -> Range; into
 
     // Counting child nodes ------------------------------------------------------------------------
@@ -167,11 +167,13 @@ defun_node_props! {
 /// Edit NODE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte positions and in terms of
-/// `[ROW COLUMN]' coordinates.
+/// [LINE-NUMBER BYTE-COLUMN] coordinates.
 ///
-/// Notes:
-/// - ROW is 0-based, which is different from Emacs's 1-based `line-number-at-pos'.
-/// - COLUMN counts bytes, unlike Emacs's `current-column', which works with chars.
+/// LINE-NUMBER should be the number returned by `line-number-at-pos', which counts
+/// from 1.
+///
+/// BYTE-COLUMN should count from 0, like Emacs's `current-column'. However, unlike
+/// that function, it should count bytes, instead of displayed glyphs.
 ///
 /// This function is only rarely needed. When you edit a syntax tree, all of the
 /// nodes that you retrieve from the tree afterward will already reflect the edit.

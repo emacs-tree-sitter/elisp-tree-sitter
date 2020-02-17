@@ -74,9 +74,9 @@ tree-sitter CLI."
 (defvar-local tree-sitter--old-end-byte 1)
 (defvar-local tree-sitter--new-end-byte 1)
 
-(defvar-local tree-sitter--start-point [0 0])
-(defvar-local tree-sitter--old-end-point [0 0])
-(defvar-local tree-sitter--new-end-point [0 0])
+(defvar-local tree-sitter--start-point [1 0])
+(defvar-local tree-sitter--old-end-point [1 0])
+(defvar-local tree-sitter--new-end-point [1 0])
 
 (defun tree-sitter--before-change (beg end)
   "Update relevant editing states. Installed on `before-change-functions'.

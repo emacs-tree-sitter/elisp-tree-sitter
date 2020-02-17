@@ -25,11 +25,13 @@ fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte positions and in terms of
-/// `[ROW COLUMN]' coordinates.
+/// [LINE-NUMBER BYTE-COLUMN] coordinates.
 ///
-/// Notes:
-/// - ROW is 0-based, which is different from Emacs's 1-based `line-number-at-pos'.
-/// - COLUMN counts bytes, unlike Emacs's `current-column', which works with chars.
+/// LINE-NUMBER should be the number returned by `line-number-at-pos', which counts
+/// from 1.
+///
+/// BYTE-COLUMN should count from 0, like Emacs's `current-column'. However, unlike
+/// that function, it should count bytes, instead of displayed glyphs.
 #[defun]
 fn edit_tree(
     tree: Borrowed<Tree>,

@@ -134,7 +134,7 @@ tree is held (since nodes internally reference the tree)."
     (ert-info ("Testing buffer boundaries")
       (let ((min (point-min))
             (max (point-max)))
-        (should (equal [0 0] (ts-point-from-position min)))
+        (should (equal [1 0] (ts-point-from-position min)))
         (should (= min (ts-point-to-position (ts-point-from-position min))))
         (should (= max (ts-point-to-position (ts-point-from-position max))))))
     (ert-info ("Testing arbitrary points")

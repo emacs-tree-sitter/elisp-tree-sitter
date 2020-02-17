@@ -52,18 +52,18 @@
 ;;; Type conversion.
 
 (defun ts-point-from-position (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
+  "Convert POSITION to a valid tree-sitter point.
 The returned column counts bytes, which is different from `current-column'."
   (ts--save-context
     (ts--point-from-position position)))
 
 (defun ts--point-from-position (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
+  "Convert POSITION to a valid tree-sitter point.
 Prefer `ts-point-from-position', unless there's a real performance bottleneck.
 
 This function must be called within a `ts--save-context' block."
   (goto-char position)
-  (let ((row (- (line-number-at-pos position) 1))
+  (let ((row (line-number-at-pos position))
         ;; TODO: Add tests that fail if `current-column' is used instead.
         (column (- (position-bytes position)
                    (position-bytes (line-beginning-position)))))
@@ -75,7 +75,7 @@ This function must be called within a `ts--save-context' block."
     (let ((row (aref point 0))
           (column (aref point 1)))
       (goto-char 1)
-      (forward-line row)
+      (forward-line (- row 1))
       (byte-to-position (+ column (position-bytes (line-beginning-position)))))))
 
 
