@@ -120,13 +120,13 @@ fn _query_cursor_matches<'e>(
         for (ci, c) in m.captures.iter().enumerate() {
             let captured_node = node.map(|_| c.node);
             let capture = if index_only.is_some() {
-                env.vector((c.index, captured_node))?
+                env.cons(c.index, captured_node)?
             } else {
-                env.vector((&capture_names[c.index as usize], captured_node))?
+                env.cons(&capture_names[c.index as usize], captured_node)?
             };
             captures.set(ci, capture)?;
         }
-        let _match = env.vector((m.pattern_index, captures))?;
+        let _match = env.cons(m.pattern_index, captures)?;
         vec.push(_match);
     }
     vec_to_vector(env, vec)
@@ -156,9 +156,9 @@ fn _query_cursor_captures<'e>(
         let c = m.captures[capture_index];
         let captured_node = node.map(|_| c.node);
         let capture = if index_only.is_some() {
-            env.vector((c.index, captured_node))?
+            env.cons(c.index, captured_node)?
         } else {
-            env.vector((&capture_names[c.index as usize], captured_node))?
+            env.cons(&capture_names[c.index as usize], captured_node)?
         };
         vec.push(capture);
     }
