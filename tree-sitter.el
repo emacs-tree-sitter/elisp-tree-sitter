@@ -70,13 +70,13 @@ tree-sitter CLI."
 (defvar-local tree-sitter-language nil
   "Tree-sitter language.")
 
-(defvar-local tree-sitter--start-byte 1)
-(defvar-local tree-sitter--old-end-byte 1)
-(defvar-local tree-sitter--new-end-byte 1)
+(defvar-local tree-sitter--start-byte nil)
+(defvar-local tree-sitter--old-end-byte nil)
+(defvar-local tree-sitter--new-end-byte nil)
 
-(defvar-local tree-sitter--start-point [1 0])
-(defvar-local tree-sitter--old-end-point [1 0])
-(defvar-local tree-sitter--new-end-point [1 0])
+(defvar-local tree-sitter--start-point nil)
+(defvar-local tree-sitter--old-end-point nil)
+(defvar-local tree-sitter--new-end-point nil)
 
 (defun tree-sitter--before-change (beg end)
   "Update relevant editing states. Installed on `before-change-functions'.

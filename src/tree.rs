@@ -25,7 +25,7 @@ fn root_node(tree: Borrowed<Tree>) -> Result<RNode> {
 /// Edit the syntax TREE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte positions and in terms of
-/// [LINE-NUMBER BYTE-COLUMN] coordinates.
+/// (LINE-NUMBER . BYTE-COLUMN) coordinates.
 ///
 /// LINE-NUMBER should be the number returned by `line-number-at-pos', which counts
 /// from 1.

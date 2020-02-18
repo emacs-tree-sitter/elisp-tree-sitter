@@ -72,13 +72,13 @@ defun_node_props! {
     /// Return NODE's start byte position.
     "node-start-byte" fn start_byte -> BytePos; into
 
-    /// Return NODE's start point, as a [LINE-NUMBER BYTE-COLUMN] vector.
+    /// Return NODE's start point, in the form of (LINE-NUMBER . BYTE-COLUMN).
     "node-start-point" fn start_position -> Point; into
 
     /// Return NODE's end byte position.
     "node-end-byte" fn end_byte -> BytePos; into
 
-    /// Return NODE's end point, as a [LINE-NUMBER BYTE-COLUMN] vector.
+    /// Return NODE's end point, in the form of (LINE-NUMBER . BYTE-COLUMN).
     "node-end-point" fn end_position -> Point; into
 
     /// Return a vector of NODE's [START-BYTEPOS END-BYTEPOS START-POINT END-POINT].
@@ -167,7 +167,7 @@ defun_node_props! {
 /// Edit NODE to keep it in sync with source code that has been edited.
 ///
 /// You must describe the edit both in terms of byte positions and in terms of
-/// [LINE-NUMBER BYTE-COLUMN] coordinates.
+/// (LINE-NUMBER . BYTE-COLUMN) coordinates.
 ///
 /// LINE-NUMBER should be the number returned by `line-number-at-pos', which counts
 /// from 1.

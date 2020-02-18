@@ -53,7 +53,9 @@
 
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid tree-sitter point.
-The returned column counts bytes, which is different from `current-column'."
+
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+for a more detailed explanation."
   (ts--save-context
     (ts--point-from-position position)))
 
@@ -63,25 +65,28 @@ Prefer `ts-point-from-position', unless there's a real performance bottleneck.
 
 This function must be called within a `ts--save-context' block."
   (goto-char position)
-  (let ((row (line-number-at-pos position))
+  (let ((line-number (line-number-at-pos position))
         ;; TODO: Add tests that fail if `current-column' is used instead.
-        (column (- (position-bytes position)
-                   (position-bytes (line-beginning-position)))))
-    (vector row column)))
+        (byte-column (- (position-bytes position)
+                        (position-bytes (line-beginning-position)))))
+    (cons line-number byte-column)))
 
 (defun ts-point-to-position (point)
-  "Convert tree-sitter POINT to buffer position."
+  "Convert tree-sitter POINT to buffer position.
+
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+for a more detailed explanation."
   (ts--save-context
-    (let ((row (aref point 0))
-          (column (aref point 1)))
+    (let ((line-number (car point))
+          (byte-column (cdr point)))
       (goto-char 1)
-      (forward-line (- row 1))
-      (byte-to-position (+ column (position-bytes (line-beginning-position)))))))
+      (forward-line (- line-number 1))
+      (byte-to-position (+ byte-column (position-bytes (line-beginning-position)))))))
 
 
 ;;; Extracting buffer's text.
 
-(defun ts-buffer-input (bytepos _row _column)
+(defun ts-buffer-input (bytepos _line-number _byte-column)
   "Return a portion of the current buffer's text, starting from BYTEPOS.
 BYTEPOS is automatically clamped to the range valid for the current buffer.
 

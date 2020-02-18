@@ -74,7 +74,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 ### Types
 
 - `language`, `parser`, `tree`, `node`, `cursor`, `query`: corresponding tree-sitter types, embedded in `user-ptr` objects.
-- `point`: a vector in the form of `[LINE-NUMBER BYTE-COLUMN]`.
+- `point`: a pair of `(LINE-NUMBER . BYTE-COLUMN)`.
   + `LINE-NUMBER` is the absolute line number returned by `line-number-at-pos`, counting from 1.
   + `BYTE-COLUMN` counts from 0, like `current-column`. However, unlike that function, it counts bytes, instead of displayed glyphs.
 - `range`: a vector in the form of `[START-BYTEPOS END-BYTEPOS START-POINT END-POINT]`.

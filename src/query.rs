@@ -165,17 +165,17 @@ fn _query_cursor_captures<'e>(
     vec_to_vector(env, vec)
 }
 
-/// Limit CURSOR's query executions to the range of byte positions [BEG END].
+/// Limit CURSOR's query executions to the range of byte positions, from BEG to END.
 #[defun]
 fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Result<()> {
     cursor.set_byte_range(beg.into(), end.into());
     Ok(())
 }
 
-/// Limit CURSOR's query executions to the point range [BEG END].
+/// Limit CURSOR's query executions to the point range, from BEG to END.
 ///
-/// A "point" here means a vector of [LINE-NUMBER BYTE-COLUMN]. See `ts-parse' for
-/// an explanation of these values.
+/// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+/// for a more detailed explanation.
 #[defun]
 fn set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());
