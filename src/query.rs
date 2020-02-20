@@ -28,20 +28,20 @@ fn _make_query(language: Language, source: String) -> Result<Query> {
 }
 
 macro_rules! defun_query_methods {
-    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident : $type:ty ),* ) )? -> $rtype:ty )*) => {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident : $type:ty ),* ) )? -> $rtype:ty $(; $into:ident)? )*) => {
         $(
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
             fn $name(query: &Query, $( $( $param : $type ),* )? ) -> Result<$rtype> {
-                Ok(query.$name( $( $( $param ),* )? ))
+                Ok(query.$name( $( $( $param ),* )? )$(.$into())?)
             }
         )*
     };
 }
 
 defun_query_methods! {
-    /// Return the byte offset where the NTH pattern starts in QUERY's source.
-    "query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> usize
+    /// Return the byte position where the NTH pattern starts in QUERY's source.
+    "query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> BytePos; into
 
     /// Return the number of patterns in QUERY.
     "query-count-patterns" fn pattern_count -> usize
@@ -120,13 +120,13 @@ fn _query_cursor_matches<'e>(
         for (ci, c) in m.captures.iter().enumerate() {
             let captured_node = node.map(|_| c.node);
             let capture = if index_only.is_some() {
-                env.vector((c.index, captured_node))?
+                env.cons(c.index, captured_node)?
             } else {
-                env.vector((&capture_names[c.index as usize], captured_node))?
+                env.cons(&capture_names[c.index as usize], captured_node)?
             };
             captures.set(ci, capture)?;
         }
-        let _match = env.vector((m.pattern_index, captures))?;
+        let _match = env.cons(m.pattern_index, captures)?;
         vec.push(_match);
     }
     vec_to_vector(env, vec)
@@ -156,23 +156,26 @@ fn _query_cursor_captures<'e>(
         let c = m.captures[capture_index];
         let captured_node = node.map(|_| c.node);
         let capture = if index_only.is_some() {
-            env.vector((c.index, captured_node))?
+            env.cons(c.index, captured_node)?
         } else {
-            env.vector((&capture_names[c.index as usize], captured_node))?
+            env.cons(&capture_names[c.index as usize], captured_node)?
         };
         vec.push(capture);
     }
     vec_to_vector(env, vec)
 }
 
-/// Limit CURSOR's query executions to the byte range [BEG END].
+/// Limit CURSOR's query executions to the range of byte positions, from BEG to END.
 #[defun]
-fn set_byte_range(cursor: &mut QueryCursor, beg: usize, end: usize) -> Result<()> {
-    cursor.set_byte_range(beg, end);
+fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Result<()> {
+    cursor.set_byte_range(beg.into(), end.into());
     Ok(())
 }
 
-/// Limit CURSOR's query executions to the point range [BEG END].
+/// Limit CURSOR's query executions to the point range, from BEG to END.
+///
+/// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+/// for a more detailed explanation.
 #[defun]
 fn set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());

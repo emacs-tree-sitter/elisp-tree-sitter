@@ -69,19 +69,19 @@ defun_node_props! {
 
     // Position ------------------------------------------------------------------------------------
 
-    /// Return NODE's start byte.
-    "node-start-byte" fn start_byte -> usize
+    /// Return NODE's start byte position.
+    "node-start-byte" fn start_byte -> BytePos; into
 
-    /// Return NODE's start point, as a `[ROW COLUMN]' vector.
+    /// Return NODE's start point, in the form of (LINE-NUMBER . BYTE-COLUMN).
     "node-start-point" fn start_position -> Point; into
 
-    /// Return NODE's end byte.
-    "node-end-byte" fn end_byte -> usize
+    /// Return NODE's end byte position.
+    "node-end-byte" fn end_byte -> BytePos; into
 
-    /// Return NODE's end point, as a `[ROW COLUMN]' vector.
+    /// Return NODE's end point, in the form of (LINE-NUMBER . BYTE-COLUMN).
     "node-end-point" fn end_position -> Point; into
 
-    /// Return NODE's `[START-BYTE END-BYTE START-POINT END-POINT]'.
+    /// Return a vector of NODE's [START-BYTEPOS END-BYTEPOS START-POINT END-POINT].
     "node-range" fn range -> Range; into
 
     // Counting child nodes ------------------------------------------------------------------------
@@ -116,10 +116,10 @@ defun_node_navs! {
 
     // Child ---------------------------------------------------------------------------------------
 
-    /// Return NODE's child at the given zero-based index.
+    /// Return NODE's child at the given 0-based index.
     "get-nth-child" fn child(i: usize)
 
-    /// Return NODE's named child at the given zero-based index.
+    /// Return NODE's named child at the given 0-based index.
     "get-nth-named-child" fn named_child(i: usize)
 
     /// Return NODE's child with the given FIELD-NAME.
@@ -144,16 +144,18 @@ defun_node_navs! {
 
     // Descendant ----------------------------------------------------------------------------------
 
-    /// Return the smallest node within NODE that spans the given range of bytes.
-    "get-descendant-for-byte-range" fn descendant_for_byte_range(start: usize, end: usize)
+    /// Return the smallest node within NODE that spans the given range of byte
+    /// positions.
+    "get-descendant-for-byte-range" fn descendant_for_byte_range(start into: BytePos, end into: BytePos)
 
-    /// Return the smallest node within NODE that spans the given range of points.
+    /// Return the smallest node within NODE that spans the given point range.
     "get-descendant-for-point-range" fn descendant_for_point_range(start into: Point, end into: Point)
 
-    /// Return the smallest named node within NODE that spans the given range of bytes.
-    "get-named-descendant-for-byte-range" fn named_descendant_for_byte_range(start: usize, end: usize)
+    /// Return the smallest named node within NODE that spans the given range of byte
+    /// positions.
+    "get-named-descendant-for-byte-range" fn named_descendant_for_byte_range(start into: BytePos, end into: BytePos)
 
-    /// Return the smallest named node within NODE that spans the given range of points.
+    /// Return the smallest named node within NODE that spans the given point range.
     "get-named-descendant-for-point-range" fn named_descendant_for_point_range(start into: Point, end into: Point)
 }
 
@@ -164,26 +166,33 @@ defun_node_props! {
 
 /// Edit NODE to keep it in sync with source code that has been edited.
 ///
+/// You must describe the edit both in terms of byte positions and in terms of
+/// (LINE-NUMBER . BYTE-COLUMN) coordinates.
+///
+/// LINE-NUMBER should be the number returned by `line-number-at-pos', which counts
+/// from 1.
+///
+/// BYTE-COLUMN should count from 0, like Emacs's `current-column'. However, unlike
+/// that function, it should count bytes, instead of displayed glyphs.
+///
 /// This function is only rarely needed. When you edit a syntax tree, all of the
 /// nodes that you retrieve from the tree afterward will already reflect the edit.
 /// You only need to use this function when you have a node that you want to keep
 /// and continue to use after an edit.
-///
-/// Note that indexing must be zero-based.
 #[defun]
 fn edit_node(
     node: &mut RNode,
-    start_byte: usize,
-    old_end_byte: usize,
-    new_end_byte: usize,
+    start_bytepos: BytePos,
+    old_end_bytepos: BytePos,
+    new_end_bytepos: BytePos,
     start_point: Point,
     old_end_point: Point,
     new_end_point: Point,
 ) -> Result<()> {
     let edit = InputEdit {
-        start_byte,
-        old_end_byte,
-        new_end_byte,
+        start_byte: start_bytepos.into(),
+        old_end_byte: old_end_bytepos.into(),
+        new_end_byte: new_end_bytepos.into(),
         start_position: start_point.into(),
         old_end_position: old_end_point.into(),
         new_end_position: new_end_point.into(),

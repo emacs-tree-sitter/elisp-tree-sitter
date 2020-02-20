@@ -53,12 +53,12 @@ fn current_field_name(cursor: Value) -> Result<Value> {
 }
 
 macro_rules! defun_cursor_walks {
-    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident: $itype:ty ),* ) )? -> $type:ty)*) => {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $itype:ty ),* ) )? -> $type:ty)*) => {
         $(
             $(#[$meta])*
             #[defun$((name = $lisp_name))?]
             fn $name(cursor: &mut RCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
-                Ok(cursor.borrow_mut().$name( $( $( $param ),* )? ))
+                Ok(cursor.borrow_mut().$name( $( $( $param $(.$into())? ),* )? ))
             }
         )*
     };
@@ -77,9 +77,9 @@ defun_cursor_walks! {
     /// Return t if CURSOR successfully moved, nil if there was no next sibling node.
     fn goto_next_sibling -> bool
 
-    /// Move CURSOR to the first child that extends beyond the given byte offset.
+    /// Move CURSOR to the first child that extends beyond the given BYTEPOS.
     /// Return the index of the child node if one was found, nil otherwise.
-    "goto-first-child-for-byte" fn goto_first_child_for_byte(index: usize) -> Option<usize>
+    "goto-first-child-for-byte" fn goto_first_child_for_byte(bytepos into: BytePos) -> Option<usize>
 }
 
 /// Re-initialize CURSOR to start at a different NODE.

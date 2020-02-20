@@ -51,67 +51,55 @@
 
 ;;; Type conversion.
 
-(defsubst ts-byte-from-position (position)
-  "Return tree-sitter (0-based) byte offset for character at POSITION."
-  (- (position-bytes position) 1))
-
-(defsubst ts-byte-to-position (byte)
-  "Return the character position for tree-sitter (0-based) BYTE offset."
-  (byte-to-position (1+ byte)))
-
 (defun ts-point-from-position (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-The returned column counts bytes, which is different from `current-column'."
+  "Convert POSITION to a valid tree-sitter point.
+
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+for a more detailed explanation."
   (ts--save-context
     (ts--point-from-position position)))
 
 (defun ts--point-from-position (position)
-  "Convert POSITION to a valid (0-based indexed) tree-sitter point.
-Prefer `ts-byte-to-position', unless there's a real performance bottleneck.
+  "Convert POSITION to a valid tree-sitter point.
+Prefer `ts-point-from-position', unless there's a real performance bottleneck.
 
 This function must be called within a `ts--save-context' block."
   (goto-char position)
-  (let ((row (- (line-number-at-pos position) 1))
+  (let ((line-number (line-number-at-pos position))
         ;; TODO: Add tests that fail if `current-column' is used instead.
-        (column (- (position-bytes position)
-                   (position-bytes (line-beginning-position)))))
-    (vector row column)))
+        (byte-column (- (position-bytes position)
+                        (position-bytes (line-beginning-position)))))
+    (cons line-number byte-column)))
 
 (defun ts-point-to-position (point)
-  "Convert tree-sitter POINT to buffer position."
+  "Convert tree-sitter POINT to buffer position.
+
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+for a more detailed explanation."
   (ts--save-context
-    (let ((row (aref point 0))
-          (column (aref point 1)))
+    (let ((line-number (car point))
+          (byte-column (cdr point)))
       (goto-char 1)
-      (forward-line row)
-      (ts-byte-to-position (+ column (ts-byte-from-position (line-beginning-position)))))))
+      (forward-line (- line-number 1))
+      (byte-to-position (+ byte-column (position-bytes (line-beginning-position)))))))
 
 
 ;;; Extracting buffer's text.
 
-(defsubst ts-buffer-substring (beg-byte end-byte)
-  "Return the current buffer's text between (0-based) BEG-BYTE and END-BYTE.
-This function must be called with narrowing disabled, e.g. within a
-`ts--without-restriction' block."
-  (buffer-substring-no-properties
-   (ts-byte-to-position beg-byte)
-   (ts-byte-to-position end-byte)))
-
-(defun ts-buffer-input (byte _row _column)
-  "Return a portion of the current buffer's text, starting from BYTE.
-BYTE is zero-based, and is automatically clamped to the range valid for the
-current buffer.
+(defun ts-buffer-input (bytepos _line-number _byte-column)
+  "Return a portion of the current buffer's text, starting from BYTEPOS.
+BYTEPOS is automatically clamped to the range valid for the current buffer.
 
 This function must be called with narrowing disabled, e.g. within a
 `ts--without-restriction' block."
-  (let* ((max-position (point-max))
-         (beg-byte (max 0 byte))
+  (let* ((max-pos (point-max))
+         (beg-byte (max 1 bytepos))
          ;; ;; TODO: Don't hard-code read length.
          (end-byte (+ 1024 beg-byte))
-         ;; nil means > max-position, since we already made sure they are non-negative.
-         (start (or (ts-byte-to-position beg-byte) max-position))
-         (end (or (ts-byte-to-position end-byte) max-position)))
-    (buffer-substring-no-properties start end)))
+         ;; nil means > max-pos, since we already made sure they are non-negative.
+         (beg-pos (or (byte-to-position beg-byte) max-pos))
+         (end-pos (or (byte-to-position end-byte) max-pos)))
+    (buffer-substring-no-properties beg-pos end-pos)))
 
 (defun ts--node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree.
@@ -119,7 +107,9 @@ Prefer `ts-node-text', unless there's a real bottleneck.
 
 This function must be called within a `ts--without-restriction' block."
   (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (ts-buffer-substring beg end)))
+    (buffer-substring-no-properties
+     (byte-to-position beg)
+     (byte-to-position end))))
 
 (defun ts-node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree."
@@ -133,28 +123,28 @@ This function must be called within a `ts--without-restriction' block."
   "Return the smallest node within NODE that spans the position range [BEG END]."
   (ts-get-descendant-for-byte-range
    node
-   (ts-byte-from-position beg)
-   (ts-byte-from-position end)))
+   (position-bytes beg)
+   (position-bytes end)))
 
 (defun ts-get-named-descendant-for-position-range (node beg end)
   "Return the smallest named node within NODE that spans the position range [BEG END]."
   (ts-get-named-descendant-for-byte-range
    node
-   (ts-byte-from-position beg)
-   (ts-byte-from-position end)))
+   (position-bytes beg)
+   (position-bytes end)))
 
 (defun ts-node-start-position (node)
   "Return NODE's start position."
-  (ts-byte-to-position (ts-node-start-byte node)))
+  (byte-to-position (ts-node-start-byte node)))
 
 (defun ts-node-end-position (node)
   "Return NODE's end position."
-  (ts-byte-to-position (ts-node-end-byte node)))
+  (byte-to-position (ts-node-end-byte node)))
 
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
-  (ts-goto-first-child-for-byte cursor (ts-byte-from-position position)))
+  (ts-goto-first-child-for-byte cursor (position-bytes position)))
 
 
 ;;; Language loading mechanism.
@@ -212,7 +202,7 @@ parsed with LANGUAGE."
   "Execute QUERY on NODE and return a vector of matches.
 Matches are sorted in the order they were found.
 
-Each match is a `[PATTERN-INDEX MATCH-CAPTURES]' vector, where PATTERN-INDEX is
+Each match has the form (PATTERN-INDEX . MATCH-CAPTURES), where PATTERN-INDEX is
 the position of the matched pattern within QUERY, and MATCH-CAPTURES is a vector
 of captures by the match, similar to that returned by `ts-query-captures'. If
 the optional arg INDEX-ONLY is non-nil, positions of the capture patterns within
@@ -230,7 +220,7 @@ Otherwise `ts-node-text' is used."
   "Execute QUERY on NODE and return a vector of captures.
 Matches are sorted in the order they appear.
 
-Each capture is a `[CAPTURE-NAME CAPTURED-NODE]' vector. If the optional arg
+Each capture has the form (CAPTURE-NAME . CAPTURED-NODE). If the optional arg
 INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is
 returned instead of its name.
 

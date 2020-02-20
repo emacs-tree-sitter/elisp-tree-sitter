@@ -70,19 +70,19 @@ tree-sitter CLI."
 (defvar-local tree-sitter-language nil
   "Tree-sitter language.")
 
-(defvar-local tree-sitter--start-byte 0)
-(defvar-local tree-sitter--old-end-byte 0)
-(defvar-local tree-sitter--new-end-byte 0)
+(defvar-local tree-sitter--start-byte nil)
+(defvar-local tree-sitter--old-end-byte nil)
+(defvar-local tree-sitter--new-end-byte nil)
 
-(defvar-local tree-sitter--start-point [0 0])
-(defvar-local tree-sitter--old-end-point [0 0])
-(defvar-local tree-sitter--new-end-point [0 0])
+(defvar-local tree-sitter--start-point nil)
+(defvar-local tree-sitter--old-end-point nil)
+(defvar-local tree-sitter--new-end-point nil)
 
 (defun tree-sitter--before-change (beg end)
   "Update relevant editing states. Installed on `before-change-functions'.
 BEG and END are the begin and end of the text to be changed."
-  (setq tree-sitter--start-byte (ts-byte-from-position beg)
-        tree-sitter--old-end-byte (ts-byte-from-position end))
+  (setq tree-sitter--start-byte (position-bytes beg)
+        tree-sitter--old-end-byte (position-bytes end))
   (ts--save-context
     ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
     (setq tree-sitter--start-point (ts--point-from-position beg)
@@ -108,7 +108,7 @@ BEG and END are the begin and end of the text to be changed."
 Installed on `after-change-functions'.
 
 END is the end of the changed text."
-  (setq tree-sitter--new-end-byte (ts-byte-from-position end)
+  (setq tree-sitter--new-end-byte (position-bytes end)
         tree-sitter--new-end-point (ts-point-from-position end))
   (when tree-sitter-tree
     (ts-edit-tree tree-sitter-tree

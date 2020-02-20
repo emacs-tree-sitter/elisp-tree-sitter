@@ -134,39 +134,13 @@ tree is held (since nodes internally reference the tree)."
     (ert-info ("Testing buffer boundaries")
       (let ((min (point-min))
             (max (point-max)))
-        (should (equal [0 0] (ts-point-from-position min)))
+        (should (equal '(1 . 0) (ts-point-from-position min)))
         (should (= min (ts-point-to-position (ts-point-from-position min))))
         (should (= max (ts-point-to-position (ts-point-from-position max))))))
     (ert-info ("Testing arbitrary points")
       (dotimes (_ 100)
         (let ((p (1+ (random (buffer-size)))))
           (should (= p (ts-point-to-position (ts-point-from-position p)))))))))
-
-(ert-deftest conversion::position<->ts-byte ()
-  (ts-test-with-temp-buffer "tree-sitter-tests.el"
-    ;; Some non-ascii texts to exercise this test:
-    ;; Nguyễn Tuấn Anh
-    ;; Нгуен Туан Ань
-    ;; 阮俊英
-    (ert-info ("Testing buffer boundaries")
-      (let ((min (point-min))
-            (max (point-max)))
-        (should (equal 0 (ts-byte-from-position min)))
-        (should (> (ts-byte-from-position max) (buffer-size)))
-        (should (= min (ts-byte-to-position (ts-byte-from-position min))))
-        (should (= max (ts-byte-to-position (ts-byte-from-position max))))))
-    (ert-info ("Testing arbitrary points")
-      (dotimes (_ 100)
-        (let* ((p0 (1+ (random (buffer-size))))
-               (p1 (1+ (random (buffer-size))))
-               (b0 (ts-byte-from-position p0))
-               (b1 (ts-byte-from-position p1)))
-          (should (>= (1+ b0) p0))
-          (should (= p0 (ts-byte-to-position b0)))
-          (ert-info ("Checking substrings")
-            (should (equal
-                     (buffer-substring-no-properties (min p0 p1) (max p0 p1))
-                     (ts-buffer-substring (min b0 b1) (max b0 b1))))))))))
 
 (ert-deftest buffer-input::non-ascii-characters ()
   (with-temp-buffer
@@ -207,11 +181,11 @@ tree is held (since nodes internally reference the tree)."
                         (match? @function \"make_query\"))
                        (macro_definition (identifier) @macro)"))
            (node-texts (mapcar (lambda (capture)
-                                 (pcase-let ((`[_ ,node] capture))
+                                 (pcase-let ((`(_ . ,node) capture))
                                    (ts-node-text node)))
                                captures))
            (capture-names (mapcar (lambda (capture)
-                                    (pcase-let ((`[,name node] capture)) name))
+                                    (pcase-let ((`(,name . _) capture)) name))
                                   captures)))
       (ert-info ("Should match specified functions and not more")
         (should (member "_make_query" node-texts))
