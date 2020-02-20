@@ -82,8 +82,8 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 These types are understood only by this package. They are not recognized by `type-of`, but have corresponding type-checking predicates, which are useful for debugging: `ts-language-p`, `ts-tree-p`, `ts-node-p`...
 
 For consistency with Emacs's conventions, this binding has some differences compared to the tree-sitter's C/Rust APIs:
-- It uses 1-based byte position, not 0-based byte offset.
-- It uses 1-based line number, not 0-based row.
+- It uses 1-based byte positions, not 0-based byte offsets.
+- It uses 1-based line numbers, not 0-based row coordinates.
 
 ### Functions
 
