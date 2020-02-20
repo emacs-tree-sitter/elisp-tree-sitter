@@ -3,6 +3,8 @@ trigger:
     include:
     - '*.*.*'
 
+pr: none
+
 resources:
   repositories:
   - repository: emacs-module-rs
