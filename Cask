@@ -1,10 +1,10 @@
-(package-file "tree-sitter.el")
+(package-file "lisp/tree-sitter.el")
 
-(files "*.el"
+(files "lisp/*.el"
        "README.md"
-       "tree-sitter-dyn.dylib"
-       "tree-sitter-dyn.so"
-       "tree-sitter-dyn.dll"
+       "lisp/tree-sitter-dyn.dylib"
+       "lisp/tree-sitter-dyn.so"
+       "lisp/tree-sitter-dyn.dll"
        "Cargo.toml"
        "Cargo.lock"
        "src")

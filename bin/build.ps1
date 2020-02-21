@@ -19,4 +19,4 @@ cargo build --all $extra
 
 Pop-Location
 
-Copy-Item $module_dir\$module_name.dll $project_root\$module_renamed.dll
+Copy-Item $module_dir\$module_name.dll $project_root\lisp\$module_renamed.dll

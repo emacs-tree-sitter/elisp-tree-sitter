@@ -20,8 +20,8 @@ if ($args[0] -eq "watch") {
     # https://stackoverflow.com/questions/2095088/error-when-calling-3rd-party-executable-from-powershell-when-using-an-ide
     $ErrorActionPreference = 'Continue'
     emacs --batch `
-      --directory $project_root `
+      --directory "$project_root\lisp" `
       -l ert `
-      -l tree-sitter-tests `
+      -l tree-sitter-tests.el `
       -f ert-run-tests-batch-and-exit
 }

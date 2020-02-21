@@ -118,7 +118,7 @@ For consistency with Emacs's conventions, this binding has some differences comp
 
 ## Setup for Development
 
-Clone this repo and add it to `load-path`.
+Clone this repo and add its `lisp` directory to `load-path`.
 
 If you want to hack on the high-level features (in Lisp) only:
 - Evaluate this (once) to download the necessary binaries:

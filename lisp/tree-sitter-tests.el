@@ -27,7 +27,9 @@
 
 (defun ts-test-full-path (relative-path)
   "Return full path from project RELATIVE-PATH."
-  (concat (file-name-directory (locate-library "tree-sitter")) relative-path))
+  (concat (file-name-directory
+           (directory-file-name
+            (file-name-directory (locate-library "tree-sitter")))) relative-path))
 
 (defun ts-test-tree-sexp (sexp)
   "Check that the current syntax tree's sexp representation is SEXP."
@@ -130,7 +132,7 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)))
 
 (ert-deftest conversion::position<->ts-point ()
-  (ts-test-with-temp-buffer "tree-sitter-tests.el"
+  (ts-test-with-temp-buffer "lisp/tree-sitter-tests.el"
     (ert-info ("Testing buffer boundaries")
       (let ((min (point-min))
             (max (point-max)))

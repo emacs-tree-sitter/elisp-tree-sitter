@@ -19,5 +19,5 @@ source "$here/env.bash"
     cargo build --all $extra
 
     MODULE_DIR="$PROJECT_ROOT/target/$TARGET"
-    cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./$MODULE_RENAMED"
+    cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./lisp/$MODULE_RENAMED"
 )

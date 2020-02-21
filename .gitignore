@@ -2,4 +2,4 @@
 **/*.rs.bk
 **/*.elc
 grammars/
-tree-sitter-dyn.*
+lisp/tree-sitter-dyn.*
