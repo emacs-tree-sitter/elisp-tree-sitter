@@ -78,13 +78,13 @@ If VERSION and OS are not spcified, use the defaults of
   "List of language symbols and their corresponding grammar sources.")
 
 (defconst tree-sitter-langs--grammars-dir
-  (concat
-   (let ((this-dir (file-name-directory (locate-library "tree-sitter-langs"))))
-     (if (file-exists-p (concat this-dir "Cargo.toml"))
-         this-dir
-       (file-name-directory
-        (directory-file-name this-dir))))
-   "grammars")
+  (let ((this-dir (file-name-directory (locate-library "tree-sitter-langs"))))
+    (file-name-as-directory
+     (concat (if (file-exists-p (concat this-dir "Cargo.toml"))
+                 this-dir
+               (file-name-directory
+                (directory-file-name this-dir)))
+             "grammars")))
   "Directory to store grammar repos, for compilation.")
 
 (defun tree-sitter-langs--source (lang-symbol)
