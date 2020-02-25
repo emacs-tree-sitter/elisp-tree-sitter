@@ -21,6 +21,7 @@
 ;;; Code:
 
 (require 'tree-sitter-core)
+(require 'tree-sitter-load)
 
 (defgroup tree-sitter nil
   "Incremental parsing system."
@@ -32,6 +33,7 @@ Each function will be called with a single argument: the old tree."
   :type 'hook
   :group 'tree-sitter)
 
+;;; TODO: Let `tree-sitter-grammars' populate this list.
 (defcustom tree-sitter-major-mode-language-alist
   '((agda-mode       . agda)
     (sh-mode         . bash)
@@ -135,8 +137,10 @@ END is the end of the changed text."
     ;; Determine the language symbol based on `major-mode' .
     (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
       (unless lang-symbol
+        ;; TODO: Consider doing nothing if the language is not supported, so
+        ;; that we can make this a global mode.
         (error "No language registered for major mode `%s'" major-mode))
-      (setq tree-sitter-language (ts-require-language lang-symbol))))
+      (setq tree-sitter-language (tree-sitter-require lang-symbol))))
   (setq tree-sitter-parser (ts-make-parser)
         tree-sitter-tree nil)
   (ts-set-language tree-sitter-parser tree-sitter-language)

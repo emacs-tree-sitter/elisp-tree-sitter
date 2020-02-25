@@ -20,6 +20,7 @@
 (require 'tar-mode)
 
 (require 'tree-sitter-cli)
+(require 'tree-sitter-load)
 
 (eval-when-compile
   (require 'subr-x)
@@ -203,7 +204,8 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                (default-directory (tree-sitter-cli-bin-directory))
                (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
                (files (seq-filter (lambda (file)
-                                    (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
+                                    (when (seq-some (lambda (ext) (string-suffix-p ext file))
+                                                    tree-sitter-load-extensions)
                                       file))
                                   (directory-files default-directory)))
                ;; Disk names in Windows can confuse tar, so we need this option. BSD

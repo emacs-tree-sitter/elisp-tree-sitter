@@ -21,7 +21,7 @@
 (defun ts-test-make-parser (lang-symbol)
   "Return a new parser for LANG-SYMBOL."
   (let ((parser (ts-make-parser))
-        (language (ts-require-language lang-symbol)))
+        (language (tree-sitter-require lang-symbol)))
     (ts-set-language parser language)
     parser))
 
@@ -56,7 +56,7 @@
     ;; XXX: `equal' seems to return nil even if 2 `user-ptr' objects have the same pointer and
     ;; finalizer. That's broken. Report a bug to emacs-devel.
     (should (equal (format "%s" (ts-parser-language parser))
-                   (format "%s" (ts-require-language 'rust))))))
+                   (format "%s" (tree-sitter-require 'rust))))))
 
 (ert-deftest parsing::rust-string ()
   (ts-test-with 'rust parser
@@ -92,7 +92,7 @@
 
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
-    (setq tree-sitter-language (ts-require-language 'rust))
+    (setq tree-sitter-language (tree-sitter-require 'rust))
     (tree-sitter-mode)
     (ts-test-tree-sexp '(source_file))
     (insert "fn")
@@ -147,7 +147,7 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest buffer-input::non-ascii-characters ()
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
-    (setq tree-sitter-language (ts-require-language 'javascript))
+    (setq tree-sitter-language (tree-sitter-require 'javascript))
     (tree-sitter-mode)
     (ts-test-tree-sexp '(program (expression_statement (string))))))
 
@@ -160,7 +160,7 @@ tree is held (since nodes internally reference the tree)."
     (call-interactively #'comment-or-uncomment-region)))
 
 (ert-deftest query::making ()
-  (let ((rust (ts-require-language 'rust)))
+  (let ((rust (tree-sitter-require 'rust)))
     (ert-info ("Should work on string")
       (should (= (ts-query-count-patterns
                   (ts-make-query rust "(function_item (identifier) @function)
@@ -174,7 +174,7 @@ tree is held (since nodes internally reference the tree)."
 
 (ert-deftest query::basic ()
   (ts-test-with-temp-buffer "src/query.rs"
-    (setq tree-sitter-language (ts-require-language 'rust))
+    (setq tree-sitter-language (tree-sitter-require 'rust))
     (tree-sitter-mode)
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
@@ -195,6 +195,10 @@ tree is held (since nodes internally reference the tree)."
         (should (not (member "capture_names" node-texts))))
       (ert-info ("Should capture some macros")
         (should (member "macro" capture-names))))))
+
+(ert-deftest load ()
+  (should-error (tree-sitter-require 'abc-xyz))
+  (tree-sitter-require 'rust))
 
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here
