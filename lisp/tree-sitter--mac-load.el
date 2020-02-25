@@ -29,3 +29,7 @@
                     (ts--try-load-dyn full-name)))
                 load-path))
   (fmakunbound 'ts--try-load-dyn))
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
