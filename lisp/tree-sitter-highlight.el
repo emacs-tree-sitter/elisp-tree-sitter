@@ -71,7 +71,7 @@
   "Face used for label"
   :group 'tree-sitter-highlight-faces)
 
-(defface tree-sitter-operator-face '(())
+(defface tree-sitter-operator-face '((default :inherit font-lock-keyword-face))
   "Face used for operator"
   :group 'tree-sitter-highlight-faces)
 
@@ -249,7 +249,7 @@ to faces.  Each function takes no arguments."
       ;; Find changes that are within the current window
       (mapc #'(lambda (range)
                 (let ((start (aref range 0))
-                      (end (aref range 1)))
+                       (end (aref range 1)))
                   ;; TODO: Improve this
                   (tree-sitter-highlight--highlight (max wstart start) (min wend end))))
         changes))))
