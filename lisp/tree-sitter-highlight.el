@@ -214,7 +214,8 @@ to faces.  Each function takes no arguments."
                   (gethash (car (split-string name "\\.")) tree-sitter-highlight--face-hash)))
           (start (ts-node-start-position node))
           (end   (ts-node-end-position node)))
-    (add-face-text-property start end face)))
+    (unless (get-text-property start 'face)
+      (add-face-text-property start end face))))
 
 (defun tree-sitter-highlight--get-injection (language)
   (cond ((eq language major-mode) '(tree-sitter-highlight--query
@@ -248,7 +249,7 @@ to faces.  Each function takes no arguments."
       ;; Find changes that are within the current window
       (mapc #'(lambda (range)
                 (let ((start (aref range 0))
-                       (end (aref range 1)))
+                      (end (aref range 1)))
                   ;; TODO: Improve this
                   (tree-sitter-highlight--highlight (max wstart start) (min wend end))))
         changes))))
