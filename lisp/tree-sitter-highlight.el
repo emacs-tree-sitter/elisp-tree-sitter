@@ -97,23 +97,23 @@
 
 (defface tree-sitter-type-face '((default :inherit font-lock-type-face))
   "Faced used for type"
-  :group 'tree-sitter-highlight-face)
+  :group 'tree-sitter-highlight-faces)
 
 (defface tree-sitter-type-builtin-face '((default :inherit font-lock-builtin-face))
   "Face used for type.builtin"
-  :group 'tree-sitter-highlight-face)
+  :group 'tree-sitter-highlight-faces)
 
 (defface tree-sitter-variable-face '((default :inherit font-lock-variable-name-face))
   "Face used for variable"
-  :group 'tree-sitter-highlight-face)
+  :group 'tree-sitter-highlight-faces)
 
 (defface tree-sitter-variable-builtin-face '((default :inherit font-lock-builtin-face))
   "Face used for variable.builtin"
-  :group 'tree-sitter-highlight-face)
+  :group 'tree-sitter-highlight-faces)
 
 (defface tree-sitter-variable-parameter-face '((default :inherit font-lock-variable-name-face))
   "Faced used for variable.parameter"
-  :group 'tree-sitter-highlight-face)
+  :group 'tree-sitter-highlight-faces)
 
 (defcustom tree-sitter-highlight-default-faces
   '(("attribute"             . tree-sitter-attribute-face)
