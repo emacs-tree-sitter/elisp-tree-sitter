@@ -33,32 +33,8 @@ Each function will be called with a single argument: the old tree."
   :type 'hook
   :group 'tree-sitter)
 
-;;; TODO: Let `tree-sitter-grammars' populate this list.
-(defcustom tree-sitter-major-mode-language-alist
-  '((agda-mode       . agda)
-    (sh-mode         . bash)
-    (c-mode          . c)
-    (c++-mode        . cpp)
-    (css-mode        . css)
-    (go-mode         . go)
-    (haskell-mode    . haskell)
-    (html-mode       . html)
-    (java-mode       . java)
-    (js-mode         . javascript)
-    (js2-mode        . javascript)
-    (json-mode       . json)
-    (julia-mode      . julia)
-    (ocaml-mode      . ocaml)
-    (php-mode        . php)
-    (python-mode     . python)
-    (ruby-mode       . ruby)
-    (rust-mode       . rust)
-    (scala-mode      . scala)
-    (swift-mode      . swift)
-    (typescript-mode . typescript))
-  "Alist that maps major modes to tree-sitter language names.
-The corresponding language definitions should have been pre-installed with
-tree-sitter CLI."
+(defcustom tree-sitter-major-mode-language-alist nil
+  "Alist that maps major modes to tree-sitter language names."
   :group 'tree-sitter
   :type '(alist :key-type symbol
                 :value-type symbol))

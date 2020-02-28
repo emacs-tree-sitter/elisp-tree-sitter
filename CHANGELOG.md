@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 - Remove functions `ts-require-language` and `ts-load-language`.
 - Added `tree-sitter-load`.
+- Moved `tree-sitter-langs` into its own package.
 
 ## [0.3.0] - 2020-02-21
 - Used Emacs's 1-based byte positions and line numbers instead of 0-based byte offsets and row coordinates.
