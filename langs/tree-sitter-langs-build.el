@@ -36,7 +36,7 @@
     (unless main-file
       (error "Could not find tree-sitter-langs.el"))
     (with-temp-buffer
-      (insert-file-contents-literally main-file)
+      (insert-file-contents main-file)
       (unless (re-search-forward ";; Version: \\(.+\\)")
         (error "Could not determine tree-sitter-langs version"))
       (match-string 1))))
@@ -147,7 +147,7 @@ If there's no tag, return \"origin/master\"."
 
 (defun tree-sitter-langs--buffer (name)
   "Return a buffer from NAME, as the DESTINATION of `call-process'.
-In batch mode, return stdout."
+In batch mode, return nil, so that stdout is used instead."
   (unless noninteractive
     (let ((buf (get-buffer-create name)))
       (pop-to-buffer buf)
@@ -158,7 +158,7 @@ In batch mode, return stdout."
 ;;; TODO: Load to check binary compatibility.
 (defun tree-sitter-langs-compile (lang-symbol)
   "Download and compile the grammar for LANG-SYMBOL.
-Requires git and tree-sitter CLI."
+This function requires git and tree-sitter CLI."
   (message "[tree-sitter-langs] Processing %s" lang-symbol)
   (unless (executable-find "git")
     (error "Could not find git (needed to download grammars)"))
@@ -190,6 +190,14 @@ Requires git and tree-sitter CLI."
         (let ((default-directory (file-name-as-directory (concat dir path))))
           (tree-sitter-langs--call "tree-sitter" "generate")
           (tree-sitter-langs--call "tree-sitter" "test")))
+      ;; On macOS, rename .so => .dylib, because we will make a "universal"
+      ;; bundle.
+      (when (eq system-type 'darwin)
+        ;; This renames existing ".so" files as well.
+        (let ((default-directory tree-sitter-langs--bin-dir))
+          (dolist (file (directory-files default-directory))
+            (when (string-suffix-p ".so" file)
+              (rename-file file (concat (file-name-base file) ".dylib"))))))
       (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
       (tree-sitter-langs--call "git" "clean" "-f"))))
 
@@ -266,7 +274,7 @@ non-nil."
          (_ (unless main-file
               (error "Could not find tree-sitter.el")))
          (version (with-temp-buffer
-                    (insert-file-contents-literally main-file)
+                    (insert-file-contents main-file)
                     (unless (re-search-forward ";; Version: \\(.+\\)")
                       (error "Could not determine tree-sitter version"))
                     (match-string 1)))

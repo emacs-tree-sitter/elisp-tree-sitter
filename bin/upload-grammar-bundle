@@ -16,4 +16,6 @@ FILE_NAME=tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz
 URL="https://api.bintray.com/content/$SUBJ/$REPO/$PKG/$BUNDLE_VERSION/$FILE_NAME"
 echo "Uploading to $URL"
 
-curl -i -v -T "$LOCAL_PATH" -u"$SUBJ":"$BINTRAY_API_KEY" "$URL"
+# curl -i -v -T "$LOCAL_PATH" -u"$SUBJ":"$BINTRAY_API_KEY" "$URL"
+
+# TODO: Publish as well, instead of having to do so manually afterwards.

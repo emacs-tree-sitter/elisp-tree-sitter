@@ -6,19 +6,43 @@ steps:
 # TODO: Set $BUNDLE_VERSION from a previous job instead. Or even better, use
 # Emacs Lisp to upload the files, instead of a bash script.
 - bash: |
-    BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs) (princ tree-sitter-langs--version))")
+    set -e
+    BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs-build) (princ tree-sitter-langs--version))")
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$BUNDLE_VERSION"
   workingDirectory: langs
 
 - ${{ each os in parameters.oses }}:
   - task: DownloadPipelineArtifact@2
-    displayName: Retrieve tree-sitter-grammars-${{ os }}
+    displayName: Retrieve tree-sitter-grammars-${{ os }}-$(BUNDLE_VERSION).tar.gz
     inputs:
       artifact: tree-sitter-grammars-${{ os }}
-      path: $(System.DefaultWorkingDirectory)
-  # TODO: Publish as well, instead of having to do so manually afterwards.
+      path: langs
+  - task: DownloadPipelineartifact@2
+    displayName: Retrieve tree-sitter-langs-$(BUNDLE_VERSION).tar for ${{ os }}
+    inputs:
+      artifact: tree-sitter-langs-${{ os }}
+      path: langs/${{ os }}
+
+- bash: ls
+  workingDirectory: langs
+
+- task: ExtractFiles@1
+  displayName: Extract tree-sitter-grammars archives (.tar.gz)
+  inputs:
+    archiveFilePatterns: langs/tree-sitter-grammars-*.tar.gz
+    destinationFolder: langs/bin
+    cleanDestinationFolder: no
+
+- bash: ls
+  workingDirectory: langs/bin
+
+- bash: cask package
+  displayName: Create a "universal" tree-sitter-langs package
+  workingDirectory: langs
+
+- ${{ each os in parameters.oses }}:
   - bash: ./bin/upload-grammar-bundle
+    displayName: Upload grammar bundle to bintray
     env:
       BINTRAY_API_KEY: $(BINTRAY_API_KEY)
       BUNDLE_OS: ${{ os }}
-    displayName: Upload grammar bundle to bintray
