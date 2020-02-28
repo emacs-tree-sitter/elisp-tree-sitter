@@ -9,7 +9,7 @@ SUBJ=ubolonton
 REPO=emacs
 PKG=tree-sitter-grammars
 
-LOCAL_PATH="$PROJECT_ROOT/tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz"
+LOCAL_PATH="$PROJECT_ROOT/langs/tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz"
 
 FILE_NAME=tree-sitter-grammars-$BUNDLE_OS-$BUNDLE_VERSION.tar.gz
 

@@ -1,4 +1,4 @@
 steps:
-- publish: $(System.DefaultWorkingDirectory)/tree-sitter-grammars-$(BUNDLE_OS)-$(BUNDLE_VERSION).tar.gz
+- publish: $(System.DefaultWorkingDirectory)/langs/tree-sitter-grammars-$(BUNDLE_OS)-$(BUNDLE_VERSION).tar.gz
   artifact: tree-sitter-grammars-$(BUNDLE_OS)
   displayName: Save tree-sitter-grammars-$(BUNDLE_OS)

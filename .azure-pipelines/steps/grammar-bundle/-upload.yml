@@ -8,6 +8,7 @@ steps:
 - bash: |
     BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs) (princ tree-sitter-langs--version))")
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$BUNDLE_VERSION"
+  workingDirectory: langs
 
 - ${{ each os in parameters.oses }}:
   - task: DownloadPipelineArtifact@2
