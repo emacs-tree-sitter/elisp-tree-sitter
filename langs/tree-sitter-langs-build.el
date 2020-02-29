@@ -211,7 +211,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (unwind-protect
         (let* ((tar-file (concat (file-name-as-directory
                                   (expand-file-name default-directory))
-                                 (tree-sitter-langs--bundle-file)))
+                                 (tree-sitter-langs--bundle-file) ".gz"))
                (default-directory tree-sitter-langs--bin-dir)
                (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
                (files (seq-filter (lambda (file)
@@ -224,9 +224,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
                (tar-opts (pcase system-type
                            ('windows-nt '("--force-local")))))
-          (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
-          (let ((dired-compress-file-suffixes '(("\\.tar\\'" ".tar.gz" nil))))
-            (dired-compress-file tar-file)))
+          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files)))
       (when errors
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (display-warning 'tree-sitter
@@ -288,6 +286,7 @@ non-nil."
           (delete-file dyn-file)
           (dired-compress-file gz-file))
       (url-copy-file url gz-file)
+      ;; FIX: Uncompressing with `dired-compress-file' doesn't work on Windows.
       (dired-compress-file gz-file))))
 
 (provide 'tree-sitter-langs-build)
