@@ -21,16 +21,9 @@ LANG=$1
 
 (
     cd "$PROJECT_ROOT"
-    mkdir -p grammars/
 
-    if [ ! -d "grammars/tree-sitter-$LANG" ]; then
-        git clone "https://github.com/tree-sitter/tree-sitter-$LANG" "grammars/tree-sitter-$LANG"
-    fi
-
-    cd "grammars/tree-sitter-$LANG"
-    git remote update
-    git reset --hard origin/HEAD
-
-    echo "Running 'tree-sitter test' for $LANG"
-    tree-sitter test
+    $EMACS --batch \
+           --directory "$PROJECT_ROOT/lisp" \
+           --directory "$PROJECT_ROOT/langs" \
+           --eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-ensure '$LANG))"
 )

@@ -120,7 +120,9 @@ If you want to hack on the high-level features (in Lisp) only:
 - Evaluate this (once) to download the necessary binaries:
     ```emacs-lisp
     (require 'tree-sitter-langs-build)
+    ;; Download pre-compiled `tree-sitter-dyn'.
     (tree-sitter-download-dyn-module)
+    ;; Download pre-compiled language grammars.
     (tree-sitter-langs-install)
     ```
 - Make changes to the `.el` files.
@@ -138,24 +140,16 @@ If you want to build addtional (or all) grammars from source, or work on the cor
     # For npm user
     npm install -g tree-sitter-cli
     ```
-- Download the grammar repo:
+- Run:
     ```bash
-    git clone https://github.com/oakmac/tree-sitter-clojure
+    # macOS/Linux
+    make ensure/rust
     ```
-- Build the grammar:
-    ```bash
-    cd tree-sitter-clojure
-    tree-sitter generate && tree-sitter test
+    ```powershell
+    # Windows
+    .\bin\ensure-lang rust
     ```
-- Register it with the major mode mapping:
-    ```emacs-lisp
-    (add-to-list 'tree-sitter-major-mode-language-alist '((clojure-mode . clojure)))
-    (add-hook 'clojure-mode-hook #'tree-sitter-mode)
-    ```
-- Or load it directly:
-    ```emacs-lisp
-    (tree-sitter-require 'clojure)
-    ```
+- You can modify`tree-sitter-langs-repos` if the language you need is not declared there.
 
 ### Working on the dynamic module
 
