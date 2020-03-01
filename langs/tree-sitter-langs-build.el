@@ -141,7 +141,7 @@ If there's no tag, return \"origin/master\"."
           (lang-name (symbol-name lang-symbol))
           (default-directory (concat tree-sitter-langs--repos-dir
                                      (format "tree-sitter-%s" lang-name))))
-       `(,lang-symbol ,(or (magit-get-current-tag)
+       `(,lang-symbol ,(or (magit-get-current-tag "origin/master")
                            "origin/master"))))
    tree-sitter-langs-repos))
 
