@@ -22,8 +22,8 @@ jobs:
       vs2017-win2016:
         IMAGE_NAME: 'vs2017-win2016'
         DYN_EXT: dll
-      macos-10.13-emacs-25.3:
-        IMAGE_NAME: 'macos-10.13'
+      macos-10.14-emacs-25.3:
+        IMAGE_NAME: 'macos-10.14'
         EVM_EMACS: emacs-25.3
         DYN_EXT: dylib
       ubuntu-16.04-emacs-25.3:
@@ -44,7 +44,7 @@ jobs:
 - job: Package
   dependsOn: Build
   pool:
-    vmImage: macos-10.14
+    vmImage: macos-10.15
   variables:
     EVM_EMACS: emacs-26.3
   steps:
