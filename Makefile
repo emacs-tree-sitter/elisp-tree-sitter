@@ -11,10 +11,10 @@ build: ## Build the bindings
 .PHONY: ensure/%
 ensure/%: ## Download grammar for a given language
 	@./bin/ensure-lang $*
-	@echo "[!!] load it in Emacs: \n\n\t(require 'tree-sitter)\n\t(ts-require-language '$*)\n"
+	@echo "[!!] load it in Emacs: \n\n\t(require 'tree-sitter)\n\t(tree-sitter-require '$*)\n"
 
 .PHONY: test
-test: ensure/rust ensure/javascript ensure/bash ## Run tests
+test: ## Run tests
 	@./bin/test
 
 .PHONY: watch

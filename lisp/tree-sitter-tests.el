@@ -14,9 +14,8 @@
 (require 'tree-sitter-langs)
 (require 'tree-sitter-debug)
 
-(tree-sitter-langs-ensure 'rust)
-(tree-sitter-langs-ensure 'bash)
-(tree-sitter-langs-ensure 'javascript)
+(dolist (lang-symbol '(rust bash javascript))
+  (tree-sitter-langs-ensure lang-symbol))
 
 (require 'ert)
 
