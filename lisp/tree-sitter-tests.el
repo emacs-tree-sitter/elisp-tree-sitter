@@ -14,19 +14,9 @@
 (require 'tree-sitter-langs)
 (require 'tree-sitter-debug)
 
-(defun ts-test--ensure-lang (lang-symbol)
-  (condition-case err
-      (tree-sitter-require lang-symbol)
-    (error
-     (display-warning 'tree-sitter-test
-                      (format "Could not load grammar for `%s', trying to compile it"
-                              lang-symbol))
-     (tree-sitter-langs-compile lang-symbol)
-     (tree-sitter-require lang-symbol))))
-
-(ts-test--ensure-lang 'rust)
-(ts-test--ensure-lang 'bash)
-(ts-test--ensure-lang 'javascript)
+(tree-sitter-langs-ensure 'rust)
+(tree-sitter-langs-ensure 'bash)
+(tree-sitter-langs-ensure 'javascript)
 
 (require 'ert)
 

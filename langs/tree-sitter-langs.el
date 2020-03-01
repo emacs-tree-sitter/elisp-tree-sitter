@@ -26,6 +26,20 @@
   (require 'pcase)
   (require 'cl-lib))
 
+(defun tree-sitter-langs-ensure (lang-symbol)
+  "Return the language object identified by LANG-SYMBOL.
+If it cannot be loaded, this function tries to compile the grammar.
+
+See `tree-sitter-langs-repos'."
+  (condition-case err
+      (tree-sitter-require lang-symbol)
+    (error
+     (display-warning 'tree-sitter-test
+                      (format "Could not load grammar for `%s', trying to compile it"
+                              lang-symbol))
+     (tree-sitter-langs-compile lang-symbol)
+     (tree-sitter-require lang-symbol))))
+
 ;;; Add the bundle directory.
 (cl-pushnew tree-sitter-langs--bin-dir
             tree-sitter-load-path)

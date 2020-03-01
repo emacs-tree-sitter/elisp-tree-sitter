@@ -155,7 +155,6 @@ In batch mode, return nil, so that stdout is used instead."
       (redisplay)
       buf)))
 
-;;; TODO: Load to check binary compatibility.
 (defun tree-sitter-langs-compile (lang-symbol)
   "Download and compile the grammar for LANG-SYMBOL.
 This function requires git and tree-sitter CLI."
