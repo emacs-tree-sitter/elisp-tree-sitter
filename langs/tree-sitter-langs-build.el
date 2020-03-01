@@ -197,7 +197,10 @@ This function requires git and tree-sitter CLI."
         (let ((default-directory tree-sitter-langs--bin-dir))
           (dolist (file (directory-files default-directory))
             (when (string-suffix-p ".so" file)
-              (rename-file file (concat (file-name-base file) ".dylib"))))))
+              (let ((new-name (concat (file-name-base file) ".dylib")))
+                (when (file-exists-p new-name)
+                  (delete-file new-name))
+                (rename-file file new-name))))))
       (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
       (tree-sitter-langs--call "git" "clean" "-f"))))
 
