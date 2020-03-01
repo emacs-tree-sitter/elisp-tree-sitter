@@ -21,6 +21,7 @@ if ($args[0] -eq "watch") {
     $ErrorActionPreference = 'Continue'
     emacs --batch `
       --directory "$project_root\lisp" `
+      --directory "$project_root\langs" `
       -l ert `
       -l tree-sitter-tests.el `
       -f ert-run-tests-batch-and-exit
