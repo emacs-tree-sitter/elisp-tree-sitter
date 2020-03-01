@@ -14,9 +14,6 @@
 ;; This is an Emacs binding for tree-sitter, an incremental parsing system
 ;; (https://tree-sitter.github.io/tree-sitter/). It includes both the core APIs, and a minor mode
 ;; that provides a buffer-local up-to-date syntax tree.
-;;
-;; (add-to-list 'tree-sitter-major-mode-language-alist '(rust-mode . rust))
-;; (add-hook 'rust-mode-hook #'tree-sitter-mode)
 
 ;;; Code:
 

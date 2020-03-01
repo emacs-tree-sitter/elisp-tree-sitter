@@ -29,7 +29,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 
 ## Basic Usage
 
-- Enable `tree-sitter` in a supported major mode (defined in `tree-sitter-major-mode-language-alist`):
+- Enable the `tree-sitter` minor mode in a supported major mode (defined in `tree-sitter-major-mode-language-alist`):
     ```emacs-lisp
     (require 'tree-sitter)
     (require 'tree-sitter-langs)
@@ -40,24 +40,39 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
     (require 'tree-sitter-debug)
     (tree-sitter-debug-enable)
     ```
-- Use the APIs:
+- Get names of all functions in a Rust file:
     ```emacs-lisp
-    (setq rust (tree-sitter-require 'rust))
-    (setq parser (ts-make-parser))
-    (ts-set-language parser rust)
-
-    ;;; Parse a simple string.
-    (ts-parse-string parser "fn foo() {}")
-
-    ;;; Incremental parsing.
-    (with-temp-buffer
-      (insert-file-contents "src/types.rs")
-      (let* ((tree)
-             (initial (benchmark-run (setq tree (ts-parse parser #'ts-buffer-input nil))))
-             (reparse (benchmark-run (ts-parse parser #'ts-buffer-input tree))))
-        ;; Second parse should be much faster than the initial parse, especially as code size grows.
-        (message "initial %s" initial)
-        (message "reparse %s" reparse)))
+    (with-current-buffer "types.rs"
+      (seq-map (lambda (capture)
+                 (pcase-let ((`(_ . ,node) capture))
+                   (ts-node-text node)))
+               (tree-sitter-query [(function_item (identifier) @name)])))
+    ```
+- Write a simple extension to `expand-region`:
+    ```emacs-lisp
+    (defun tree-sitter-mark-next-bigger-node ()
+      (interactive)
+      (let* ((p (point))
+             (m (if mark-active (mark) p))
+             (beg (min p m))
+             (end (max p m))
+             (root (ts-root-node tree-sitter-tree))
+             (node (ts-get-named-descendant-for-position-range root beg end))
+             (node-beg (ts-node-start-position node))
+             (node-end (ts-node-end-position node)))
+        ;; Already marking current node. Try its parent node instead.
+        (when (and (= beg node-beg) (= end node-end))
+          (when-let ((node (ts-get-parent node)))
+            (setq node-beg (ts-node-start-position node)
+                  node-end (ts-node-end-position node))))
+        (set-mark node-end)
+        (goto-char node-beg)))
+    ```
+- Parse a string:
+    ```emacs-lisp
+    (let ((parser (ts-make-parser)))
+      (ts-set-language parser (tree-sitter-require 'rust))
+      (ts-parse-string parser "fn foo() {}"))
     ```
 
 ## APIs
