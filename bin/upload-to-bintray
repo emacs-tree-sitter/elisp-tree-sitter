@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+SUBJ=ubolonton
+REPO=emacs
+
+BINTRAY_URL="https://api.bintray.com/content/$SUBJ/$REPO/$BINTRAY_PKG/$BUNDLE_VERSION/$BINTRAY_REMOTE_PATH"
+echo "Uploading $BINTRAY_LOCAL_PATH to $BINTRAY_URL"
+
+curl -i -v -T "$BINTRAY_LOCAL_PATH" -u"$SUBJ":"$BINTRAY_API_KEY" "$BINTRAY_URL"

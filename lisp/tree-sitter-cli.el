@@ -31,18 +31,5 @@ other data."
   (file-name-as-directory
    (concat (tree-sitter-cli-directory) "bin")))
 
-(defvar tree-sitter-cli-compiled-grammar-ext
-  (pcase system-type
-    ((or 'darwin 'gnu/linux) ".so")
-    ('windows-nt ".dll")
-    (_ (error "Unsupported system-type %s" system-type))))
-
-(defun tree-sitter-cli-locate-language (lang-name)
-  "Return a pair of (GRAMMAR-FILE . NATIVE-SYMBOL-NAME) to load LANG-NAME from."
-  (let ((file (format "%s%s" lang-name tree-sitter-cli-compiled-grammar-ext))
-        (symbol-name (format "tree_sitter_%s" lang-name)))
-    (cons (concat (tree-sitter-cli-bin-directory) file)
-          symbol-name)))
-
 (provide 'tree-sitter-cli)
 ;;; tree-sitter-cli.el ends here

@@ -1,4 +1,4 @@
-;;; tree-sitter-langs.el --- Language definitions for tree-sitter -*- lexical-binding: t; coding: utf-8 -*-
+;;; tree-sitter-langs-build.el --- Building grammar bundle -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2020 Tuấn-Anh Nguyễn
 ;;
@@ -6,10 +6,7 @@
 
 ;;; Commentary:
 
-;; This is a convenient bundle of language definitions for `tree-sitter'. It
-;; serves as an interim distribution mechanism, until `tree-sitter' is
-;; widespread enough for language major modes to include the definitions on
-;; their own.
+;; This file contains functions to obtain and build `tree-sitter' grammars.
 
 ;;; Code:
 
@@ -19,13 +16,30 @@
 (require 'url)
 (require 'tar-mode)
 
-(require 'tree-sitter-cli)
-
 (eval-when-compile
   (require 'subr-x)
-  (require 'pcase))
+  (require 'pcase)
+  (require 'cl-lib))
 
-(defconst tree-sitter-langs--version "0.0.7")
+(defconst tree-sitter-langs--suffixes '(".dylib" ".dll" ".so")
+  "List of suffixes for shared libraries that define tree-sitter languages.")
+
+(defconst tree-sitter-langs--dir
+  (file-name-directory (locate-library "tree-sitter-langs")))
+
+(defconst tree-sitter-langs--bin-dir
+  (file-name-as-directory
+   (concat tree-sitter-langs--dir "bin")))
+
+(defconst tree-sitter-langs--version
+  (let ((main-file (locate-library "tree-sitter-langs.el")))
+    (unless main-file
+      (error "Could not find tree-sitter-langs.el"))
+    (with-temp-buffer
+      (insert-file-contents main-file)
+      (unless (re-search-forward ";; Version: \\(.+\\)")
+        (error "Could not determine tree-sitter-langs version"))
+      (match-string 1))))
 
 (defconst tree-sitter-langs--os
   (pcase system-type
@@ -51,7 +65,7 @@ If VERSION and OS are not spcified, use the defaults of
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
-(defvar tree-sitter-langs-repos
+(defconst tree-sitter-langs-repos
   '((agda       "v1.2.1")
     (bash       "v0.16.0")
     (c          "v0.16.0")
@@ -77,14 +91,10 @@ If VERSION and OS are not spcified, use the defaults of
     (typescript "v0.16.1" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.")
 
-(defconst tree-sitter-langs--grammars-dir
-  (concat
-   (let ((this-dir (file-name-directory (locate-library "tree-sitter-langs"))))
-     (if (file-exists-p (concat this-dir "Cargo.toml"))
-         this-dir
-       (file-name-directory
-        (directory-file-name this-dir))))
-   "grammars")
+(defconst tree-sitter-langs--repos-dir
+  (file-name-as-directory
+   (concat (file-name-directory (locate-library "tree-sitter-langs"))
+           "repos"))
   "Directory to store grammar repos, for compilation.")
 
 (defun tree-sitter-langs--source (lang-symbol)
@@ -109,7 +119,9 @@ If BUFFER is nil, `princ' is used to forward its stdout+stderr."
                      `(:buffer ,tree-sitter-langs--out)
                    `(:filter (lambda (proc string)
                                (princ string)))))
-         (proc (apply #'make-process (append base output)))
+         (proc (let ((process-environment (cons (format "TREE_SITTER_DIR=%s" tree-sitter-langs--dir)
+                                                process-environment)))
+                 (apply #'make-process (append base output))))
          (exit-code (progn
                       (while (not (memq (process-status proc)
                                         '(exit failed signal)))
@@ -127,15 +139,15 @@ If there's no tag, return \"origin/master\"."
      (pcase-let*
          ((`(,lang-symbol . _) desc)
           (lang-name (symbol-name lang-symbol))
-          (default-directory (concat tree-sitter-langs--grammars-dir
+          (default-directory (concat tree-sitter-langs--repos-dir
                                      (format "tree-sitter-%s" lang-name))))
-       `(,lang-symbol ,(or (magit-get-current-tag)
+       `(,lang-symbol ,(or (magit-get-current-tag "origin/master")
                            "origin/master"))))
    tree-sitter-langs-repos))
 
 (defun tree-sitter-langs--buffer (name)
   "Return a buffer from NAME, as the DESTINATION of `call-process'.
-In batch mode, return stdout."
+In batch mode, return nil, so that stdout is used instead."
   (unless noninteractive
     (let ((buf (get-buffer-create name)))
       (pop-to-buffer buf)
@@ -146,7 +158,7 @@ In batch mode, return stdout."
 ;;; TODO: Load to check binary compatibility.
 (defun tree-sitter-langs-compile (lang-symbol)
   "Download and compile the grammar for LANG-SYMBOL.
-Requires git and tree-sitter CLI."
+This function requires git and tree-sitter CLI."
   (message "[tree-sitter-langs] Processing %s" lang-symbol)
   (unless (executable-find "git")
     (error "Could not find git (needed to download grammars)"))
@@ -156,7 +168,7 @@ Requires git and tree-sitter CLI."
          (lang-name (symbol-name lang-symbol))
          (dir (if source
                   (file-name-as-directory
-                   (concat tree-sitter-langs--grammars-dir
+                   (concat tree-sitter-langs--repos-dir
                            (format "tree-sitter-%s" lang-name)))
                 (error "Unknown language `%s'" lang-name)))
          (repo (plist-get source :repo))
@@ -178,6 +190,17 @@ Requires git and tree-sitter CLI."
         (let ((default-directory (file-name-as-directory (concat dir path))))
           (tree-sitter-langs--call "tree-sitter" "generate")
           (tree-sitter-langs--call "tree-sitter" "test")))
+      ;; On macOS, rename .so => .dylib, because we will make a "universal"
+      ;; bundle.
+      (when (eq system-type 'darwin)
+        ;; This renames existing ".so" files as well.
+        (let ((default-directory tree-sitter-langs--bin-dir))
+          (dolist (file (directory-files default-directory))
+            (when (string-suffix-p ".so" file)
+              (let ((new-name (concat (file-name-base file) ".dylib")))
+                (when (file-exists-p new-name)
+                  (delete-file new-name))
+                (rename-file file new-name))))))
       (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
       (tree-sitter-langs--call "git" "clean" "-f"))))
 
@@ -199,11 +222,12 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
     (unwind-protect
         (let* ((tar-file (concat (file-name-as-directory
                                   (expand-file-name default-directory))
-                                 (tree-sitter-langs--bundle-file)))
-               (default-directory (tree-sitter-cli-bin-directory))
+                                 (tree-sitter-langs--bundle-file) ".gz"))
+               (default-directory tree-sitter-langs--bin-dir)
                (tree-sitter-langs--out (tree-sitter-langs--buffer "*tree-sitter-langs-create-bundle*"))
                (files (seq-filter (lambda (file)
-                                    (when (string-suffix-p tree-sitter-cli-compiled-grammar-ext file)
+                                    (when (seq-some (lambda (ext) (string-suffix-p ext file))
+                                                    tree-sitter-langs--suffixes)
                                       file))
                                   (directory-files default-directory)))
                ;; Disk names in Windows can confuse tar, so we need this option. BSD
@@ -211,9 +235,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
                (tar-opts (pcase system-type
                            ('windows-nt '("--force-local")))))
-          (apply #'tree-sitter-langs--call "tar" "-cvf" tar-file (append tar-opts files))
-          (let ((dired-compress-file-suffixes '(("\\.tar\\'" ".tar.gz" nil))))
-            (dired-compress-file tar-file)))
+          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files)))
       (when errors
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (display-warning 'tree-sitter
@@ -222,13 +244,13 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
 ;;;###autoload
 (defun tree-sitter-langs-install (&optional version os keep-bundle)
   "Download and install the specified VERSION of the language grammar bundle.
-If VERSION and OS are not spcified, use the defaults of
+If VERSION and OS are not specified, use the defaults of
 `tree-sitter-langs--version' and `tree-sitter-langs--os'.
 
 The download bundle file is deleted after installation, unless KEEP-BUNDLE is
 non-nil."
   (interactive)
-  (let ((dir (tree-sitter-cli-bin-directory)))
+  (let ((dir tree-sitter-langs--bin-dir))
     (unless (file-directory-p dir)
       (make-directory dir t))
     (let ((default-directory dir)
@@ -255,7 +277,7 @@ non-nil."
          (_ (unless main-file
               (error "Could not find tree-sitter.el")))
          (version (with-temp-buffer
-                    (insert-file-contents-literally main-file)
+                    (insert-file-contents main-file)
                     (unless (re-search-forward ";; Version: \\(.+\\)")
                       (error "Could not determine tree-sitter version"))
                     (match-string 1)))
@@ -275,7 +297,8 @@ non-nil."
           (delete-file dyn-file)
           (dired-compress-file gz-file))
       (url-copy-file url gz-file)
+      ;; FIX: Uncompressing with `dired-compress-file' doesn't work on Windows.
       (dired-compress-file gz-file))))
 
-(provide 'tree-sitter-langs)
-;;; tree-sitter-langs.el ends here
+(provide 'tree-sitter-langs-build)
+;;; tree-sitter-langs-build.el ends here

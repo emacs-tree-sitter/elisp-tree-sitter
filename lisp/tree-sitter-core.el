@@ -24,8 +24,6 @@
 ;; We still call this on macOS, as it's useful for other things as well.
 (require 'tree-sitter-dyn)
 
-(require 'tree-sitter-cli)
-
 (require 'simple)
 (require 'map)
 (require 'pp)
@@ -145,44 +143,6 @@ This function must be called within a `ts--without-restriction' block."
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
   (ts-goto-first-child-for-byte cursor (position-bytes position)))
-
-
-;;; Language loading mechanism.
-
-(defvar ts--languages nil
-  "An alist of mappings from language name symbols to language objects.
-See `ts-require-language'.")
-
-;;; TODO: Move this to `tree-sitter-cli', so that `tree-sitter-langs' can use it.
-(defun ts--load-language-from-cli-dir (name &optional noerror)
-  "Load and return the language NAME from the tree-sitter CLI's dir.
-See `tree-sitter-cli-directory'.
-
-If the optional arg NOERROR is non-nil, then return nil if the language is not
-found or cannot be loaded, instead of signaling an error."
-  (pcase-let ((`(,file . ,symbol-name) (tree-sitter-cli-locate-language name)))
-    (if noerror
-        (condition-case nil
-            (ts--load-language file symbol-name)
-          (rust-error nil))
-      (ts--load-language file symbol-name))))
-
-;;; TODO: Support more loading mechanisms: bundled statically, packaged-together
-;;; shared libs, shared libs under ~/.emacs.d/.tree-sitter. Also, remove this
-;;; file's dependency on `tree-sitter-cli'.
-(defun ts-load-language (lang-symbol)
-  "Load and return a new language object identified by LANG-SYMBOL.
-The language should have been installed using tree-sitter CLI."
-  (ts--load-language-from-cli-dir (symbol-name lang-symbol)))
-
-(defun ts-require-language (lang-symbol)
-  "Return the language object identified by LANG-SYMBOL.
-If the language hasn't been loaded yet, this function attempts to load it."
-  (let ((language (alist-get lang-symbol ts--languages)))
-    (unless language
-      (setq language (ts-load-language lang-symbol))
-      (map-put ts--languages lang-symbol language))
-    language))
 
 
 ;;; Querying.

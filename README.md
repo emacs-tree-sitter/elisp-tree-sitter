@@ -21,7 +21,7 @@ At this stage of the project, there are few end-user-visible features, but you c
     ```emacs-lisp
     (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
     ```
-- Install `tree-sitter` like other normal packages.
+- Install `tree-sitter` and `tree-sitter-langs` like other normal packages.
 - Evaluate this (once) to download language grammars:
     ```emacs-lisp
     (require 'tree-sitter-langs)
