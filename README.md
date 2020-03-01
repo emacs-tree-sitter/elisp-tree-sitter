@@ -22,11 +22,6 @@ At this stage of the project, there are few end-user-visible features, but you c
     (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
     ```
 - Install `tree-sitter` and `tree-sitter-langs` like other normal packages.
-- Evaluate this (once) to download language grammars:
-    ```emacs-lisp
-    (require 'tree-sitter-langs)
-    (tree-sitter-langs-install)
-    ```
 
 The package is not yet on MELPA, because it currently doesn't have a convenient way to distribute packages with pre-compiled binaries.
 
@@ -37,6 +32,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 - Enable `tree-sitter` in a supported major mode (defined in `tree-sitter-major-mode-language-alist`):
     ```emacs-lisp
     (require 'tree-sitter)
+    (require 'tree-sitter-langs)
     (add-hook 'rust-mode-hook #'tree-sitter-mode)
     ```
 - Show the debug view of a buffer's parse tree
@@ -46,7 +42,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
     ```
 - Use the APIs:
     ```emacs-lisp
-    (setq rust (ts-require-language 'rust))
+    (setq rust (tree-sitter-require 'rust))
     (setq parser (ts-make-parser))
     (ts-set-language parser rust)
 
@@ -88,7 +84,7 @@ For consistency with Emacs's conventions, this binding has some differences comp
 ### Functions
 
 - Language:
-    + `ts-require-language`: like `require`, for tree-sitter languages.
+    + `tree-sitter-require`: like `require`, for tree-sitter languages.
 - Parser:
     + `ts-make-parser`: create a new parser.
     + `ts-set-language`: set a parser's active language.
@@ -118,12 +114,12 @@ For consistency with Emacs's conventions, this binding has some differences comp
 
 ## Setup for Development
 
-Clone this repo and add its `lisp` directory to `load-path`.
+Clone this repo and add its `lisp` and `langs` directories to `load-path`.
 
 If you want to hack on the high-level features (in Lisp) only:
 - Evaluate this (once) to download the necessary binaries:
     ```emacs-lisp
-    (require 'tree-sitter-langs)
+    (require 'tree-sitter-langs-build)
     (tree-sitter-download-dyn-module)
     (tree-sitter-langs-install)
     ```
@@ -158,7 +154,7 @@ If you want to build addtional (or all) grammars from source, or work on the cor
     ```
 - Or load it directly:
     ```emacs-lisp
-    (ts-require-language 'clojure)
+    (tree-sitter-require 'clojure)
     ```
 
 ### Working on the dynamic module
@@ -198,7 +194,6 @@ To test against a different version of Emacs, set the environment variable `EMAC
 ## Overall Plan
 
 Targeting lib authors:
-- Publish a `tree-sitter-grammars` package that bundles pre-compiled grammars, for ease of experimentation.
 - Write a guide on using the tree-sitter APIs.
 
 Targeting end users:

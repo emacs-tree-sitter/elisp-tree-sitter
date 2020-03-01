@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-- Remove functions `ts-require-language` and `ts-load-language`.
-- Added `tree-sitter-load`.
+
+- Replaced functions `ts-require-language` and `ts-load-language` with `tree-sitter-require` and `tree-sitter-load`.
 - Moved `tree-sitter-langs` into its own package.
 
 ## [0.3.0] - 2020-02-21
