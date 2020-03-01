@@ -7,4 +7,4 @@ steps:
     displayName: Retrieve tree-sitter-dyn.${{ ext }}
     inputs:
       artifact: tree-sitter-dyn.${{ ext }}
-      path: $(System.DefaultWorkingDirectory)
+      path: lisp

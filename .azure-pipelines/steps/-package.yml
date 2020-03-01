@@ -4,3 +4,4 @@ steps:
 
 - bash: gzip -v tree-sitter-dyn.*
   displayName: Compress platform-specific dynamic modules
+  workingDirectory: lisp
