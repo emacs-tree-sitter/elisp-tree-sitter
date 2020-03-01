@@ -1,5 +1,9 @@
 /target
 **/*.rs.bk
 **/*.elc
+**/.cask
 grammars/
 lisp/tree-sitter-dyn.*
+
+langs/bin/
+langs/repos/
