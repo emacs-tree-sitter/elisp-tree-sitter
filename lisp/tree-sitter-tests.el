@@ -204,5 +204,9 @@ tree is held (since nodes internally reference the tree)."
   (should-error (tree-sitter-require 'abc-xyz))
   (tree-sitter-require 'rust))
 
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
 (provide 'tree-sitter-tests)
 ;;; tree-sitter-tests.el ends here
