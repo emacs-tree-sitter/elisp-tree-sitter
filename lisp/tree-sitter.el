@@ -59,7 +59,7 @@ BEG and END are the begin and end of the text to be changed."
   (setq tree-sitter--start-byte (position-bytes beg)
         tree-sitter--old-end-byte (position-bytes end))
   (ts--save-context
-    ;; TODO: Keep mutating the same vectors instead of creating a new one each time.
+    ;; TODO: Keep mutating the same objects instead of creating a new one each time.
     (setq tree-sitter--start-point (ts--point-from-position beg)
           tree-sitter--old-end-point (ts--point-from-position end))))
 

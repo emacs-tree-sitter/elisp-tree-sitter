@@ -56,7 +56,7 @@ fn edit_tree(
 
 /// Compare an edited OLD-TREE to NEW-TREE, both representing the same document.
 ///
-/// This function returns a vector of ranges whose syntactic structure has changed.
+/// This function returns a sequence of ranges whose syntactic structure has changed.
 ///
 /// For this to work correctly, OLD-TREE must have been edited such that its ranges
 /// match up to NEW-TREE. Generally, you'll want to call this function right after

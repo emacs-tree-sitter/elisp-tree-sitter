@@ -159,14 +159,14 @@ parsed with LANGUAGE."
     (ts--make-query language source)))
 
 (defun ts-query-matches (query node &optional cursor index-only text-function)
-  "Execute QUERY on NODE and return a vector of matches.
+  "Execute QUERY on NODE and return a sequence of matches.
 Matches are sorted in the order they were found.
 
 Each match has the form (PATTERN-INDEX . MATCH-CAPTURES), where PATTERN-INDEX is
-the position of the matched pattern within QUERY, and MATCH-CAPTURES is a vector
-of captures by the match, similar to that returned by `ts-query-captures'. If
-the optional arg INDEX-ONLY is non-nil, positions of the capture patterns within
-QUERY are returned instead of their names.
+the position of the matched pattern within QUERY, and MATCH-CAPTURES is a
+sequence of captures associated with the match, similar to that returned by
+`ts-query-captures'. If the optional arg INDEX-ONLY is non-nil, positions of the
+capture patterns within QUERY are returned instead of their names.
 
 If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
 QUERY. Otherwise a new query-cursor is used.
@@ -177,7 +177,7 @@ Otherwise `ts-node-text' is used."
    (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
 
 (defun ts-query-captures (query node &optional cursor index-only text-function)
-  "Execute QUERY on NODE and return a vector of captures.
+  "Execute QUERY on NODE and return a sequence of captures.
 Matches are sorted in the order they appear.
 
 Each capture has the form (CAPTURE-NAME . CAPTURED-NODE). If the optional arg
