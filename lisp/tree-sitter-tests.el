@@ -52,12 +52,31 @@
 (ert-deftest creating-parser ()
   (should (ts-parser-p (ts-test-make-parser 'rust))))
 
-(ert-deftest language-equality ()
+(ert-deftest language::equality ()
   (ts-test-with 'rust parser
     ;; XXX: `equal' seems to return nil even if 2 `user-ptr' objects have the same pointer and
     ;; finalizer. That's broken. Report a bug to emacs-devel.
     (should (equal (format "%s" (ts-parser-language parser))
                    (format "%s" (tree-sitter-require 'rust))))))
+
+(ert-deftest language::node-types ()
+  (let* ((language (tree-sitter-require 'rust))
+         (type-count (ts-lang-count-types language)))
+    (ert-info ("0 should be the special node type \"end\"")
+      (should (equal "end" (ts-type-name-for-id language 0))))
+    (ert-info ("Node type IDs should be from 0 to type count minus 1")
+      (should-not (null (ts-type-name-for-id language 1)))
+      (should-not (null (ts-type-name-for-id language (- type-count 1))))
+      (should (null (ts-type-name-for-id language type-count))))))
+
+(ert-deftest language::fields ()
+  (let* ((language (tree-sitter-require 'rust))
+         (field-count (ts-lang-count-fields language)))
+    (ert-info ("Field IDs should be from 1 to field count")
+      (should (null (ts-field-name-for-id language 0)))
+      (should-not (null (ts-field-name-for-id language 1)))
+      (should-not (null (ts-field-name-for-id language field-count)))
+      (should (null (ts-field-name-for-id language (1+ field-count)))))))
 
 (ert-deftest parsing::rust-string ()
   (ts-test-with 'rust parser

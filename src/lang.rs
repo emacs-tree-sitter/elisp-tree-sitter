@@ -46,7 +46,7 @@ defun_lang_methods! {
     "lang-count-fields" fn field_count -> usize
 
     /// Return the name of a node type, given its numerical TYPE-ID in LANG.
-    "type-name-for-id" fn node_kind_for_id(type_id: u16) -> &'static str
+    "type-name-for-id" fn node_kind_for_id(type_id: u16) -> Option<&'static str>
 
     /// Return t if the numerical TYPE-ID identifies a named node type in LANG.
     "type-named-p" fn node_kind_is_named(type_id: u16) -> bool
@@ -55,5 +55,5 @@ defun_lang_methods! {
     "field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
 
     /// Return the field name for the given numerical FIELD-ID defined in LANG.
-    "field-name-for-id" fn field_name_for_id(field_id: u16) -> &'static str
+    "field-name-for-id" fn field_name_for_id(field_id: u16) -> Option<&'static str>
 }

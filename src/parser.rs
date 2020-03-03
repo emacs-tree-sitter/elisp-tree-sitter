@@ -133,5 +133,6 @@ fn set_included_ranges(parser: &mut Parser, ranges: Value) -> Result<()> {
         let range: Range = ranges.get(i)?;
         included.push(range.into());
     }
-    Ok(parser.set_included_ranges(included))
+    // TODO: Define custom error class.
+    Ok(parser.set_included_ranges(included).unwrap())
 }
