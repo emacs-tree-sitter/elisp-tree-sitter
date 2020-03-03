@@ -12,8 +12,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'subr-x)
-  (require 'pcase))
+  (require 'subr-x))
 
 (defun tree-sitter-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.

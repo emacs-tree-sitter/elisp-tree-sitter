@@ -12,13 +12,11 @@
 ;;; Code:
 
 (require 'map)
-(require 'seq)
 
 (require 'tree-sitter-core)
 (require 'tree-sitter-cli)
 
 (eval-when-compile
-  (require 'subr-x)
   (require 'pcase))
 
 (defvar tree-sitter-languages nil

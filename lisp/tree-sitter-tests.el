@@ -19,9 +19,6 @@
 
 (require 'ert)
 
-(eval-when-compile
-  (require 'subr-x))
-
 (defun ts-test-make-parser (lang-symbol)
   "Return a new parser for LANG-SYMBOL."
   (let ((parser (ts-make-parser))

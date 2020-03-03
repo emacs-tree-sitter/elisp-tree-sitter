@@ -24,12 +24,7 @@
 ;; We still call this on macOS, as it's useful for other things as well.
 (require 'tree-sitter-dyn)
 
-(require 'simple)
-(require 'map)
-(require 'pp)
-
 (eval-when-compile
-  (require 'subr-x)
   (require 'pcase))
 
 (defmacro ts--without-restriction (&rest body)
