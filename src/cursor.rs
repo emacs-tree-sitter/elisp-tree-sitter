@@ -44,12 +44,8 @@ fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
 /// Return the field name of CURSOR's current node.
 /// Return nil if the current node doesn't have a field.
 #[defun]
-fn current_field_name(cursor: Value) -> Result<Value> {
-    let env = cursor.env;
-    let cursor = cursor.into_ref::<RCursor>()?;
-    let cursor = cursor.borrow();
-    // FIX: tree-sitter's `field_name` API should return Option<&'static str> not Option<&str>.
-    Ok(cursor.field_name().into_lisp(env)?)
+fn current_field_name(cursor: &RCursor) -> Result<Option<&'static str>> {
+    Ok(cursor.borrow().field_name())
 }
 
 macro_rules! defun_cursor_walks {
