@@ -134,6 +134,13 @@ This function must be called within a `ts--without-restriction' block."
   "Return NODE's end position."
   (byte-to-position (ts-node-end-byte node)))
 
+(defun ts-node-position-range (node)
+  "Return NODE's (START-POSITION . END-POSITION)."
+  (pcase-let ((`[,beg ,end] (ts-node-range node)))
+    (cons
+     (byte-to-position beg)
+     (byte-to-position end))))
+
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
