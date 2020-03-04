@@ -144,6 +144,17 @@ tree is held (since nodes internally reference the tree)."
         (should (ts-cursor-p (ts-make-cursor tree)))
         (should (ts-cursor-p (ts-make-cursor node)))))))
 
+(ert-deftest cursor::reset ()
+  (ts-test-with-temp-buffer "src/types.rs"
+    (setq tree-sitter-language (tree-sitter-require 'rust))
+    (tree-sitter-mode)
+    (let* ((node (ts-root-node tree-sitter-tree))
+           (cursor (ts-make-cursor node)))
+      (ts-goto-first-child cursor)
+      (should-not (equal (ts-node-type (ts-current-node cursor)) "source_file"))
+      (ts-reset-cursor cursor node)
+      (should (equal (ts-node-type (ts-current-node cursor)) "source_file")))))
+
 (ert-deftest cursor::using-without-tree ()
   (ts-test-with 'rust parser
     (let ((cursor (ts-make-cursor (ts-parse-string parser "fn foo() {}"))))

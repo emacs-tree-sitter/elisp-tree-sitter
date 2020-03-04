@@ -294,7 +294,7 @@ impl<'e> Deref for RCursorBorrow<'e> {
 
 pub struct RCursorBorrowMut<'e> {
     #[allow(unused)]
-    reft: RefMut<'e, Tree>,
+    reft: Ref<'e, Tree>,
     cursor: &'e mut TreeCursor<'e>,
 }
 
@@ -334,7 +334,7 @@ impl RCursor {
 
     #[inline]
     pub fn borrow_mut<'e>(&'e mut self) -> RCursorBorrowMut {
-        let reft: RefMut<'e, Tree> = self.tree.borrow_mut();
+        let reft: Ref<'e, Tree> = self.tree.borrow();
         // XXX: Explain the safety here.
         let cursor: &'e mut _ = unsafe { mem::transmute(&mut self.inner) };
         RCursorBorrowMut { reft, cursor }
