@@ -36,17 +36,30 @@
   "Check that the current syntax tree's sexp representation is SEXP."
   (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
 
+(defun ts-test-use-lang (lang-symbol)
+  "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
+  (setq tree-sitter-language (tree-sitter-require lang-symbol))
+  (tree-sitter-mode))
+
 (defmacro ts-test-with (lang-symbol var &rest body)
   "Eval BODY with VAR bound to a new parser for LANG-SYMBOL."
   (declare (indent 2))
   `(let ((,var (ts-test-make-parser ,lang-symbol)))
      ,@body))
 
-(defmacro ts-test-with-temp-buffer (relative-path &rest body)
+(defmacro ts-test-with-file (relative-path &rest body)
   "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH."
   (declare (indent 1))
   `(with-temp-buffer
      (insert-file-contents (ts-test-full-path ,relative-path))
+     ,@body))
+
+(defmacro ts-test-lang-with-file (lang-symbol relative-path &rest body)
+  "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH.
+`tree-sitter-mode' is turned on, using the given language LANG-SYMBOL."
+  (declare (indent 2))
+  `(ts-test-with-file ,relative-path
+     (ts-test-use-lang ,lang-symbol)
      ,@body))
 
 (ert-deftest creating-parser ()
@@ -95,7 +108,7 @@
 
 (ert-deftest parsing::rust-buffer ()
   (ts-test-with 'rust parser
-    (ts-test-with-temp-buffer "src/types.rs"
+    (ts-test-with-file "src/types.rs"
       (let* ((tree) (old-tree)
              (initial (benchmark-run
                           (setq tree (ts-parse parser #'ts-buffer-input nil))))
@@ -112,8 +125,7 @@
 
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
-    (setq tree-sitter-language (tree-sitter-require 'rust))
-    (tree-sitter-mode)
+    (ts-test-use-lang 'rust)
     (ts-test-tree-sexp '(source_file))
     (insert "fn")
     (ts-test-tree-sexp '(source_file (ERROR)))
@@ -145,9 +157,7 @@ tree is held (since nodes internally reference the tree)."
         (should (ts-cursor-p (ts-make-cursor node)))))))
 
 (ert-deftest cursor::reset ()
-  (ts-test-with-temp-buffer "src/types.rs"
-    (setq tree-sitter-language (tree-sitter-require 'rust))
-    (tree-sitter-mode)
+  (ts-test-lang-with-file 'rust "src/types.rs"
     (let* ((node (ts-root-node tree-sitter-tree))
            (cursor (ts-make-cursor node)))
       (ts-goto-first-child cursor)
@@ -163,7 +173,7 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)))
 
 (ert-deftest conversion::position<->ts-point ()
-  (ts-test-with-temp-buffer "lisp/tree-sitter-tests.el"
+  (ts-test-with-file "lisp/tree-sitter-tests.el"
     (ert-info ("Testing buffer boundaries")
       (let ((min (point-min))
             (max (point-max)))
@@ -178,13 +188,12 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest buffer-input::non-ascii-characters ()
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
-    (setq tree-sitter-language (tree-sitter-require 'javascript))
-    (tree-sitter-mode)
+    (ts-test-use-lang 'javascript)
     (ts-test-tree-sexp '(program (expression_statement (string))))))
 
 ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
 (ert-deftest buffer-input::narrowing ()
-  (ts-test-with-temp-buffer "bin/build"
+  (ts-test-with-file "bin/build"
     (sh-mode)
     (tree-sitter-mode)
     (call-interactively #'mark-whole-buffer)
@@ -204,9 +213,7 @@ tree is held (since nodes internally reference the tree)."
                  2)))))
 
 (ert-deftest query::basic ()
-  (ts-test-with-temp-buffer "src/query.rs"
-    (setq tree-sitter-language (tree-sitter-require 'rust))
-    (tree-sitter-mode)
+  (ts-test-lang-with-file 'rust "src/query.rs"
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-query
