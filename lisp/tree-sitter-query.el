@@ -22,7 +22,7 @@
 (defvar tree-sitter-query--target-buffer nil
   "Target buffer to run the queries against.")
 
-(defvar tree-sitter-query--match-highlight-number 0
+(defvar tree-sitter-query--match-highlight-number -1
   "Counter that keeps track of the number of the match color face.")
 
 (defvar tree-sitter-query--match-highlight-text-property-used '()
@@ -65,12 +65,12 @@
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
            (matches (ts-query-captures query root-node nil nil))
-           (nextface (tree-sitter-query--get-next-match-highlight-color))
-           (capture-name ""))
+           (nextface)
+           (capture-name))
       (if (> (length matches) 0)
           (progn
             ;; reset counter
-            (setq tree-sitter-query--match-highlight-number 0)
+            (setq tree-sitter-query--match-highlight-number -1)
             ;; iterate all matches and highlight them with an underline
             (cl-loop
              for submatches across matches
