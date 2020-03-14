@@ -1,4 +1,4 @@
-;; tree-sitter-builder.el --- tools for running queries live -*- lexical-binding: t; coding: utf-8 -*-
+;; tree-sitter-query.el --- tools for running queries live -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
@@ -10,37 +10,76 @@
 ;; Code:
 
 (require 'scheme)
+(require 'cl-lib)
 (require 'tree-sitter)
-(require 'seq)
+(require 'tree-sitter-query-faces)
 
 (define-derived-mode tree-sitter-query-mode prog-mode "ts-query-builder"
   "Major mode for building tree-sitter queries and testing them live"
   :syntax-table scheme-mode-syntax-table
   :abbrev-table scheme-mode-abbrev-table)
 
-(defface tree-sitter-query-match
-  '((t
-     (:underline
-      (:color "red" :style line))))
-  "face for highlighting matches")
-
 (defvar tree-sitter-query--target-buffer nil
   "Target buffer to run the queries against.")
 
-(defun tree-sitter-query--highlight-node (node)
-  "Highlight a node match in the current buffer"
-  (set-text-properties (ts-node-start-position node) (ts-node-end-position node) '(face tree-sitter-query-match)))
+(defvar tree-sitter-query--match-highlight-number 0
+  "Counter that keeps track of the number of the match color face.")
+
+(defvar tree-sitter-query--match-highlight-text-property-used '()
+  "List which text properties where used.")
+
+(defun tree-sitter-query--get-next-match-highlight-color ()
+  "Return the symbol for the next highlight match face in number order."
+  (when (>= tree-sitter-query--match-highlight-number 114)
+    (setq tree-sitter-query--match-highlight-number 0))
+  ;; add 1 to the variable
+  (setq tree-sitter-query--match-highlight-number (+ tree-sitter-query--match-highlight-number 1))
+  (elt tree-sitter-query-faces-match-list tree-sitter-query--match-highlight-number))
+
+(defun tree-sitter-query--highlight-node (node match-face)
+  "Highlight a NODE match in the current buffer with face MATCH-FACE."
+  (let* ((capture-name (car node))
+         (captured-node (cdr node))
+         (node-start (ts-node-start-position captured-node))
+         (node-end (ts-node-end-position captured-node))
+         (font-lock-face-property `(font-lock-face ,match-face))
+         (help-echo-property `(help-echo ,capture-name)))
+    ;; register which properties were added to the region of text to aid on the
+    ;; removal on the next pattern evaluation
+    (add-to-list 'tree-sitter-query--match-highlight-text-property-used font-lock-face-property)
+    ;; add the font-lock face
+    (add-text-properties node-start node-end font-lock-face-property)
+    ;; and add the name of the capture node, if any.
+    (unless (string= capture-name "")
+      (add-to-list 'tree-sitter-query--match-highlight-text-property-used help-echo-property)
+      (add-text-properties node-start node-end help-echo-property))))
 
 (defun tree-sitter-query--eval-query (patterns)
   "Evaluate a query PATTERNS against the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
-    (remove-text-properties (point-min) (point-max) '(face tree-sitter-query-match))
+    ;; clean the target buffer of properties previously added
+    (dolist (property tree-sitter-query--match-highlight-text-property-used)
+      (remove-text-properties (point-min) (point-max) property))
+    ;; clear the list of used properties
+    (setq tree-sitter-query--match-highlight-text-property-used '())
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
-           (matches (ts-query-captures query root-node nil nil)))
+           (matches (ts-query-captures query root-node nil nil))
+           (nextface (tree-sitter-query--get-next-match-highlight-color))
+           (capture-name ""))
       (if (> (length matches) 0)
-          (seq-doseq (match matches)
-            (tree-sitter-query--highlight-node (elt match 1)))
+          (progn
+            ;; reset counter
+            (setq tree-sitter-query--match-highlight-number 0)
+            ;; iterate all matches and highlight them with an underline
+            (cl-loop
+             for submatches across matches
+             do (cl-loop
+                 for match on submatches
+                 do (unless (string= capture-name (car match))
+                      (setq capture-name (car match))
+                      (setq nextface (tree-sitter-query--get-next-match-highlight-color)))
+                 (tree-sitter-query--highlight-node match nextface))))
         (message "[ERR] no matches found or invalid query")))))
 
 (defun tree-sitter-query--after-change (&rest args)
@@ -59,7 +98,7 @@ The buffer on focus when the command is called is set as the target buffer"
          (builder-window-is-visible (get-buffer-window builder-buffer))
          (builder-window))
     (when (eq target-buffer builder-buffer)
-      (error "this buffer cannot be use as target buffer"))
+      (error "This buffer cannot be use as target buffer"))
     (unless builder-window-is-visible
       (setf builder-window (split-window-vertically -7))
       (with-selected-window builder-window
