@@ -6,7 +6,7 @@ help: ## Prints target and a help message
 .PHONY: build
 build: ## Build the bindings
 	@./bin/build
-	@echo "[!!] in Emacs add $(PWD) to load-path:\n\n\t(add-to-list 'load-path \"$(PWD)\")\n"
+	@echo "[!!] in Emacs add $(PWD) to load-path:\n\n\t(add-to-list 'load-path \"$(PWD)/lisp\")\n"
 
 .PHONY: ensure/%
 ensure/%: ## Download grammar for a given language
