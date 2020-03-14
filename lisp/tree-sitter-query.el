@@ -58,6 +58,8 @@ The buffer on focus when the command is called is set as the target buffer"
          (builder-buffer (get-buffer-create "*tree-sitter-query-builder*"))
          (builder-window-is-visible (get-buffer-window builder-buffer))
          (builder-window))
+    (when (eq target-buffer builder-buffer)
+      (error "this buffer cannot be use as target buffer"))
     (unless builder-window-is-visible
       (setf builder-window (split-window-vertically -7))
       (with-selected-window builder-window
