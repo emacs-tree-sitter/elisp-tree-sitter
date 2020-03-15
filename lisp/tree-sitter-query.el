@@ -19,6 +19,9 @@
   :syntax-table scheme-mode-syntax-table
   :abbrev-table scheme-mode-abbrev-table)
 
+(defconst tree-sitter-query-builder-buffer-name "*tree-sitter-query-builder*"
+  "Name of the builder buffer")
+
 (defvar tree-sitter-query--target-buffer nil
   "Target buffer to run the queries against.")
 
@@ -69,7 +72,7 @@
 
 (defun tree-sitter-query--after-change (&rest args)
   "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
-  (with-current-buffer (get-buffer "*tree-sitter-query-builder*")
+  (with-current-buffer (get-buffer tree-sitter-query-builder-buffer-name)
     (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
       (with-demoted-errors
           (tree-sitter-query--eval-query pattern)))))
@@ -85,7 +88,7 @@
 The buffer on focus when the command is called is set as the target buffer"
   (interactive)
   (let* ((target-buffer (current-buffer))
-         (builder-buffer (get-buffer-create "*tree-sitter-query-builder*"))
+         (builder-buffer (get-buffer-create tree-sitter-query-builder-buffer-name))
          (builder-window-is-visible (get-buffer-window builder-buffer))
          (builder-window))
     (when (eq target-buffer builder-buffer)
