@@ -1,6 +1,6 @@
 ;; tree-sitter-query.el --- tools for running queries live -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 
