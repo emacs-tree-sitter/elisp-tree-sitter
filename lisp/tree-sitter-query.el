@@ -89,26 +89,28 @@ The buffer on focus when the command is called is set as the target buffer"
   (interactive)
   (let* ((target-buffer (current-buffer))
          (builder-buffer (get-buffer-create tree-sitter-query-builder-buffer-name))
-         (builder-window-is-visible (get-buffer-window builder-buffer))
-         (builder-window))
+         (builder-window-is-visible (get-buffer-window builder-buffer)))
     (when (eq target-buffer builder-buffer)
-      (error "This buffer cannot be use as target buffer"))
+      (user-error "This buffer cannot be use as target buffer"))
     (unless builder-window-is-visible
-      (setf builder-window (split-window-vertically -7))
-      (with-selected-window builder-window
-        (switch-to-buffer builder-buffer)))
+      (unless (display-buffer-in-side-window
+               builder-buffer
+               '((side . bottom)
+                 (window-height . 7))))
+      (user-error "No enough space available for query builder window"))
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
         (tree-sitter-mode))
-      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t)
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil :local)
       (setq tree-sitter-query--target-buffer target-buffer))
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
-      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t)
-      (add-hook 'kill-buffer-hook 'tree-sitter-query--clean-target-buffer nil t))
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil :local)
+      (add-hook 'kill-buffer-hook 'tree-sitter-query--clean-target-buffer nil :local))
     (setf tree-sitter-query--target-buffer target-buffer)
-    (select-window builder-window)))
+    ;; switch focus to the query builder window
+    (select-window (get-buffer-window builder-buffer))))
 
 (provide 'tree-sitter-query)
 ;;; tree-sitter-query.el ends here
