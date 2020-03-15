@@ -37,9 +37,7 @@
          (captured-node (cdr node))
          (node-start (ts-node-start-position captured-node))
          (node-end (ts-node-end-position captured-node))
-         (overlay-added))
-    ;; create an overlay for the match
-    (setq overlay-added (make-overlay node-start node-end))
+         (overlay-added (make-overlay node-start node-end)))
     ;; ensure it is deleted automatically when the overlay becomes empty
     (overlay-put overlay-added 'evaporate t)
     ;; set the match-face as the face of the overlay
