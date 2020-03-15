@@ -28,7 +28,7 @@
 (defun tree-sitter-query--get-next-match-highlight-color ()
   "Return the symbol for the next highlight match face in number order."
   (setq tree-sitter-query--match-highlight-number
-        (mod (+ 1 tree-sitter-query--match-highlight-number) tree-sitter-query-faces-list-length))
+        (mod (cl-incf tree-sitter-query--match-highlight-number) tree-sitter-query-faces-list-length))
   (elt tree-sitter-query-faces-match-list tree-sitter-query--match-highlight-number))
 
 (defun tree-sitter-query--highlight-node (node match-face)
