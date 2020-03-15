@@ -936,5 +936,8 @@
     tree-sitter-query-faces-match-115)
   "List of all faces.")
 
+(defconst tree-sitter-query-faces-list-length (length tree-sitter-query-faces-match-list)
+  "Keep record of `tree-sitter-query-faces-list' variable length")
+
 (provide 'tree-sitter-query-faces)
 ;;; tree-sitter-query-faces.el ends here
