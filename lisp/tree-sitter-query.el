@@ -82,6 +82,11 @@
       (with-demoted-errors
           (tree-sitter-query--eval-query pattern)))))
 
+(defun tree-sitter-query--clean-target-buffer ()
+  "Remove all overlays if the builder buffer happens to be killed"
+  (with-current-buffer tree-sitter-query--target-buffer
+    (remove-overlays)))
+
 (defun tree-sitter-query-builder ()
   "Provide means for developers to write and test tree-sitter queries.
 
@@ -100,11 +105,13 @@ The buffer on focus when the command is called is set as the target buffer"
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
         (tree-sitter-mode))
-      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t))
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t)
+      (setq tree-sitter-query--target-buffer target-buffer))
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
-      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t))
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t)
+      (add-hook 'kill-buffer-hook 'tree-sitter-query--clean-target-buffer nil t))
     (setf tree-sitter-query--target-buffer target-buffer)
     (select-window builder-window)))
 
