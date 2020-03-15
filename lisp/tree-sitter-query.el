@@ -25,9 +25,6 @@
 (defvar tree-sitter-query--match-highlight-number -1
   "Counter that keeps track of the number of the match color face.")
 
-(defvar tree-sitter-query--match-highlight-text-property-used '()
-  "List which text properties where used.")
-
 (defun tree-sitter-query--get-next-match-highlight-color ()
   "Return the symbol for the next highlight match face in number order."
   (when (>= tree-sitter-query--match-highlight-number 114)
@@ -42,26 +39,22 @@
          (captured-node (cdr node))
          (node-start (ts-node-start-position captured-node))
          (node-end (ts-node-end-position captured-node))
-         (font-lock-face-property `(font-lock-face ,match-face))
-         (help-echo-property `(help-echo ,capture-name)))
-    ;; register which properties were added to the region of text to aid on the
-    ;; removal on the next pattern evaluation
-    (add-to-list 'tree-sitter-query--match-highlight-text-property-used font-lock-face-property)
-    ;; add the font-lock face
-    (add-text-properties node-start node-end font-lock-face-property)
-    ;; and add the name of the capture node, if any.
+         (overlay-added))
+    ;; create an overlay for the match
+    (setq overlay-added (make-overlay node-start node-end))
+    ;; ensure it is deleted automatically when the overlay becomes empty
+    (overlay-put overlay-added 'evaporate t)
+    ;; set the match-face as the face of the overlay
+    (overlay-put overlay-added 'face match-face)
+    ;; put the name of the capture in the help-echo, if any
     (unless (string= capture-name "")
-      (add-to-list 'tree-sitter-query--match-highlight-text-property-used help-echo-property)
-      (add-text-properties node-start node-end help-echo-property))))
+      (overlay-put overlay-added 'help-echo capture-name))))
 
 (defun tree-sitter-query--eval-query (patterns)
   "Evaluate a query PATTERNS against the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
-    ;; clean the target buffer of properties previously added
-    (dolist (property tree-sitter-query--match-highlight-text-property-used)
-      (remove-text-properties (point-min) (point-max) property))
-    ;; clear the list of used properties
-    (setq tree-sitter-query--match-highlight-text-property-used '())
+    ;; clean the target buffer of overlays
+    (remove-overlays)
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
            (matches (ts-query-captures query root-node nil nil))
