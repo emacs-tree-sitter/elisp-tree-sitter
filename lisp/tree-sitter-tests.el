@@ -138,6 +138,14 @@
     (kill-region (point-min) (point-max))
     (ts-test-tree-sexp '(source_file))))
 
+(ert-deftest node::eq ()
+  (ts-test-with 'rust parser
+    (let* ((tree (ts-parse-string parser "fn foo() {}"))
+           (node1 (ts-root-node tree))
+           (node2 (ts-root-node tree)))
+      (should (ts-node-eq node1 node2))
+      (should-not (ts-node-eq node1 (ts-get-nth-child node1 0))))))
+
 (ert-deftest node::using-without-tree ()
   "Test that a tree's nodes are still usable after no direct reference to the
 tree is held (since nodes internally reference the tree)."

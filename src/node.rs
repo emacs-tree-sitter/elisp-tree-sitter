@@ -93,6 +93,12 @@ defun_node_props! {
     "count-named-children" fn named_child_count -> usize
 }
 
+/// Return t if two nodes are identical.
+#[defun]
+fn node_eq(node1: &RNode, node2: &RNode) -> Result<bool> {
+    Ok(node1 == node2)
+}
+
 /// Apply FUNCTION to each of NODE's children, for side effects only.
 #[defun]
 fn mapc_children(function: Value, node: &RNode) -> Result<()> {

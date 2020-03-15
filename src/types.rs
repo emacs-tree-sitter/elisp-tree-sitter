@@ -231,6 +231,12 @@ impl<'e> DerefMut for RNodeBorrowMut<'e> {
     }
 }
 
+impl PartialEq for RNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
 impl IntoLisp<'_> for RNode {
     fn into_lisp(self, env: &Env) -> Result<Value> {
         RefCell::new(self).into_lisp(env)
