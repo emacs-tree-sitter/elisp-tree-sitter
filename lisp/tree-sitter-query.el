@@ -54,22 +54,18 @@
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
            (matches (ts-query-captures query root-node nil nil))
-           (nextface)
-           (capture-name))
-      (if (> (length matches) 0)
-          (progn
-            ;; reset counter
-            (setq tree-sitter-query--match-highlight-number -1)
-            ;; iterate all matches and highlight them with an underline
-            (cl-loop
-             for submatches across matches
-             do (cl-loop
-                 for match on submatches
-                 do (unless (string= capture-name (car match))
-                      (setq capture-name (car match))
-                      (setq nextface (tree-sitter-query--get-next-match-highlight-color)))
-                 (tree-sitter-query--highlight-node match nextface))))
-        (message "[ERR] no matches found or invalid query")))))
+           (nextface))
+      (if (= (length matches) 0)
+          (message "no matches found")
+        ;; reset counter
+        (setq tree-sitter-query--match-highlight-number -1)
+        ;; iterate all matches and highlight them with an underline
+        (cl-loop
+         for submatches across matches
+         do (cl-loop
+             for match on submatches
+             do (setq nextface (tree-sitter-query--get-next-match-highlight-color))
+             (tree-sitter-query--highlight-node match nextface)))))))
 
 (defun tree-sitter-query--after-change (&rest args)
   "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
