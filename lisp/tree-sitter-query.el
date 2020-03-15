@@ -77,9 +77,10 @@
 
 (defun tree-sitter-query--after-change (&rest args)
   "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
-  (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
-    (with-demoted-errors
-        (tree-sitter-query--eval-query pattern))))
+  (with-current-buffer (get-buffer "*tree-sitter-query-builder*")
+    (let ((pattern (buffer-substring-no-properties (point-min) (point-max))))
+      (with-demoted-errors
+          (tree-sitter-query--eval-query pattern)))))
 
 (defun tree-sitter-query-builder ()
   "Provide means for developers to write and test tree-sitter queries.
@@ -98,7 +99,8 @@ The buffer on focus when the command is called is set as the target buffer"
         (switch-to-buffer builder-buffer)))
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
-        (tree-sitter-mode)))
+        (tree-sitter-mode))
+      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil t))
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
