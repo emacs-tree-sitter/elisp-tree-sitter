@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use emacs::{defun, Result, Value, IntoLisp};
+use emacs::{defun, Result};
 
 use tree_sitter::Tree;
 
