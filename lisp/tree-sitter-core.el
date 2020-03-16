@@ -222,27 +222,24 @@ If NODE is the root node, the sequence is empty."
       (setq this parent))
     steps))
 
+(define-error 'ts--invalid-node-step "Cannot follow node step")
+
 (defun ts--node-from-steps (tree steps)
   "Follow STEPS from TREE's root node; return the final node.
 STEPS shoud be a sequence of steps, as described by `ts--node-steps'.
 
-If a step cannot be followed, return nil."
-  (catch 'ts-invalid-step
-    (let ((this (ts-root-node tree)))
-      (pcase-dolist (`(,old-node . ,i) steps)
-        (let ((new-node (ts-get-nth-child this i)))
-          (unless new-node
-            (message "Node type %S has no child at position %s"
-                     (ts-node-type this) i)
-            (throw 'ts-invalid-step nil))
-          (let ((new-type (ts-node-type new-node))
-                (old-type (ts-node-type old-node)))
-            (unless (equal old-type new-type)
-              (message "Node type %S has child of type %S at position %s; expected %S"
-                       (ts-node-type this) new-type i old-type)
-              (throw 'ts-invalid-step nil)))
-          (setq this new-node)))
-      this)))
+If a step cannot be followed, signal a `ts--invalid-node-step' error."
+  (let ((this (ts-root-node tree)))
+    (pcase-dolist (`(,old-node . ,i) steps)
+      (let ((new-node (ts-get-nth-child this i)))
+        (unless new-node
+          (signal 'ts--invalid-node-step (list this old-node i new-node)))
+        (let ((new-type (ts-node-type new-node))
+              (old-type (ts-node-type old-node)))
+          (unless (equal old-type new-type)
+            (signal 'ts--invalid-node-step (list this old-node i new-node))))
+        (setq this new-node)))
+    this))
 
 (provide 'tree-sitter-core)
 ;;; tree-sitter-core.el ends here
