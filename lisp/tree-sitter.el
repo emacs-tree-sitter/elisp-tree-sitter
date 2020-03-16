@@ -20,6 +20,9 @@
 (require 'tree-sitter-core)
 (require 'tree-sitter-load)
 
+(eval-when-compile
+  (require 'subr-x))
+
 (defgroup tree-sitter nil
   "Incremental parsing system."
   :group 'languages)
@@ -141,6 +144,24 @@ END is the end of the changed text."
           (when err
             (setq tree-sitter-mode nil))))
     (tree-sitter--disable)))
+
+(defun tree-sitter-node-at-point ()
+  "Return the syntax node at point."
+  (let ((root (ts-root-node tree-sitter-tree))
+        (p (point)))
+    (ts-get-descendant-for-position-range root p p)))
+
+(defmacro tree-sitter-save-excursion (&rest body)
+  "Save current location within the syntax tree; execute BODY; restore it.
+If the location cannot be restored due to the syntax tree changing too much,
+this behaves like `save-excursion'."
+  `(let* ((old-node (tree-sitter-node-at-point))
+          (steps (ts--node-steps old-node))
+          (delta (- (point) (ts-node-start-position old-node))))
+     (unwind-protect
+         (save-excursion ,@body)
+       (when-let ((node (ts--node-from-steps tree-sitter-tree steps)))
+         (goto-char (+ delta (ts-node-start-position node)))))))
 
 (provide 'tree-sitter)
 ;;; tree-sitter.el ends here

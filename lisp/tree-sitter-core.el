@@ -201,5 +201,48 @@ Otherwise `ts-node-text' is used."
   "Return the pretty-printed string of TREE's sexp."
   (pp-to-string (read (ts-tree-to-sexp tree))))
 
+(defun ts--node-steps (node)
+  "Return the sequence of steps from the root node to NODE.
+
+Each step has the form (CHILD-NODE . NTH), where CHILD-NODE is the node to
+descend into, and NTH is its 0-based ordinal position within the parent node.
+
+If NODE is the root node, the sequence is empty."
+  (let ((steps)
+        (parent)
+        (this node))
+    (while (setq parent (ts-get-parent this))
+      (let ((i 0))
+        (ts-mapc-children
+         (lambda (child)
+           (when (ts-node-eq child this)
+             (setq steps (cons (cons this i) steps)))
+           (setq i (1+ i)))
+         parent))
+      (setq this parent))
+    steps))
+
+(defun ts--node-from-steps (tree steps)
+  "Follow STEPS from TREE's root node; return the final node.
+STEPS shoud be a sequence of steps, as described by `ts--node-steps'.
+
+If a step cannot be followed, return nil."
+  (catch 'ts-invalid-step
+    (let ((this (ts-root-node tree)))
+      (pcase-dolist (`(,old-node . ,i) steps)
+        (let ((new-node (ts-get-nth-child this i)))
+          (unless new-node
+            (message "Node type %S has no child at position %s"
+                     (ts-node-type this) i)
+            (throw 'ts-invalid-step nil))
+          (let ((new-type (ts-node-type new-node))
+                (old-type (ts-node-type old-node)))
+            (unless (equal old-type new-type)
+              (message "Node type %S has child of type %S at position %s; expected %S"
+                       (ts-node-type this) new-type i old-type)
+              (throw 'ts-invalid-step nil)))
+          (setq this new-node)))
+      this)))
+
 (provide 'tree-sitter-core)
 ;;; tree-sitter-core.el ends here

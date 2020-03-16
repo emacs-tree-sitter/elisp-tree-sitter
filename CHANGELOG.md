@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-- Added `ts-node-position-range`.
-- Added `ts-node-eq`.
+- Added function `ts-node-position-range`.
+- Added function `ts-node-eq`.
+- Added macro `tree-sitter-save-excursion`, which is useful for code formatting operations.
 - Upgraded `tree-sitter` to 0.6.3. This fixed `ts-type-name-for-id` and `ts-field-name-for-id` crashing on out-of-bounds IDs.
 - Fixed `ts-reset-cursor` always signaling "already mutable borrowed" error.
 
