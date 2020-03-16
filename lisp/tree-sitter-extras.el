@@ -39,6 +39,7 @@
           (pixel-scroll-pixel-down dy)
         (pixel-scroll-pixel-up (- dy))))))
 
+;;;###autoload
 (defmacro tree-sitter-save-excursion (&rest body)
   "Save the current location within the syntax tree; execute BODY; restore it.
 
