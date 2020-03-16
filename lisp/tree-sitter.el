@@ -114,19 +114,21 @@ END is the end of the changed text."
         ;; that we can make this a global mode.
         (error "No language registered for major mode `%s'" major-mode))
       (setq tree-sitter-language (tree-sitter-require lang-symbol))))
-  (setq tree-sitter-parser (ts-make-parser)
-        tree-sitter-tree nil)
-  (ts-set-language tree-sitter-parser tree-sitter-language)
-  (tree-sitter--do-parse)
-  (add-hook 'before-change-functions #'tree-sitter--before-change 'append 'local)
-  (add-hook 'after-change-functions #'tree-sitter--after-change 'append 'local))
+  (unless tree-sitter-parser
+    (setq tree-sitter-parser (ts-make-parser))
+    (ts-set-language tree-sitter-parser tree-sitter-language))
+  (unless tree-sitter-tree
+    (tree-sitter--do-parse))
+  (add-hook 'before-change-functions #'tree-sitter--before-change :append :local)
+  (add-hook 'after-change-functions #'tree-sitter--after-change :append :local))
 
 (defun tree-sitter--disable ()
   "Disable `tree-sitter' in the current buffer."
-  (remove-hook 'before-change-functions #'tree-sitter--before-change 'local)
-  (remove-hook 'after-change-functions #'tree-sitter--after-change 'local)
+  (remove-hook 'after-change-functions #'tree-sitter--after-change :local)
+  (remove-hook 'before-change-functions #'tree-sitter--before-change :local)
   (setq tree-sitter-tree nil
-        tree-sitter-parser nil))
+        tree-sitter-parser nil
+        tree-sitter-language nil))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-mode
