@@ -15,6 +15,10 @@
 (eval-when-compile
   (require 'subr-x))
 
+(declare-function pixel-posn-y-at-point "ext:pixel-scroll")
+(declare-function pixel-scroll-pixel-up "ext:pixel-scroll")
+(declare-function pixel-scroll-pixel-down "ext:pixel-scroll")
+
 (defcustom tree-sitter-save-excursion-try-hard nil
   "Whether `tree-sitter-save-excursion' should try as hard as possible."
   :type 'boolean
@@ -48,9 +52,10 @@ much, this macro behaves like `save-excursion', unless
 `tree-sitter-save-excursion-try-hard' is non-nil, in which case it tries to get
 as close as possible to the original location.
 
-After restoration, if `pixel-scroll' is available (Emacs 26), the buffer text is
-scrolled so that the cursor stays at the same vertical position, pixelwise. This
-can be disabled by setting `tree-sitter-save-excursion-pixelwise' to nil."
+After the location is restored, the buffer text is scrolled so that point stays
+at roughly the same vertical screen position. If `pixel-scroll' is available and
+`tree-sitter-save-excursion-pixelwise' is non-nil, pixelwise scrolling is used
+instead, to make this restoration exact."
   (declare (indent 0))
   `(let* ((p (point))
           (old-node (tree-sitter-node-at-point))
