@@ -65,10 +65,10 @@
         ;; iterate all matches and highlight them with an underline
         (cl-loop
          for submatches across matches
-         do (cl-loop
-             for match on submatches
-             do (setq nextface (tree-sitter-query--get-next-match-highlight-color))
-             (tree-sitter-query--highlight-node match nextface)))))))
+         do (setq nextface (tree-sitter-query--get-next-match-highlight-color))
+         (cl-loop
+          for match on submatches
+          do (tree-sitter-query--highlight-node match nextface)))))))
 
 (defun tree-sitter-query--after-change (&rest args)
   "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
@@ -96,8 +96,8 @@ The buffer on focus when the command is called is set as the target buffer"
       (unless (display-buffer-in-side-window
                builder-buffer
                '((side . bottom)
-                 (window-height . 7))))
-      (user-error "No enough space available for query builder window"))
+                 (window-height . 10)))
+        (user-error "No enough space available for query builder window")))
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
         (tree-sitter-mode))
