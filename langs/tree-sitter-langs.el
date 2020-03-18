@@ -31,7 +31,7 @@
 If it cannot be loaded, this function tries to compile the grammar.
 
 See `tree-sitter-langs-repos'."
-  (condition-case err
+  (condition-case nil
       (tree-sitter-require lang-symbol)
     (error
      (display-warning 'tree-sitter-test
@@ -68,8 +68,8 @@ See `tree-sitter-langs-repos'."
                 (scala-mode      . scala)
                 (swift-mode      . swift)
                 (typescript-mode . typescript))))
-  (map-put tree-sitter-major-mode-language-alist
-           major-mode lang-symbol))
+  (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
+        lang-symbol))
 
 (provide 'tree-sitter-langs)
 ;;; tree-sitter-langs.el ends here
