@@ -97,7 +97,7 @@ The buffer on focus when the command is called is set as the target buffer"
                builder-buffer
                '((side . bottom)
                  (window-height . 10)))
-        (user-error "No enough space available for query builder window")))
+        (user-error "Not enough space available for query builder window")))
     (with-current-buffer target-buffer
       (unless tree-sitter-mode
         (tree-sitter-mode))
