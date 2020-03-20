@@ -1,6 +1,8 @@
 trigger:
 - grammar-bundle
 
+pr: none
+
 resources:
   repositories:
   - repository: emacs-module-rs
