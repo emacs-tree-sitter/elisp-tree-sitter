@@ -212,13 +212,15 @@ If NODE is the root node, the sequence is empty."
         (parent)
         (this node))
     (while (setq parent (ts-get-parent this))
-      (let ((i 0))
-        (ts-mapc-children
-         (lambda (child)
-           (when (ts-node-eq child this)
-             (setq steps (cons (cons this i) steps)))
-           (setq i (1+ i)))
-         parent))
+      (push (catch :ts-step
+              (let ((i 0))
+                (ts-mapc-children (lambda (child)
+                                    (if (ts-node-eq child this)
+                                        (throw :ts-step (cons this i))
+                                      (setq i (1+ i))))
+                                  parent))
+              (throw :ts-is-not-parents-child (cons this parent)))
+            steps)
       (setq this parent))
     steps))
 
