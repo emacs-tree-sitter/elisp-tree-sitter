@@ -21,6 +21,9 @@
   (require 'pcase)
   (require 'cl-lib))
 
+(declare-function dired-omit-mode "dired-x" (&optional arg))
+(declare-function magit-get-current-tag "magit-git" (&optional rev with-distance))
+
 (defconst tree-sitter-langs--suffixes '(".dylib" ".dll" ".so")
   "List of suffixes for shared libraries that define tree-sitter languages.")
 
