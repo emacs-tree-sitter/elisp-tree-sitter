@@ -1,10 +1,10 @@
 (require 'seq)
 
-;; XXX: Using `require' after setting`module-file-suffix' to `.dylib' results in "Cannot open load
-;; file: No such file or directory, tree-sitter-dyn".
+;; XXX: Using `require' after setting`module-file-suffix' to `.dylib' results in
+;; "Cannot open load file: No such file or directory, tree-sitter-dyn".
 ;;
-;; XXX: Using `load' results in an error message with garbled text: "Symbol’s value as variable is
-;; void: Ïúíþ".
+;; XXX: Using `load' results in an error message with garbled text: "Symbol’s
+;; value as variable is void: Ïúíþ".
 ;;
 ;; Therefore, we use `module-load' directly.
 (defun ts--try-load-dyn (name)

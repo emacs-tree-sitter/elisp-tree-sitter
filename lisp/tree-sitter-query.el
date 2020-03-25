@@ -3,28 +3,26 @@
 ;; Copyright (C) 2020  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
-;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.4.0
-;; Package-Requires: ((emacs "25.1"))
-;; License: MIT
 
 ;;; Commentary:
 
-;; This file contains other debug utilities for building queries and see
-;; results in a target buffer
+;; This file contains other debug utilities for building queries and see results
+;; in a target buffer.
 
-;; Code:
+;;; Code:
 
 (require 'scheme)
-(require 'cl-lib)
 (require 'tree-sitter)
 
+(eval-when-compile
+  (require 'cl-lib))
+
 (defgroup tree-sitter-query nil
-  "tree-sitter playground for GNU Emacs."
+  "Tree-Sitter playground."
   :group 'tree-sitter)
 
 (define-derived-mode tree-sitter-query-mode prog-mode "ts-query-builder"
-  "Major mode for building tree-sitter queries and testing them live"
+  "Major mode for building tree-sitter queries and testing them live."
   :syntax-table scheme-mode-syntax-table
   :abbrev-table scheme-mode-abbrev-table)
 
@@ -38,33 +36,31 @@
   '((t :foreground "#000"
        :background "#00bfff"
        :weight bold))
-  "face for match highlight"
+  "Face for highlight captures in matches."
   :group 'tree-sitter-query)
 
 (defun tree-sitter-query--highlight-capture (capture)
-  "Highlight a CAPTURE match in the current buffer."
+  "Highlight CAPTURE in the current buffer."
   (pcase-let* ((`(,capture-name . ,captured-node) capture)
                (`(,node-start . ,node-end) (ts-node-position-range captured-node))
-               (overlay-added (make-overlay node-start node-end)))
-    ;; ensure it is deleted automatically when the overlay becomes empty
-    (overlay-put overlay-added 'evaporate t)
-    ;; set the match-face as the face of the overlay
-    (overlay-put overlay-added 'face 'tree-sitter-query-match)
-    ;; put the name of the capture in the help-echo, if any
+               (overlay (make-overlay node-start node-end)))
+    ;; Ensure the overlay is deleted when it becomes empty.
+    (overlay-put overlay 'evaporate t)
+    (overlay-put overlay 'face 'tree-sitter-query-match)
+    ;; Use the capture's name as the mouseover tooltip.
     (unless (string= capture-name "")
-      (overlay-put overlay-added 'help-echo capture-name))))
+      (overlay-put overlay 'help-echo capture-name))))
 
 (defun tree-sitter-query--eval-query (patterns)
-  "Evaluate a query PATTERNS against the target buffer."
+  "Evaluate query PATTERNS against the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
-    ;; clean the target buffer of overlays
     (remove-overlays)
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
            (captures-list (ts-query-captures query root-node)))
       (if (= (length captures-list) 0)
-          (message "no matches found")
-        ;; iterate all matches and highlight them with an underline
+          (message "No matches found")
+        ;; Highlight captures.
         (cl-loop
          for captures across captures-list
          do
@@ -72,15 +68,15 @@
           for capture on captures
           do (tree-sitter-query--highlight-capture capture)))))))
 
-(defun tree-sitter-query--after-change (&rest args)
-  "Run evaluation of pattern in current buffer for every change made by the user, ignoring ARGS."
+(defun tree-sitter-query--after-change (&rest _args)
+  "Run query patterns against the target buffer and update highlighted texts."
   (with-current-buffer (get-buffer tree-sitter-query-builder-buffer-name)
-    (let ((pattern (buffer-string)))
+    (let ((patterns (buffer-string)))
       (with-demoted-errors "Error: %S"
-        (tree-sitter-query--eval-query pattern)))))
+        (tree-sitter-query--eval-query patterns)))))
 
 (defun tree-sitter-query--clean-target-buffer ()
-  "Remove all overlays if the builder buffer happens to be killed."
+  "Remove all overlays from the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
     (remove-overlays))
   (setq tree-sitter-query--target-buffer nil))
@@ -89,7 +85,7 @@
 (defun tree-sitter-query-builder ()
   "Provide means for developers to write and test tree-sitter queries.
 
-The buffer on focus when the command is called is set as the target buffer"
+The buffer on focus when the command is called is set as the target buffer."
   (interactive)
   (let* ((target-buffer (current-buffer))
          (builder-buffer (get-buffer-create tree-sitter-query-builder-buffer-name))
@@ -113,7 +109,7 @@ The buffer on focus when the command is called is set as the target buffer"
       (add-hook 'after-change-functions 'tree-sitter-query--after-change nil :local)
       (add-hook 'kill-buffer-hook 'tree-sitter-query--clean-target-buffer nil :local))
     (setf tree-sitter-query--target-buffer target-buffer)
-    ;; switch focus to the query builder window
+    ;; Switch focus to the query builder window.
     (select-window (get-buffer-window builder-buffer))))
 
 (provide 'tree-sitter-query)

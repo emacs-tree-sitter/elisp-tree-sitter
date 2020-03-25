@@ -8,7 +8,7 @@
 ;;; Commentary:
 
 ;; This file contains the core functionalities of tree-sitter.
-;;
+
 ;;; Code:
 
 (unless (functionp 'module-load)

@@ -8,7 +8,7 @@
 
 ;; This file implements functions to search, load and register `tree-sitter'
 ;; language objects (grammars).
-;;
+
 ;;; Code:
 
 (require 'map)
