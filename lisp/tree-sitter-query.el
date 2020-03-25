@@ -14,9 +14,6 @@
 (require 'scheme)
 (require 'tree-sitter)
 
-(eval-when-compile
-  (require 'cl-lib))
-
 (defgroup tree-sitter-query nil
   "Tree-Sitter playground."
   :group 'tree-sitter)
@@ -57,16 +54,10 @@
     (remove-overlays)
     (let* ((query (ts-make-query tree-sitter-language patterns))
            (root-node (ts-root-node tree-sitter-tree))
-           (captures-list (ts-query-captures query root-node)))
-      (if (= (length captures-list) 0)
+           (captures (ts-query-captures query root-node)))
+      (if (= (length captures) 0)
           (message "No matches found")
-        ;; Highlight captures.
-        (cl-loop
-         for captures across captures-list
-         do
-         (cl-loop
-          for capture on captures
-          do (tree-sitter-query--highlight-capture capture)))))))
+        (mapc #'tree-sitter-query--highlight-capture captures)))))
 
 (defun tree-sitter-query--after-change (&rest _args)
   "Run query patterns against the target buffer and update highlighted texts."
