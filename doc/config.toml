@@ -1,0 +1,5 @@
+baseURL = "http://ubolonton.github.io/emacs-tree-sitter/"
+languageCode = "en-us"
+title = "Emacs Tree-sitter"
+
+theme = "hugo-alabaster-theme"

@@ -1,0 +1,28 @@
+#+TITLE: emacs-tree-sitter Documentation
+
+#+HUGO_BASE_DIR: .
+#+HUGO_SECTION: /
+#+HUGO_MENU: :menu main
+
+Test
+
+* Introduction
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_TYPE: homepage
+:END:
+
+* Getting Started
+:PROPERTIES:
+:EXPORT_FILE_NAME: getting-started
+:END:
+Getting STARTED
+
+* Basics
+* Tree-sitter Minor Mode
+* Tree Cursor
+* Querying
+* Misc
+** Equality
+** Types
+* Bundled Languages
