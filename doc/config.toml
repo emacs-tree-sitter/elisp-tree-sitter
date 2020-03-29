@@ -1,11 +1,13 @@
-baseURL = "http://ubolonton.github.io/emacs-tree-sitter/"
+# baseURL = "http://ubolonton.github.io/emacs-tree-sitter/"
 languageCode = "en-us"
 title = "Emacs Tree-sitter"
 
+relativeURLs = true
+
 theme = [
   "docdock",
-  # "alabaster",
   # "learn",
+  # "alabaster",
   # "hugo-bare-min-theme",
   # "techdoc",
 
