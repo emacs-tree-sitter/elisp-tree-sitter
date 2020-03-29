@@ -1,8 +1,10 @@
-#+TITLE: emacs-tree-sitter Documentation
+#+TITLE: Emacs Tree-sitter
 
 #+HUGO_BASE_DIR: .
 #+HUGO_SECTION: /
 #+HUGO_MENU: :menu main
+
+#+HUGO_CUSTOM_FRONT_MATTER: :alwaysopen true
 
 Test
 
@@ -12,13 +14,166 @@ Test
 :EXPORT_HUGO_TYPE: homepage
 :END:
 
+This is Emacs's binding for tree-sitter, an incremental parsing system. It requires Emacs 25.1 or above, built with dynamic module support.
+
+It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
+- Faster, fine-grained code highlighting.
+- More flexible code folding.
+- Structural editing (like Paredit, or even better) for non-Lisp code.
+- More informative indexing for imenu.
+
+#+begin_src emacs-lisp
+  (defun tree-sitter-mark-next-bigger-node ()
+    (interactive)
+    (let* ((p (point))
+           (m (if mark-active (mark) p))
+           (beg (min p m))
+           (end (max p m))
+           (root (ts-root-node tree-sitter-tree))
+           (node (ts-get-named-descendant-for-position-range root beg end))
+           (node-beg (ts-node-start-position node))
+           (node-end (ts-node-end-position node)))
+      ;; Already marking current node. Try its parent node instead.
+      (when (and (= beg node-beg) (= end node-end))
+        (when-let ((node (ts-get-parent node)))
+          (setq node-beg (ts-node-start-position node)
+                node-end (ts-node-end-position node))))
+      (set-mark node-end)
+      (goto-char node-beg)))
+#+end_src
+
+{{% alert theme="danger" %}}Hello{{% /alert %}}
+
 * Getting Started
 :PROPERTIES:
-:EXPORT_FILE_NAME: getting-started
+:EXPORT_HUGO_SECTION: getting-started
 :END:
+** Getting Started
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 1002
+:EXPORT_HUGO_MENU: :menu main :weight 1002
+:END:
+
 Getting STARTED
 
 * Basics
+:PROPERTIES:
+:EXPORT_FILE_NAME: basics
+:EXPORT_HUGO_WEIGHT: 1003
+:EXPORT_HUGO_MENU: :menu main :weight 1003
+:END:
+- Enable the =tree-sitter= minor mode in a supported major mode (defined in =tree-sitter-major-mode-language-alist=):
+    #+begin_src emacs-lisp
+    (require 'tree-sitter)
+    (require 'tree-sitter-langs)
+    (add-hook 'rust-mode-hook #'tree-sitter-mode)
+    #+end_src
+- Show the debug view of a buffer's parse tree
+    #+begin_src emacs-lisp
+    (require 'tree-sitter-debug)
+    (tree-sitter-debug-enable)
+    #+end_src
+- Get names of all functions in a Rust file:
+    #+begin_src emacs-lisp
+    (with-current-buffer "types.rs"
+      (seq-map (lambda (capture)
+                 (pcase-let ((`(_ . ,node) capture))
+                   (ts-node-text node)))
+               (tree-sitter-query [(function_item (identifier) @name)])))
+    #+end_src
+- Write a simple extension to =expand-region=:
+    #+begin_src emacs-lisp
+    (defun tree-sitter-mark-next-bigger-node ()
+      (interactive)
+      (let* ((p (point))
+             (m (if mark-active (mark) p))
+             (beg (min p m))
+             (end (max p m))
+             (root (ts-root-node tree-sitter-tree))
+             (node (ts-get-named-descendant-for-position-range root beg end))
+             (node-beg (ts-node-start-position node))
+             (node-end (ts-node-end-position node)))
+        ;; Already marking current node. Try its parent node instead.
+        (when (and (= beg node-beg) (= end node-end))
+          (when-let ((node (ts-get-parent node)))
+            (setq node-beg (ts-node-start-position node)
+                  node-end (ts-node-end-position node))))
+        (set-mark node-end)
+        (goto-char node-beg)))
+    #+end_src
+- Parse a string:
+    #+begin_src emacs-lisp
+    (let ((parser (ts-make-parser)))
+      (ts-set-language parser (tree-sitter-require 'rust))
+      (ts-parse-string parser "fn foo() {}"))
+    #+end_src
+* API
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: api
+:END:
+
+** _ :ignore:
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_TITLE: API
+:EXPORT_HUGO_WEIGHT: 1004
+:EXPORT_HUGO_MENU: :menu main :weight 1004
+:END:
+- Functions in this package are named differently, to be more Lisp-idiomatic. The overall parsing flow stays the same.
+- Documentation for individual functions can be viewed with =C-h f= (=describe-function=), as usual.
+- A =symbol= in the C API is actually the ID of a type, so it's called =type-id= in this package.
+** Types
+:PROPERTIES:
+:EXPORT_FILE_NAME: types
+:EXPORT_HUGO_MENU: :menu main :parent "api"
+:END:
+- =language=, =parser=, =tree=, =node=, =cursor=, =query=: corresponding tree-sitter types, embedded in =user-ptr= objects.
+- =point=: a pair of =(LINE-NUMBER . BYTE-COLUMN)=.
+  + =LINE-NUMBER= is the absolute line number returned by =line-number-at-pos=, counting from 1.
+  + =BYTE-COLUMN= counts from 0, like =current-column=. However, unlike that function, it counts bytes, instead of displayed glyphs.
+- =range=: a vector in the form of =[START-BYTEPOS END-BYTEPOS START-POINT END-POINT]=.
+
+These types are understood only by this package. They are not recognized by =type-of=, but have corresponding type-checking predicates, which are useful for debugging: =ts-language-p=, =ts-tree-p=, =ts-node-p=...
+
+For consistency with Emacs's conventions, this binding has some differences compared to the tree-sitter's C/Rust APIs:
+- It uses 1-based byte positions, not 0-based byte offsets.
+- It uses 1-based line numbers, not 0-based row coordinates.
+
+** Functions
+:PROPERTIES:
+:EXPORT_FILE_NAME: functions
+:EXPORT_HUGO_MENU: :menu main :parent "api"
+:END:
+- Language:
+    + =tree-sitter-require=: like =require=, for tree-sitter languages.
+- Parser:
+    + =ts-make-parser=: create a new parser.
+    + =ts-set-language=: set a parser's active language.
+    + =ts-parse-string=: parse a string.
+    + =ts-parse=: parse with a text-generating callback.
+    + =ts-set-included-ranges=: set sub-ranges when parsing multi-language text.
+- Tree:
+    + =ts-root-node=: get the tree's root node.
+    + =ts-edit-tree=: prepare a tree for incremental parsing.
+    + =ts-changed-ranges=: compare 2 trees for changes.
+    + =ts-tree-to-sexp=: debug utility.
+- Cursor:
+    + =ts-make-cursor=: obtain a new cursor from either a tree or a node.
+    + =ts-goto-= functions: move to a different node.
+    + =ts-current-= functions: get the current field/node.
+- Node:
+    + =ts-node-= functions: node's properties and predicates.
+    + =ts-get-= functions: get related nodes (parent, siblings, children, descendants).
+    + =ts-count-= functions: count child nodes.
+    + =ts-mapc-children=: loops through child nodes.
+    + =ts-node-to-sexp=: debug utility.
+- Query:
+    + =ts-make-query=: create a new query.
+    + =ts-make-query-cursor=: create a new query cursor.
+    + =ts-query-matches=, =ts-query-captures=: execute a query, returning matches/captures.
+    + =ts-set-byte-range=, =ts-set-point-range=: limit query execution to a range.
+
 * Tree-sitter Minor Mode
 * Tree Cursor
 * Querying
