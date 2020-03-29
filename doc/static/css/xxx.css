@@ -18,3 +18,28 @@ body {
   border: 1px solid #DDD;
   box-shadow: 2px 2px 2px #EEE;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Make top bar sticky. */
+/* TODO: Make it sticky only when it's needed to toggle the sidebar. */
+
+#body > .padding {
+  overflow: visible;
+}
+
+#top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hide copy-to-clipboard button, except for code blocks. */
+
+code + .copy-to-clipboard {
+  display: none;
+}
+
+.chroma .copy-to-clipboard {
+  display: inline;
+}
