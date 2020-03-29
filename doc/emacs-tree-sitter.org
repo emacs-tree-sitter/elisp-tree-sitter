@@ -113,7 +113,7 @@ Getting STARTED
 :EXPORT_HUGO_SECTION: api
 :END:
 
-** _ :ignore:
+** _
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_TITLE: API
@@ -127,6 +127,7 @@ Getting STARTED
 :PROPERTIES:
 :EXPORT_FILE_NAME: types
 :EXPORT_HUGO_MENU: :menu main :parent "api"
+:EXPORT_HUGO_WEIGHT: 2001
 :END:
 - =language=, =parser=, =tree=, =node=, =cursor=, =query=: corresponding tree-sitter types, embedded in =user-ptr= objects.
 - =point=: a pair of =(LINE-NUMBER . BYTE-COLUMN)=.
@@ -144,6 +145,7 @@ For consistency with Emacs's conventions, this binding has some differences comp
 :PROPERTIES:
 :EXPORT_FILE_NAME: functions
 :EXPORT_HUGO_MENU: :menu main :parent "api"
+:EXPORT_HUGO_WEIGHT: 2002
 :END:
 - Language:
     + =tree-sitter-require=: like =require=, for tree-sitter languages.
