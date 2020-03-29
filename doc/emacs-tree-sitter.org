@@ -2,8 +2,8 @@
 
 #+HUGO_BASE_DIR: .
 #+HUGO_SECTION: /
-#+HUGO_MENU: :menu main
 
+# https://docdock.netlify.com/content-organisation/#unfolded-menu-entry-by-default
 #+HUGO_CUSTOM_FRONT_MATTER: :alwaysopen true
 
 Test
@@ -46,13 +46,7 @@ It aims to be the foundation for a new breed of Emacs packages that understand c
 
 * Getting Started
 :PROPERTIES:
-:EXPORT_HUGO_SECTION: getting-started
-:END:
-** Getting Started
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_WEIGHT: 1002
-:EXPORT_HUGO_MENU: :menu main :weight 1002
+:EXPORT_FILE_NAME: getting-started
 :END:
 
 Getting STARTED
@@ -60,8 +54,6 @@ Getting STARTED
 * Basics
 :PROPERTIES:
 :EXPORT_FILE_NAME: basics
-:EXPORT_HUGO_WEIGHT: 1003
-:EXPORT_HUGO_MENU: :menu main :weight 1003
 :END:
 - Enable the =tree-sitter= minor mode in a supported major mode (defined in =tree-sitter-major-mode-language-alist=):
     #+begin_src emacs-lisp
@@ -117,8 +109,6 @@ Getting STARTED
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_TITLE: API
-:EXPORT_HUGO_WEIGHT: 1004
-:EXPORT_HUGO_MENU: :menu main :weight 1004
 :END:
 - Functions in this package are named differently, to be more Lisp-idiomatic. The overall parsing flow stays the same.
 - Documentation for individual functions can be viewed with =C-h f= (=describe-function=), as usual.
@@ -126,8 +116,6 @@ Getting STARTED
 ** Types
 :PROPERTIES:
 :EXPORT_FILE_NAME: types
-:EXPORT_HUGO_MENU: :menu main :parent "api"
-:EXPORT_HUGO_WEIGHT: 2001
 :END:
 - =language=, =parser=, =tree=, =node=, =cursor=, =query=: corresponding tree-sitter types, embedded in =user-ptr= objects.
 - =point=: a pair of =(LINE-NUMBER . BYTE-COLUMN)=.
@@ -144,8 +132,6 @@ For consistency with Emacs's conventions, this binding has some differences comp
 ** Functions
 :PROPERTIES:
 :EXPORT_FILE_NAME: functions
-:EXPORT_HUGO_MENU: :menu main :parent "api"
-:EXPORT_HUGO_WEIGHT: 2002
 :END:
 - Language:
     + =tree-sitter-require=: like =require=, for tree-sitter languages.
@@ -183,3 +169,6 @@ For consistency with Emacs's conventions, this binding has some differences comp
 ** Equality
 ** Types
 * Bundled Languages
+:PROPERTIES:
+:EXPORT_FILE_NAME: bundled-languages
+:END:
