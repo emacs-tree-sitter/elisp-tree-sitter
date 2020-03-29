@@ -1,0 +1,20 @@
+/* https://discourse.gohugo.io/t/solved-syntax-highlighting-changed-with-hugo-0-29-from-0-27/8678 */
+/* https://github.com/alecthomas/chroma/issues/41 */
+
+/* We don't modify syntax.css because we want to treat that entire file as machine-generated. */
+
+body {
+  background-color: #fdf6e3;
+}
+
+.chroma code {
+  color: inherit;
+  background-color: inherit;
+}
+
+.chroma {
+  color: #777;
+  background-color: #EEE;
+  border: 1px solid #DDD;
+  box-shadow: 2px 2px 2px #EEE;
+}
