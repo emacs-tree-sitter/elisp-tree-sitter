@@ -160,6 +160,19 @@ to faces.  Each function takes no arguments."
   :type 'hook
   :group 'tree-sitter-highlight)
 
+(defcustom tree-sitter-highlight-force-correct nil
+  "If t, highlights the whole buffer while scrolling, which is more correct.
+
+For example, if a \" is placed, the buffer is scrolled down, and nothing closes
+the \" until a very long time, then if this is 'nil some code is not highlighted
+at all.
+
+If this is not a problem or scrolling isn't done during these more \"global\" changes,
+then keep this nil, otherwise set it to t to always highlight the whole buffer while
+scrolling (slows down scrolling noticeably with buffers with more than 2000 lines for me.
+"
+  :group 'tree-sitter-highlight)
+
 (defvar-local tree-sitter-highlight--face-hash nil
   "Hashtable from query identifier to face, built from
 `tree-sitter-highlight-default-faces' and `tree-sitter-highlight-buffer-faces'.")
@@ -283,19 +296,20 @@ This will remove all face properties in that region."
         ;; Highlight the whole visible region.
         (tree-sitter-highlight--highlight wstart wend)))))
 
-(defun tree-sitter-highlight--highlight-window (_window _start)
+(defun tree-sitter-highlight--highlight-window (_window start)
   "Highlight the _WINDOW after scrolling took place.
 
 Sadly we currently re-highlight the whole buffer.
-The previous code (tree-sitter-highlight--highlight start (window-end nil t))
-was not correct.
+The previous code was not correct in all cases.
 For example, if I place a single \" (without the \ ) in a Rust file and then
 scroll around, code below that \" would not be highlighted at all, if there wasn't
 anything that closed the \".
 I think this happens because we constrain the query to the visible region, and nothing matches
 there, since the start of the string is further up in the buffer, and the end of it is further down.
 "
-  (tree-sitter-highlight--highlight (point-min) (point-max)))
+  (if tree-sitter-highlight-force-correct
+    (tree-sitter-highlight--highlight (point-min) (point-max))
+   (tree-sitter-highlight--highlight start (window-end nil t))))
 
 (defun tree-sitter-highlight--enable ()
   "Enable `tree-sitter-highlight' in this buffer."
