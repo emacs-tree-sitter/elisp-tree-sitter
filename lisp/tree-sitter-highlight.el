@@ -246,16 +246,24 @@ scrolling (slows down scrolling noticeably with buffers with more than 2000 line
     #'ts-node-text)
   )
 
-(defun tree-sitter-highlight--highlight (start end)
+(defun tree-sitter-highlight--highlight (start end _)
   "Highlight the buffer from START to END with tree-sitter.
 
 This will remove all face properties in that region."
-  ;; TODO: Remember what we've highlighted, similar to how font-lock does it.
-  ;;       Already highlighted regions shouldn't be re-highlighted.
   (ts--save-context
     (with-silent-modifications
-      (remove-text-properties start end '(face nil))
-      (let ((matches (tree-sitter-highlight--get-matches start end)))
+      ;; Get at least *some* node within [start, end].
+      (let* ((node (ts-get-named-descendant-for-position-range (ts-root-node tree-sitter-tree) start end))
+              (matches (tree-sitter-highlight--get-matches (ts-node-start-position node) (ts-node-end-position node))))
+        (message "highlighting %s .. %s" start end)
+        (remove-text-properties
+          (ts-node-start-position node)
+          (ts-node-end-position node)
+          '(face nil))
+        (put-text-property
+          (ts-node-start-position node)
+          (ts-node-end-position node)
+          'fontified t)
         (seq-do #'(lambda (match)
                     (seq-do #'tree-sitter-highlight--apply (cdr match)))
           matches)))))
@@ -263,53 +271,10 @@ This will remove all face properties in that region."
 (defun tree-sitter-highlight--jit (old-tree)
   "Highlight the buffer just-in-time, i.e. after the buffer was parsed with tree-sitter."
   (when old-tree
-    (let ((changes (ts-changed-ranges old-tree tree-sitter-tree))
-           (wstart (window-start))
-           (wend   (window-end)))
-
-      ;; The old version:
-      ;;
-      ;; Find changes that are within the current window
-      ;; (mapc #'(lambda (range)
-      ;;           (let ((start (aref range 0))
-      ;;                  (end (aref range 1)))
-      ;;             ;; TODO: Improve this
-      ;;             (tree-sitter-highlight--highlight (max wstart start) (min wend end))))
-      ;;   changes))))
-
-      ;; The new version:
-      ;; Should at least never *miss* something, but certainly does "too much" (unneeded) work.
-      ;; Checks if the start or the end of any changed range lies within window-start and window-end.
-      ;; If any does, then highlight the whole visible region.
-      (when (seq-reduce #'(lambda (acc range)
-                            (let ((start (aref range 0))
-                                  (end   (aref range 1)))
-                              (or ;; Any previous range was visible
-                                  acc
-                                  ;; ... or the start is visible
-                                  (and (>= start wstart)
-                                    (<= start wend))
-                                  ;; ... or the end is visible
-                                  (and (>= end wstart)
-                                    (<= end wend)))))
-              changes nil)
-        ;; Highlight the whole visible region.
-        (tree-sitter-highlight--highlight wstart wend)))))
-
-(defun tree-sitter-highlight--highlight-window (_window start)
-  "Highlight the _WINDOW after scrolling took place.
-
-Sadly we currently re-highlight the whole buffer.
-The previous code was not correct in all cases.
-For example, if I place a single \" (without the \ ) in a Rust file and then
-scroll around, code below that \" would not be highlighted at all, if there wasn't
-anything that closed the \".
-I think this happens because we constrain the query to the visible region, and nothing matches
-there, since the start of the string is further up in the buffer, and the end of it is further down.
-"
-  (if tree-sitter-highlight-force-correct
-    (tree-sitter-highlight--highlight (point-min) (point-max))
-   (tree-sitter-highlight--highlight start (window-end nil t))))
+    (mapc #'(lambda (range)
+              (message "jit %s .. %s" (aref range 0) (aref range 1))
+              (font-lock-flush (aref range 0) (aref range 1)))
+      (ts-changed-ranges old-tree tree-sitter-tree))))
 
 (defun tree-sitter-highlight--enable ()
   "Enable `tree-sitter-highlight' in this buffer."
@@ -329,22 +294,24 @@ there, since the start of the string is further up in the buffer, and the end of
                                                   tree-sitter-major-mode-language-alist))))
     (setq tree-sitter-highlight--query            (car x)
           tree-sitter-highlight--injections-query (cadr x)))
+  ;; TODO: Create regex for each `match?` in `tree-sitter-highlight--query`
+  ;; see neovim impl for more details.
+  ;; We probably (in tree-sitter-highlight--apply) want to check whether a face is applied,
+  ;; if it isn't: match the node against the regex if any, if it matches or no regex exists then
+  ;; we're good and can apply the face to.
   (setq tree-sitter-highlight--query-cursor (ts-make-query-cursor))
-  (add-hook 'window-scroll-functions
-    #'tree-sitter-highlight--highlight-window nil t)
-  ;; Highlight the current window.
-  (tree-sitter-highlight--highlight-window nil (window-start))
+
+  (add-function :override (local 'font-lock-fontify-region-function)
+    #'tree-sitter-highlight--highlight)
+  (font-lock-flush)
   (add-hook 'tree-sitter-after-change-functions #'tree-sitter-highlight--jit nil t)
   )
 
 (defun tree-sitter-highlight--disable ()
   "Disable `tree-sitter-highlight' in this buffer."
-  (with-silent-modifications
-    (remove-text-properties (point-min)
-      (point-max)
-      '(face nil)))
-  (remove-hook 'window-scroll-functions
-    #'tree-sitter-highlight--highlight-window t)
+  (remove-function (local 'font-lock-fontify-region-function)
+    #'tree-sitter-highlight--highlight)
+  (font-lock-flush)
   (remove-hook 'tree-sitter-after-change-functions #'tree-sitter-highlight--jit t))
 
 (define-minor-mode tree-sitter-highlight-mode
