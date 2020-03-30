@@ -257,7 +257,6 @@ This will remove all face properties in that region."
              (start (ts-node-start-position node))
              (end (ts-node-end-position node))
              (matches (tree-sitter-highlight--get-matches start end)))
-        (message "highlighting %s .. %s" start end)
         (remove-text-properties start end '(face nil))
         ;; TODO: Is this the correct way to tell font-lock that we've highlighted more
         ;; than what was requested?
@@ -270,7 +269,6 @@ This will remove all face properties in that region."
   "Highlight the buffer just-in-time, i.e. after the buffer was parsed with tree-sitter."
   (when old-tree
     (mapc #'(lambda (range)
-              (message "jit %s .. %s" (aref range 0) (aref range 1))
               (font-lock-flush (aref range 0) (aref range 1)))
       (ts-changed-ranges old-tree tree-sitter-tree))))
 
