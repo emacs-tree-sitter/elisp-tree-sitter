@@ -254,16 +254,14 @@ This will remove all face properties in that region."
     (with-silent-modifications
       ;; Get at least *some* node within [start, end].
       (let* ((node (ts-get-named-descendant-for-position-range (ts-root-node tree-sitter-tree) start end))
-              (matches (tree-sitter-highlight--get-matches (ts-node-start-position node) (ts-node-end-position node))))
+             (start (ts-node-start-position node))
+             (end (ts-node-end-position node))
+             (matches (tree-sitter-highlight--get-matches start end)))
         (message "highlighting %s .. %s" start end)
-        (remove-text-properties
-          (ts-node-start-position node)
-          (ts-node-end-position node)
-          '(face nil))
-        (put-text-property
-          (ts-node-start-position node)
-          (ts-node-end-position node)
-          'fontified t)
+        (remove-text-properties start end '(face nil))
+        ;; TODO: Is this the correct way to tell font-lock that we've highlighted more
+        ;; than what was requested?
+        (put-text-property start end 'fontified t)
         (seq-do #'(lambda (match)
                     (seq-do #'tree-sitter-highlight--apply (cdr match)))
           matches)))))
