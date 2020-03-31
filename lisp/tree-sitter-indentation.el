@@ -1,5 +1,8 @@
 ;;; tree-sitter-indentation.el --- Better and smart indentation for major modes
 
+;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; 
+;; Author: Jorge Javier Araya Navarro <jorge@esavara.cr>
 ;; Version: 0.5.0
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
 ;; Package-Requires: ((emacs "25.1"))

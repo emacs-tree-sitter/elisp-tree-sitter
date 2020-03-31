@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2020  Tuấn-Anh Nguyễn
 ;;
-;; Author: Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
+;; Author: Jorge Javier Araya Navarro <jorge@esavara.cr>
 
 ;;; Commentary:
 
