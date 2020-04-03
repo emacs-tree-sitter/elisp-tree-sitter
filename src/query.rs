@@ -174,8 +174,8 @@ fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Resul
 
 /// Limit CURSOR's query executions to the point range, from BEG to END.
 ///
-/// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
-/// for a more detailed explanation.
+/// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
+/// `ts-parse-chunks' for a more detailed explanation.
 #[defun]
 fn set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());

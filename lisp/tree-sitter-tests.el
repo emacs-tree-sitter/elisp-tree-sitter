@@ -111,11 +111,11 @@
     (ts-test-with-file "src/types.rs"
       (let* ((tree) (old-tree)
              (initial (benchmark-run
-                          (setq tree (ts-parse parser #'ts-buffer-input nil))))
+                          (setq tree (ts-parse-chunks parser #'ts-buffer-input nil))))
              (reparse (benchmark-run
                           (progn
                             (setq old-tree tree)
-                            (setq tree (ts-parse parser #'ts-buffer-input old-tree))))))
+                            (setq tree (ts-parse-chunks parser #'ts-buffer-input old-tree))))))
         ;; (message "initial %s" initial)
         ;; (message "reparse %s" reparse)
         (ert-info ("Same code should result in empty change ranges")

@@ -47,7 +47,7 @@
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid tree-sitter point.
 
-A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse-chunks'
 for a more detailed explanation."
   (ts--save-context
     (ts--point-from-position position)))
@@ -67,7 +67,7 @@ This function must be called within a `ts--save-context' block."
 (defun ts-point-to-position (point)
   "Convert tree-sitter POINT to buffer position.
 
-A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse'
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse-chunks'
 for a more detailed explanation."
   (ts--save-context
     (let ((line-number (car point))
