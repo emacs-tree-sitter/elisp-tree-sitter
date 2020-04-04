@@ -18,12 +18,13 @@ strategy:
     macos-10.14-emacs-26.3:
       IMAGE_NAME: 'macos-10.14'
       EVM_EMACS: emacs-26.3
-    macos-10.15-emacs-25.3:
-      IMAGE_NAME: 'macos-10.15'
-      EVM_EMACS: emacs-25.3
-    macos-10.15-emacs-26.3:
-      IMAGE_NAME: 'macos-10.15'
-      EVM_EMACS: emacs-26.3
+    # Emacs is getting "Killed 9" on these agents, probably due to macOS 10.15 updates.
+    # macos-10.15-emacs-25.3:
+    #   IMAGE_NAME: 'macos-10.15'
+    #   EVM_EMACS: emacs-25.3
+    # macos-10.15-emacs-26.3:
+    #   IMAGE_NAME: 'macos-10.15'
+    #   EVM_EMACS: emacs-26.3
 
     ubuntu-16.04-emacs-25.3:
       IMAGE_NAME: 'ubuntu-16.04'
