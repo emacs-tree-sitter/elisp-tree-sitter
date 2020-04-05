@@ -7,6 +7,7 @@
 ;;; Commentary:
 
 ;; This file contains extra functionalities built on top of `tree-sitter-mode'.
+;; They are considered experimental, and subjected to frequent changes.
 
 ;;; Code:
 
