@@ -13,6 +13,9 @@
 
 (require 'tree-sitter)
 
+(eval-when-compile
+  (require 'cl-lib))
+
 (defgroup tree-sitter-hl nil
   "Syntax highlighting using tree-sitter."
   :group 'tree-sitter)
@@ -57,7 +60,7 @@
   "Face used for function.macro"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-method-face '((default :inherit font-lock-function-name-face))
+(defface tree-sitter-function-method-face '((default :inherit link :underline nil))
   "Face used for function.method"
   :group 'tree-sitter-hl-faces)
 
@@ -153,17 +156,51 @@
 (defun tree-sitter-hl--face (capture-name)
   (map-elt tree-sitter-hl-default-faces capture-name nil #'string=))
 
+(defun tree-sitter-hl--append-text-property (start end prop value &optional object)
+  "Like `font-lock-append-text-property', but deduplicates values
+It also expects VALUE to be a single value, not a list."
+  (let (next prev)
+    (while (/= start end)
+      (setq next (next-single-property-change start prop object end)
+            prev (get-text-property start prop object))
+      ;; Canonicalize old forms of face property.
+      (and (memq prop '(face font-lock-face))
+           (listp prev)
+           (or (keywordp (car prev))
+               (memq (car prev) '(foreground-color background-color)))
+           (setq prev (list prev)))
+      (unless (listp prev)
+        (setq prev (list prev)))
+      (unless (memq value prev)
+        (put-text-property start next prop
+                           (append prev (list value))
+                           object))
+      (setq start next))))
+
 (defun tree-sitter-hl--highlight-capture (capture)
   (pcase-let* ((`(,name . ,node) capture)
                (face (map-elt tree-sitter-hl-default-faces name nil #'string=))
                (`(,beg . ,end) (ts-node-position-range node)))
     ;; (message " %s <- %s <- [%s %s]" face name beg end)
+
+    ;; TODO: I think it's better to compute faces for each node first, in Rust.
+    ;; Additionally, we can give certain combinations of capture names their own
+    ;; faces. For example, it might be desirable for fontification of a node
+    ;; that matches both "constructor" and "variable" to be different from the
+    ;; union of "constructor fontification" and "variable fontification".
     (when face
-      (put-text-property beg end 'face face)
+
       ;; Naive `add-face-text-property' keeps adding the same face, slowing
       ;; things down.
       ;; (add-face-text-property beg end face)
-      )))
+
+      ;; (font-lock-append-text-property beg end 'face face)
+
+      ;; `put-text-property' doesn't handle list of faces.
+      ;; (put-text-property beg end 'face face)
+
+      ;; TODO: Deal with faces previously set by us.
+      (tree-sitter-hl--append-text-property beg end 'face face))))
 
 (defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
   (message "tree-sitter-hl [%s %s]" beg end)
@@ -222,7 +259,8 @@ This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
         (font-lock-flush beg end)))))
 
 ;;; This assumes both `tree-sitter-mode' and `font-lock-mode' were already
-;;; enabled in the buffer.
+;;; enabled in the buffer. TODO: We want to work even without `font-lock-mode',
+;;; right?
 (defun tree-sitter-hl--enable ()
   (unless tree-sitter-hl--query
     ;; XXX
