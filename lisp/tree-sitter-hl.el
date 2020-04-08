@@ -221,7 +221,7 @@ It also expects VALUE to be a single value, not a list."
         ;; TODO: Handle uncaptured nodes.
         (seq-do #'tree-sitter-hl--highlight-capture captures))
       ;; TODO: Return the actual region being fontified.
-      nil)))
+      `(jit-lock-bounds ,beg . ,end))))
 
 (defvar tree-sitter-hl--changed-ranges)
 
