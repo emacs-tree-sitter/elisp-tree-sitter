@@ -104,7 +104,7 @@ END is the end of the changed text."
             (ts-parse-chunks tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
-(defun tree-sitter--enable ()
+(defun tree-sitter--setup ()
   "Enable `tree-sitter' in the current buffer."
   (unless tree-sitter-language
     ;; Determine the language symbol based on `major-mode' .
@@ -115,12 +115,10 @@ END is the end of the changed text."
   (unless tree-sitter-parser
     (setq tree-sitter-parser (ts-make-parser))
     (ts-set-language tree-sitter-parser tree-sitter-language))
-  (unless tree-sitter-tree
-    (tree-sitter--do-parse))
   (add-hook 'before-change-functions #'tree-sitter--before-change :append :local)
   (add-hook 'after-change-functions #'tree-sitter--after-change :append :local))
 
-(defun tree-sitter--disable ()
+(defun tree-sitter--teardown ()
   "Disable `tree-sitter' in the current buffer."
   (remove-hook 'after-change-functions #'tree-sitter--after-change :local)
   (remove-hook 'before-change-functions #'tree-sitter--before-change :local)
@@ -137,15 +135,18 @@ END is the end of the changed text."
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
   :init-value nil
   :lighter "tree-sitter"
+  :after-hook (when tree-sitter-mode
+                (unless tree-sitter-tree
+                  (tree-sitter--do-parse)))
   (if tree-sitter-mode
       (let ((err t))
         (unwind-protect
-            (prog1 (tree-sitter--enable)
+            (prog1 (tree-sitter--setup)
               (setq err nil))
           (when err
-            (tree-sitter--disable)
+            (tree-sitter--teardown)
             (setq tree-sitter-mode nil))))
-    (tree-sitter--disable)))
+    (tree-sitter--teardown)))
 
 ;;;###autoload
 (defun turn-on-tree-sitter-mode ()
