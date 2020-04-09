@@ -104,18 +104,12 @@ END is the end of the changed text."
             (ts-parse-chunks tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
-;;; TODO: Support the use case where a temporary buffer is created just to
-;;; fontify some text. That's what `org-mode' and `markdown-mode' does. Ideally
-;;; though, in the long run, they should create multiple buffer-local parsers on
-;;; their own, one for each language with code blocks in the file.
 (defun tree-sitter--enable ()
   "Enable `tree-sitter' in the current buffer."
   (unless tree-sitter-language
     ;; Determine the language symbol based on `major-mode' .
     (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
       (unless lang-symbol
-        ;; TODO: Consider doing nothing if the language is not supported, so
-        ;; that we can make this a global mode.
         (error "No language registered for major mode `%s'" major-mode))
       (setq tree-sitter-language (tree-sitter-require lang-symbol))))
   (unless tree-sitter-parser
@@ -134,6 +128,10 @@ END is the end of the changed text."
         tree-sitter-parser nil
         tree-sitter-language nil))
 
+;;; TODO: Support the use case where a temporary buffer is created just to
+;;; fontify some text. That's what `org-mode' and `markdown-mode' does. Ideally
+;;; though, in the long run, they should create multiple buffer-local parsers on
+;;; their own, one for each language with code blocks in the file.
 ;;;###autoload
 (define-minor-mode tree-sitter-mode
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
@@ -145,9 +143,24 @@ END is the end of the changed text."
             (prog1 (tree-sitter--enable)
               (setq err nil))
           (when err
+            (tree-sitter--disable)
             (setq tree-sitter-mode nil))))
     (tree-sitter--disable)))
 
+;;;###autoload
+(defun turn-on-tree-sitter-mode ()
+  "Turn on `tree-sitter-mode' in a buffer, if possible."
+  ;; FIX: Ignore only known errors. Log the rest, at least.
+  (ignore-errors
+    (tree-sitter-mode 1)))
+
+;;;###autoload
+(define-globalized-minor-mode global-tree-sitter-mode
+  tree-sitter-mode turn-on-tree-sitter-mode
+  :init-value nil
+  :group 'tree-sitter)
+
+;;;###autoload
 (defun tree-sitter-node-at-point ()
   "Return the syntax node at point."
   (let ((root (ts-root-node tree-sitter-tree))
