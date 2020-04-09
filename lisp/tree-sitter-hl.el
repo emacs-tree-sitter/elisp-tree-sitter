@@ -40,7 +40,7 @@
   "Face used for constant.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-constructor-face '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-constructor-face '((default :inherit font-lock-type-face))
   "Face used for constructor"
   :group 'tree-sitter-hl-faces)
 
@@ -56,7 +56,7 @@
   "Face used for function.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-macro-face '((default :inherit font-lock-function-name-face))
+(defface tree-sitter-function-macro-face '((default :inherit font-lock-preprocessor-face))
   "Face used for function.macro"
   :group 'tree-sitter-hl-faces)
 
