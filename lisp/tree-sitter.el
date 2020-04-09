@@ -104,6 +104,10 @@ END is the end of the changed text."
             (ts-parse-chunks tree-sitter-parser #'ts-buffer-input tree-sitter-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
+;;; TODO: Support the use case where a temporary buffer is created just to
+;;; fontify some text. That's what `org-mode' and `markdown-mode' does. Ideally
+;;; though, in the long run, they should create multiple buffer-local parsers on
+;;; their own, one for each language with code blocks in the file.
 (defun tree-sitter--enable ()
   "Enable `tree-sitter' in the current buffer."
   (unless tree-sitter-language
