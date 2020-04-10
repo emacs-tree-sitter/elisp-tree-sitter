@@ -26,7 +26,18 @@
 
 (defcustom tree-sitter-after-change-functions nil
   "Functions to call each time `tree-sitter-tree' is updated.
-Each function will be called with a single argument: the old tree."
+Each function will be called with a single argument: the OLD-TREE. This argument
+will be nil when the buffer is parsed for the first time.
+
+For initialization logic that should be run only once, use
+`tree-sitter-after-first-parse-hook' instead."
+  :type 'hook
+  :group 'tree-sitter)
+
+(defcustom tree-sitter-after-first-parse-hook nil
+  "Functions to call after the buffer is parsed for the first time.
+This hook should be used for initialization logic that requires inspecting the
+syntax tree. It is run after `tree-sitter-mode-hook'."
   :type 'hook
   :group 'tree-sitter)
 
@@ -137,7 +148,8 @@ END is the end of the changed text."
   :lighter "tree-sitter"
   :after-hook (when tree-sitter-mode
                 (unless tree-sitter-tree
-                  (tree-sitter--do-parse)))
+                  (tree-sitter--do-parse)
+                  (run-hooks 'tree-sitter-after-first-parse-hook)))
   (if tree-sitter-mode
       (let ((err t))
         (unwind-protect

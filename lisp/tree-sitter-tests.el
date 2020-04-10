@@ -39,6 +39,8 @@
 (defun ts-test-use-lang (lang-symbol)
   "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
   (setq tree-sitter-language (tree-sitter-require lang-symbol))
+  (add-hook 'tree-sitter-after-first-parse-hook
+            (lambda () (should (not (null tree-sitter-tree)))))
   (tree-sitter-mode))
 
 (defmacro ts-test-with (lang-symbol var &rest body)
