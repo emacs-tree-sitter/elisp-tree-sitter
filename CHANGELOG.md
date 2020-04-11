@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.0] - 2020-04-11
 - Renamed `ts-parse` into `ts-parse-chunks`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
+- Added library `tree-sitter-query`, which enables interactively building queries.
 
 ## [0.5.0] - 2020-03-17
 - Added functions `ts-node-position-range`, `ts-node-eq`.
 - Added function `tree-sitter-node-at-point`.
 - Added macro `tree-sitter-save-excursion`, which is useful for code formatting operations.
-- Added `tree-sitter-extras` for extra functionalities built on top of `tree-sitter-mode`.
+- Added library `tree-sitter-extras`, for extra functionalities built on top of `tree-sitter-mode`.
 - Upgraded `tree-sitter` to 0.6.3. This fixed `ts-type-name-for-id` and `ts-field-name-for-id` crashing on out-of-bounds IDs.
 - Fixed `ts-reset-cursor` always signaling "already mutable borrowed" error.
 
@@ -26,13 +29,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.2.0] - 2020-02-02
 - Upgraded `tree-sitter` to 0.6.0.
-- Added `tree-sitter-cli`.
-- Added `tree-sitter-langs` (utilities to download pre-compiled modules and grammars).
+- Added library `tree-sitter-cli`.
+- Added library `tree-sitter-langs` (utilities to download pre-compiled modules and grammars).
 
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.2.0...0.3.0
