@@ -41,6 +41,12 @@ syntax tree. It is run after `tree-sitter-mode-hook'."
   :type 'hook
   :group 'tree-sitter)
 
+(defcustom tree-sitter-after-on-hook nil
+  "Functions to call after enabling `tree-sitter-mode'.
+Use this to enable other minor modes that depends on the syntax tree."
+  :type 'hook
+  :group 'tree-sitter)
+
 (defcustom tree-sitter-major-mode-language-alist nil
   "Alist that maps major modes to tree-sitter language names."
   :group 'tree-sitter
@@ -137,6 +143,18 @@ END is the end of the changed text."
         tree-sitter-parser nil
         tree-sitter-language nil))
 
+(defmacro tree-sitter--error-protect (body-form &rest error-forms)
+  "Execute BODY-FORM with ERROR-FORMS as cleanup code that is executed on error.
+Unlike `unwind-protect', ERROR-FORMS is not executed if BODY-FORM does not
+signal an error."
+  (declare (indent 1))
+  `(let ((err t))
+     (unwind-protect
+         (prog1 ,body-form
+           (setq err nil))
+       (when err
+         ,@error-forms))))
+
 ;;; TODO: Support the use case where a temporary buffer is created just to
 ;;; fontify some text. That's what `org-mode' and `markdown-mode' does. Ideally
 ;;; though, in the long run, they should create multiple buffer-local parsers on
@@ -151,13 +169,12 @@ END is the end of the changed text."
                   (tree-sitter--do-parse)
                   (run-hooks 'tree-sitter-after-first-parse-hook)))
   (if tree-sitter-mode
-      (let ((err t))
-        (unwind-protect
-            (prog1 (tree-sitter--setup)
-              (setq err nil))
-          (when err
-            (tree-sitter--teardown)
-            (setq tree-sitter-mode nil))))
+      (tree-sitter--error-protect
+          (progn (tree-sitter--setup)
+                 (run-hooks 'tree-sitter-after-on-hook))
+        (setq tree-sitter-mode nil)
+        (tree-sitter--teardown))
+    (run-hooks 'tree-sitter--before-off-hook)
     (tree-sitter--teardown)))
 
 ;;;###autoload

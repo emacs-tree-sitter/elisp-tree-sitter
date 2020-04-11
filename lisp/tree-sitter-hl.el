@@ -202,6 +202,7 @@ It also expects VALUE to be a single value, not a list."
       ;; TODO: Deal with faces previously set by us.
       (tree-sitter-hl--append-text-property beg end 'face face))))
 
+;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
   (message "tree-sitter-hl [%s %s]" beg end)
   (ts--save-context
@@ -225,7 +226,6 @@ It also expects VALUE to be a single value, not a list."
 
 (defvar tree-sitter-hl--changed-ranges)
 
-
 (defun tree-sitter-hl--extend-after-change-region (beg end _old-len)
   "Hook meant for `jit-lock-after-change-extend-region-functions'.
 This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
@@ -247,34 +247,39 @@ This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
   (setq tree-sitter-hl--changed-ranges
         (ts-changed-ranges old-tree tree-sitter-tree)))
 
-(defun tree-sitter-hl--invalidate-ranges (old-tree)
-  (when old-tree
-    (seq-doseq (range (ts-changed-ranges old-tree tree-sitter-tree))
-      ;; TODO: How about invalidating a single large range?
-      (pcase-let* ((`[,beg-byte ,end-byte] range)
-                   (beg (byte-to-position beg-byte))
-                   (end (byte-to-position end-byte)))
-        (message "tree-sitter-hl invalidate [%s %s]" beg end)
-        ;; TODO: How about calling `jit-lock-refontify' directly?
-        (font-lock-flush beg end)))))
+(defun tree-sitter-hl--invalidate (&optional old-tree)
+  (if old-tree
+      ;; Incremental parse.
+      (seq-doseq (range (ts-changed-ranges old-tree tree-sitter-tree))
+        ;; TODO: How about invalidating a single large range?
+        (pcase-let* ((`[,beg-byte ,end-byte] range)
+                     (beg (byte-to-position beg-byte))
+                     (end (byte-to-position end-byte)))
+          ;; (message "tree-sitter-hl invalidate [%s %s] %s" beg end (- end beg))
+          ;; TODO: How about calling `jit-lock-refontify' directly?
+          (font-lock-flush beg end)))
+    ;; First parse.
+    (font-lock-flush)))
 
-;;; This assumes both `tree-sitter-mode' and `font-lock-mode' were already
-;;; enabled in the buffer. TODO: We want to work even without `font-lock-mode',
-;;; right?
-(defun tree-sitter-hl--enable ()
+;;; TODO: We want to work even without `font-lock-mode', right?
+(defun tree-sitter-hl--setup ()
+  "Set up `tree-sitter-hl' in the current buffer.
+This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (unless tree-sitter-hl--query
     ;; XXX
     (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
       (setq tree-sitter-hl--query (tree-sitter-hl--query-for lang-symbol))))
-
-  (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
+  (unless tree-sitter-hl--query-cursor
+    (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
+    ;; Invalidate the buffer only if we were actually disabled previously.
+    (tree-sitter-hl--invalidate))
 
   ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
   ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
   ;; work, we need to make sure `tree-sitter--after-change' runs before
   ;; `jit-lock-after-change'.
   (add-hook 'tree-sitter-after-change-functions
-            #'tree-sitter-hl--invalidate-ranges
+            #'tree-sitter-hl--invalidate
             nil :local)
 
   ;; (add-hook 'tree-sitter-after-change-functions
@@ -285,11 +290,10 @@ This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
 
   ;; XXX
   (add-function :override (local 'font-lock-fontify-region-function)
-                #'tree-sitter-hl--highlight-region)
+                #'tree-sitter-hl--highlight-region))
 
-  (font-lock-flush))
-
-(defun tree-sitter-hl--disable ()
+(defun tree-sitter-hl--teardown ()
+  "Tear down `tree-sitter-hl' in the current buffer."
   (remove-function (local 'font-lock-fontify-region-function)
                    #'tree-sitter-hl--highlight-region)
 
@@ -298,10 +302,42 @@ This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
   ;; (remove-hook 'tree-sitter-after-change-functions
   ;;              #'tree-sitter-hl--record-changed-ranges)
 
-  (setq tree-sitter-hl--query-cursor nil)
-  (setq tree-sitter-hl--query nil)
+  (remove-hook 'tree-sitter-after-change-functions
+               #'tree-sitter-hl--invalidate
+               :local)
 
-  (font-lock-flush))
+  (setq tree-sitter-hl--query nil)
+  (when tree-sitter-hl--query-cursor
+    (setq tree-sitter-hl--query-cursor nil)
+    ;; Invalidate the buffer only if we were actually enabled previously.
+    (font-lock-flush)))
+
+;;;###autoload
+(define-minor-mode tree-sitter-hl-mode
+  "Toggle syntax highlighting based on Tree-sitter's syntax tree.
+Enabling this automatically enables `tree-sitter-mode' in the buffer.
+
+To enable this automatically whenever `tree-sitter-mode' is enabled:
+
+ (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)"
+  :init-value nil
+  :group 'tree-sitter
+  (if tree-sitter-hl-mode
+      (progn
+        (tree-sitter--error-protect
+            (progn
+              (unless tree-sitter-mode
+                (tree-sitter-mode))
+              (tree-sitter-hl--setup))
+          (setq tree-sitter-hl-mode nil)
+          (tree-sitter-hl--teardown))
+        ;; Disable `tree-sitter-hl-mode' when `tree-sitter-mode' is disable.
+        (add-hook 'tree-sitter--before-off-hook
+                  ;; Quoting is important because we don't want a
+                  ;; local-capturing closure.
+                  '(lambda () (tree-sitter-hl-mode -1))
+                  nil :local))
+    (tree-sitter-hl--teardown)))
 
 ;;; XXX
 (defun tree-sitter-hl--query-for (lang-symbol)
