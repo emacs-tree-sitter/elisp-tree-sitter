@@ -322,22 +322,9 @@ To enable this automatically whenever `tree-sitter-mode' is enabled:
  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)"
   :init-value nil
   :group 'tree-sitter
-  (if tree-sitter-hl-mode
-      (progn
-        (tree-sitter--error-protect
-            (progn
-              (unless tree-sitter-mode
-                (tree-sitter-mode))
-              (tree-sitter-hl--setup))
-          (setq tree-sitter-hl-mode nil)
-          (tree-sitter-hl--teardown))
-        ;; Disable `tree-sitter-hl-mode' when `tree-sitter-mode' is disable.
-        (add-hook 'tree-sitter--before-off-hook
-                  ;; Quoting is important because we don't want a
-                  ;; local-capturing closure.
-                  '(lambda () (tree-sitter-hl-mode -1))
-                  nil :local))
-    (tree-sitter-hl--teardown)))
+  (tree-sitter--handle-dependent tree-sitter-hl-mode
+    #'tree-sitter-hl--setup
+    #'tree-sitter-hl--teardown))
 
 ;;; XXX
 (defun tree-sitter-hl--query-for (lang-symbol)

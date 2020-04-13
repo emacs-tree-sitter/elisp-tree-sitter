@@ -190,6 +190,59 @@ signal an error."
   :init-value nil
   :group 'tree-sitter)
 
+(defun tree-sitter--funcall-form (func)
+  "Return an equivalent to (funcall FUNC) that can be used in a macro.
+If FUNC is a quoted symbol, skip the `funcall' indirection."
+  (if (and (consp func)
+           (memq (car func) '(quote function))
+           (symbolp (cadr func)))
+      `(,(cadr func))
+    `(funcall ,func)))
+
+(defmacro tree-sitter--handle-dependent (mode setup-function teardown-function)
+  "Build the block of code that handles the enabling/disabling of a dependent mode.
+Use this as the body of the `define-minor-mode' block that defines MODE.
+
+When MODE is enabled, it automatically enables `tree-sitter-mode'. When MODE is
+disabled, it does not disable `tree-sitter-mode', since the latter may have been
+requested by end user, or other dependent modes.
+
+When `tree-sitter-mode' is disabled, it automatically disables MODE, which will
+not function correctly otherwise. This happens before `tree-sitter-mode' cleans
+up its own state.
+
+SETUP-FUNCTION is called when MODE is enabled, after MODE variable has been set
+to t, and after `tree-sitter-mode' has already been enabled. However, it must
+not assume that `tree-sitter-tree' is non-nil, since the first parse may not
+happen yet. It should instead set up hooks to handle parse events.
+
+TEARDOWN-FUNCTION is called when MODE is disabled, after MODE variable has been
+set to nil. It should clean up any state set up by MODE, and should not signal
+any error. It is also called when SETUP-FUNCTION signals an error, to undo any
+partial setup.
+
+Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
+  (declare (indent 1))
+  (let ((setup (tree-sitter--funcall-form setup-function))
+        (teardown (tree-sitter--funcall-form teardown-function)))
+    `(if ,mode
+         (progn
+           (tree-sitter--error-protect
+               ;; Make sure `tree-sitter-mode' is enabled before MODE.
+               (progn
+                 (unless tree-sitter-mode
+                   (tree-sitter-mode))
+                 ,setup)
+             ;; Setup failed. Clean things up, leave no trace.
+             (setq ,mode nil)
+             ,teardown)
+           ;; Disable MODE when `tree-sitter-mode' is disabled. Quoting is
+           ;; important, because we don't want a variable-capturing closure.
+           (add-hook 'tree-sitter--before-off-hook
+                     '(lambda () (,mode -1))
+                     nil :local))
+       ,teardown)))
+
 ;;;###autoload
 (defun tree-sitter-node-at-point ()
   "Return the syntax node at point."
