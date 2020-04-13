@@ -38,7 +38,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 - Show the debug view of a buffer's parse tree
     ```emacs-lisp
     (require 'tree-sitter-debug)
-    (tree-sitter-debug-enable)
+    (tree-sitter-debug-mode)
     ```
 - Get names of all functions in a Rust file:
     ```emacs-lisp
