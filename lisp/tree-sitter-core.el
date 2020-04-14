@@ -11,6 +11,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'subr-x))
+
 (unless (functionp 'module-load)
   (error "Dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
@@ -149,16 +152,21 @@ Return the index of the child node if one was found, nil otherwise."
 
 ;;; Querying.
 
+(defun ts--stringify-patterns (patterns)
+  (cond
+   ((stringp patterns) patterns)
+   ((sequencep patterns)
+    ;; XXX: This is hacky.
+    (thread-last (mapconcat (lambda (p) (format "%S" p)) patterns "\n")
+      (replace-regexp-in-string (regexp-quote "\\?") "?")
+      (replace-regexp-in-string (regexp-quote "\\.") ".")))
+   (t (error "Invalid patterns"))))
+
 (defun ts-make-query (language patterns)
   "Create a new query for LANGUAGE from a sequence of S-expression PATTERNS.
 The query is associated with LANGUAGE, and can only be run on syntax nodes
 parsed with LANGUAGE."
-  (let ((source (cond
-                 ((stringp patterns) patterns)
-                 ;; FIX: This doesn't work with predicates, in which '?' would be escaped.
-                 ((sequencep patterns) (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
-                 (t (format "%S" patterns)))))
-    (ts--make-query language source)))
+  (ts--make-query language (ts--stringify-patterns patterns)))
 
 (defun ts-query-matches (query node &optional cursor index-only text-function)
   "Execute QUERY on NODE and return a sequence of matches.
