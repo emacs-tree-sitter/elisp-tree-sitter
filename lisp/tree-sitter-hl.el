@@ -60,8 +60,12 @@
   "Face used for function.macro"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-method-face '((default :inherit link :underline nil))
+(defface tree-sitter-function-method-face '((default :inherit font-lock-function-name-face))
   "Face used for function.method"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-function-call-face '((default :inherit link :underline nil))
+  "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-identifier-face '((default :inherit font-lock-function-name-face))
@@ -131,6 +135,7 @@
     ("function.builtin"      . tree-sitter-function-builtin-face)
     ("function.macro"        . tree-sitter-function-macro-face)
     ("function.method"       . tree-sitter-function-method-face)
+    ("function.call"         . tree-sitter-function-call-face)
     ("identifier"            . tree-sitter-identifier-face)
     ("keyword"               . tree-sitter-keyword-face)
     ("label"                 . tree-sitter-label-face)
