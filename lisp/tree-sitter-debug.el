@@ -61,7 +61,7 @@ This mode displays the syntax tree in another buffer, and keeps it up-to-date."
     #'tree-sitter-debug--teardown))
 
 ;;;###autoload
-(defun tree-sitter-query (patterns &optional matches index-only)
+(defun tree-sitter-debug-query (patterns &optional matches index-only)
   "Execute query PATTERNS against the current syntax tree and return captures.
 
 If the optional arg MATCHES is non-nil, matches (from `ts-query-matches') are

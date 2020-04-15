@@ -46,7 +46,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
       (seq-map (lambda (capture)
                  (pcase-let ((`(_ . ,node) capture))
                    (ts-node-text node)))
-               (tree-sitter-query [(function_item (identifier) @name)])))
+               (tree-sitter-debug-query [(function_item (identifier) @name)])))
     ```
 - Write a simple extension to `expand-region`:
     ```emacs-lisp

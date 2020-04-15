@@ -252,7 +252,7 @@ tree is held (since nodes internally reference the tree)."
   (ts-test-lang-with-file 'rust "src/query.rs"
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
-    (let* ((captures (tree-sitter-query
+    (let* ((captures (tree-sitter-debug-query
                       "((function_item (identifier) @function)
                         (match? @function \"make_query\"))
                        (macro_definition (identifier) @macro)"))
