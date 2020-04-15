@@ -15,6 +15,7 @@
 
 (eval-when-compile
   (require 'cl-lib))
+;;; ----------------------------------------------------------------------------
 
 (defgroup tree-sitter-hl nil
   "Syntax highlighting using tree-sitter."
@@ -155,11 +156,73 @@
                 :value-type face)
   :group 'tree-sitter-hl)
 
-(defvar-local tree-sitter-hl--query nil)
-(defvar-local tree-sitter-hl--query-cursor nil)
+(defvar-local tree-sitter-hl-default-patterns nil
+  "Default syntax highlighting patterns.
+This should be set by major modes that want to integrate with `tree-sitter-hl'.
+It plays a similar role to `font-lock-defaults'.")
 
-(defun tree-sitter-hl--face (capture-name)
-  (map-elt tree-sitter-hl-default-faces capture-name nil #'string=))
+(defvar tree-sitter-hl--patterns-alist nil
+  "Additional language-specific syntax highlighting patterns.
+It plays a similar role to `font-lock-keywords-alist', except that its keys are
+language symbols, not major mode symbols.")
+
+(defvar-local tree-sitter-hl--extra-patterns-list nil
+  "Additional buffer-local syntax highlighting patterns.")
+
+(defvar-local tree-sitter-hl--query nil
+  "Tree query used for syntax highlighting, compiled from patterns.")
+
+(defun tree-sitter-hl--ensure-query ()
+  "Return the tree query to be used for syntax highlighting in this buffer."
+  (unless tree-sitter-hl--query
+    (setq tree-sitter-hl--query
+          (ts-make-query
+            tree-sitter-language
+            (mapconcat #'ts--stringify-patterns
+                       (append tree-sitter-hl--extra-patterns-list
+                               (list tree-sitter-hl-default-patterns))
+                       "\n"))))
+  tree-sitter-hl--query)
+
+;;; XXX
+(defun tree-sitter-hl--default-patterns (lang-symbol)
+  (let ((query-path (concat
+                      (file-name-directory (locate-library "tree-sitter-langs"))
+                      (format "/repos/tree-sitter-%s/queries/highlights.scm"
+                              lang-symbol))))
+    (with-temp-buffer
+      (insert-file-contents query-path)
+      (buffer-string))))
+
+;;; TODO: Support adding/removing language-specific patterns.
+(defun tree-sitter-hl-add-patterns (patterns)
+  "Add buffer-local syntax highlighting PATTERNS.
+These will take precedence over `tree-sitter-hl-default-patterns', as well as
+previously added patterns."
+  ;; Do nothing if the patterns are already on top.
+  (unless (equal patterns (cl-first tree-sitter-hl--extra-patterns-list))
+    (let ((old-list tree-sitter-hl--extra-patterns-list)
+          (old-query tree-sitter-hl--query))
+      ;; Update the patterns list and request the query to be rebuilt...
+      (setq tree-sitter-hl--extra-patterns-list
+            (append (list patterns) (remove patterns old-list)))
+      (setq tree-sitter-hl--query nil)
+      ;; ... and build it if possible. During a major mode's hook, we may not
+      ;; even know the language, in which case we let `tree-sitter-hl--setup'
+      ;; build the query later on.
+      (when tree-sitter-language
+        (tree-sitter--error-protect (tree-sitter-hl--ensure-query)
+          ;; When the newly added patterns are invalid, restore the old state.
+          (setq tree-sitter-hl--query old-query
+                tree-sitter-hl--extra-patterns-list old-list))
+        ;; Everything is in place. Request a re-render.
+        (when tree-sitter-hl-mode
+          (tree-sitter-hl--invalidate))))))
+
+;;; ----------------------------------------------------------------------------
+;;; How syntax highlighting actually happens, e.g. invalidation, text properties.
+
+(defvar-local tree-sitter-hl--query-cursor nil)
 
 (defun tree-sitter-hl--append-text-property (start end prop value &optional object)
   "Like `font-lock-append-text-property', but deduplicates values
@@ -186,8 +249,6 @@ It also expects VALUE to be a single value, not a list."
   (pcase-let* ((`(,name . ,node) capture)
                (face (map-elt tree-sitter-hl-default-faces name nil #'string=))
                (`(,beg . ,end) (ts-node-position-range node)))
-    ;; (message " %s <- %s <- [%s %s]" face name beg end)
-
     ;; TODO: I think it's better to compute faces for each node first, in Rust.
     ;; Additionally, we can give certain combinations of capture names their own
     ;; faces. For example, it might be desirable for fontification of a node
@@ -209,12 +270,12 @@ It also expects VALUE to be a single value, not a list."
 
 ;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
-  (message "tree-sitter-hl [%s %s]" beg end)
   (ts--save-context
     (ts-set-point-range tree-sitter-hl--query-cursor
                         (ts--point-from-position beg)
                         (ts--point-from-position end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
+           ;; TODO: Use `ts-query-matches', for pattern priority.
            (captures (ts-query-captures
                       tree-sitter-hl--query
                       root-node
@@ -229,29 +290,6 @@ It also expects VALUE to be a single value, not a list."
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))
 
-(defvar tree-sitter-hl--changed-ranges)
-
-(defun tree-sitter-hl--extend-after-change-region (beg end _old-len)
-  "Hook meant for `jit-lock-after-change-extend-region-functions'.
-This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
-  (when (bound-and-true-p tree-sitter-hl--changed-ranges)
-    (message "tree-sitter-hl extend %s %s" beg end)
-    (seq-doseq (range tree-sitter-hl--changed-ranges)
-      (pcase-let ((`[,beg-byte ,end-byte] range))
-        (setq beg (min beg (byte-to-position beg-byte)))
-        (setq end (min end (byte-to-position end-byte)))))
-    (message "                      %s %s" beg end)
-    ;; TODO: Just set it to nil?
-    (makunbound 'tree-sitter-hl--changed-ranges)
-    `(,beg . ,end)))
-
-(defun tree-sitter-hl--record-changed-ranges (old-tree)
-  (message "tree-sitter-hl record")
-  ;; TODO: What happens if more changes are made before these changes are
-  ;; handled?
-  (setq tree-sitter-hl--changed-ranges
-        (ts-changed-ranges old-tree tree-sitter-tree)))
-
 (defun tree-sitter-hl--invalidate (&optional old-tree)
   (if old-tree
       ;; Incremental parse.
@@ -260,25 +298,27 @@ This relies on `tree-sitter-hl--record-changed-ranges' to have been run first."
         (pcase-let* ((`[,beg-byte ,end-byte] range)
                      (beg (byte-to-position beg-byte))
                      (end (byte-to-position end-byte)))
-          ;; (message "tree-sitter-hl invalidate [%s %s] %s" beg end (- end beg))
           ;; TODO: How about calling `jit-lock-refontify' directly?
           (font-lock-flush beg end)))
     ;; First parse.
     (font-lock-flush)))
 
+;;; ----------------------------------------------------------------------------
+;;; Setup and teardown.
+
 ;;; TODO: We want to work even without `font-lock-mode', right?
 (defun tree-sitter-hl--setup ()
   "Set up `tree-sitter-hl' in the current buffer.
 This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
-  (unless tree-sitter-hl--query
-    ;; XXX
+  ;; TODO: Move this to `tree-sitter-langs'.
+  (unless tree-sitter-hl-default-patterns
     (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
-      (setq tree-sitter-hl--query (tree-sitter-hl--query-for lang-symbol))))
+      (setq tree-sitter-hl-default-patterns (tree-sitter-hl--default-patterns lang-symbol))))
+  (tree-sitter-hl--ensure-query)
   (unless tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
     ;; Invalidate the buffer only if we were actually disabled previously.
     (tree-sitter-hl--invalidate))
-
   ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
   ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
   ;; work, we need to make sure `tree-sitter--after-change' runs before
@@ -286,13 +326,6 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (add-hook 'tree-sitter-after-change-functions
             #'tree-sitter-hl--invalidate
             nil :local)
-
-  ;; (add-hook 'tree-sitter-after-change-functions
-  ;;           #'tree-sitter-hl--record-changed-ranges
-  ;;           nil :local)
-  ;; (add-function :override (local 'font-lock-extend-after-change-region-function)
-  ;;               #'tree-sitter-hl--extend-after-change-region)
-
   ;; XXX
   (add-function :override (local 'font-lock-fontify-region-function)
                 #'tree-sitter-hl--highlight-region))
@@ -301,16 +334,9 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   "Tear down `tree-sitter-hl' in the current buffer."
   (remove-function (local 'font-lock-fontify-region-function)
                    #'tree-sitter-hl--highlight-region)
-
-  ;; (remove-function (local 'font-lock-extend-after-change-region-function)
-  ;;                  #'tree-sitter-hl--extend-after-change-region)
-  ;; (remove-hook 'tree-sitter-after-change-functions
-  ;;              #'tree-sitter-hl--record-changed-ranges)
-
   (remove-hook 'tree-sitter-after-change-functions
                #'tree-sitter-hl--invalidate
                :local)
-
   (setq tree-sitter-hl--query nil)
   (when tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor nil)
@@ -330,17 +356,6 @@ To enable this automatically whenever `tree-sitter-mode' is enabled:
   (tree-sitter--handle-dependent tree-sitter-hl-mode
     #'tree-sitter-hl--setup
     #'tree-sitter-hl--teardown))
-
-;;; XXX
-(defun tree-sitter-hl--query-for (lang-symbol)
-  (let* ((query-path (concat
-                      (file-name-directory (locate-library "tree-sitter-langs"))
-                      (format "/repos/tree-sitter-%s/queries/highlights.scm"
-                              lang-symbol)))
-         (query-string (with-temp-buffer
-                         (insert-file-contents query-path)
-                         (buffer-string))))
-    (ts-make-query (tree-sitter-require lang-symbol) query-string)))
 
 (provide 'tree-sitter-hl)
 ;;; tree-sitter-hl.el ends here
