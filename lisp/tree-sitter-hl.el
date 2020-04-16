@@ -207,7 +207,7 @@ previously added patterns."
           (setq tree-sitter-hl--query old-query
                 tree-sitter-hl--extra-patterns-list old-list))
         ;; Everything is in place. Request a re-render.
-        (when tree-sitter-hl-mode
+        (when (bound-and-true-p tree-sitter-hl-mode)
           (tree-sitter-hl--invalidate))))))
 
 ;;; ----------------------------------------------------------------------------
