@@ -184,15 +184,6 @@ language symbols, not major mode symbols.")
                        "\n"))))
   tree-sitter-hl--query)
 
-;;; XXX
-(defun tree-sitter-hl--default-patterns (lang-symbol)
-  (let ((query-path (concat
-                      (file-name-directory (locate-library "tree-sitter-langs"))
-                      (format "/repos/tree-sitter-%s/queries/highlights.scm"
-                              lang-symbol))))
-    (with-temp-buffer
-      (insert-file-contents query-path)
-      (buffer-string))))
 
 ;;; TODO: Support adding/removing language-specific patterns.
 (defun tree-sitter-hl-add-patterns (patterns)
@@ -310,10 +301,6 @@ It also expects VALUE to be a single value, not a list."
 (defun tree-sitter-hl--setup ()
   "Set up `tree-sitter-hl' in the current buffer.
 This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
-  ;; TODO: Move this to `tree-sitter-langs'.
-  (unless tree-sitter-hl-default-patterns
-    (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
-      (setq tree-sitter-hl-default-patterns (tree-sitter-hl--default-patterns lang-symbol))))
   (tree-sitter-hl--ensure-query)
   (unless tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
