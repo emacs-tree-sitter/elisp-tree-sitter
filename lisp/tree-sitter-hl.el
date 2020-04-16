@@ -15,6 +15,7 @@
 
 (eval-when-compile
   (require 'cl-lib))
+
 ;;; ----------------------------------------------------------------------------
 
 (defgroup tree-sitter-hl nil
@@ -25,136 +26,111 @@
   "All the faces of tree-sitter."
   :group 'tree-sitter-hl)
 
-(defface tree-sitter-attribute-face '((default :inherit font-lock-preprocessor-face))
+(defface tree-sitter-hl-face:attribute '((default :inherit font-lock-preprocessor-face))
   "Face used for attribute"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-comment-face '((default :inherit font-lock-comment-face))
+(defface tree-sitter-hl-face:comment '((default :inherit font-lock-comment-face))
   "Face used for comment"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-constant-face '((default :inherit font-lock-constant-face))
+(defface tree-sitter-hl-face:constant '((default :inherit font-lock-constant-face))
   "Face used for constant"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-constant-builtin-face '((default :inherit font-lock-builtin-face))
+(defface tree-sitter-hl-face:constant.builtin '((default :inherit font-lock-builtin-face))
   "Face used for constant.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-constructor-face '((default :inherit font-lock-type-face))
+(defface tree-sitter-hl-face:constructor '((default :inherit font-lock-type-face))
   "Face used for constructor"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-escape-face '(())
+(defface tree-sitter-hl-face:escape '(())
   "Face used for escape"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-face '((default :inherit font-lock-function-name-face))
+(defface tree-sitter-hl-face:function '((default :inherit font-lock-function-name-face))
   "Face used for function"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-builtin-face '((default :inherit font-lock-builtin-face))
+(defface tree-sitter-hl-face:function.builtin '((default :inherit font-lock-builtin-face))
   "Face used for function.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-macro-face '((default :inherit font-lock-preprocessor-face))
+(defface tree-sitter-hl-face:function.macro '((default :inherit font-lock-preprocessor-face))
   "Face used for function.macro"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-method-face '((default :inherit font-lock-function-name-face))
+(defface tree-sitter-hl-face:function.special '((default :inherit font-lock-preprocessor-face))
+  "Face used for function.special"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:function.method '((default :inherit font-lock-function-name-face))
   "Face used for function.method"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-function-call-face '((default :inherit link :underline nil))
+(defface tree-sitter-hl-face:function.call '((default :inherit link :underline nil))
   "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-identifier-face '((default :inherit font-lock-function-name-face))
+(defface tree-sitter-hl-face:identifier '((default :inherit font-lock-function-name-face))
   "Face used for identifier"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-keyword-face '((default :inherit font-lock-keyword-face))
+(defface tree-sitter-hl-face:keyword '((default :inherit font-lock-keyword-face))
   "Face used for keyword"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-label-face '((default :inherit font-lock-preprocessor-face))
+(defface tree-sitter-hl-face:label '((default :inherit font-lock-preprocessor-face))
   "Face used for label"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-operator-face '((default :inherit font-lock-keyword-face))
+(defface tree-sitter-hl-face:operator '((default :inherit font-lock-keyword-face))
   "Face used for operator"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-property-face '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-hl-face:property '((default :inherit font-lock-variable-name-face))
   "Face used for property"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-punctuation-face '(())
+(defface tree-sitter-hl-face:punctuation '(())
   "Face used for punctuation"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-punctuation-bracket-face '(())
+(defface tree-sitter-hl-face:punctuation.bracket '(())
   "Face used for punctuation.bracket"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-punctuation-delimiter-face '(())
+(defface tree-sitter-hl-face:punctuation.delimiter '(())
   "Face used for punctuation.delimiter"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-string-face '((default :inherit font-lock-string-face))
+(defface tree-sitter-hl-face:string '((default :inherit font-lock-string-face))
   "Face used for string"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-type-face '((default :inherit font-lock-type-face))
+(defface tree-sitter-hl-face:type '((default :inherit font-lock-type-face))
   "Faced used for type"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-type-builtin-face '((default :inherit font-lock-builtin-face))
+(defface tree-sitter-hl-face:type.builtin '((default :inherit font-lock-builtin-face))
   "Face used for type.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-variable-face '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-hl-face:variable '((default :inherit font-lock-variable-name-face))
   "Face used for variable"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-variable-builtin-face '((default :inherit font-lock-builtin-face))
+(defface tree-sitter-hl-face:variable.builtin '((default :inherit font-lock-builtin-face))
   "Face used for variable.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-variable-parameter-face '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-hl-face:variable.parameter '((default :inherit font-lock-variable-name-face))
   "Faced used for variable.parameter"
   :group 'tree-sitter-hl-faces)
 
-(defcustom tree-sitter-hl-default-faces
-  '(("attribute"             . tree-sitter-attribute-face)
-    ("comment"               . tree-sitter-comment-face)
-    ("constant"              . tree-sitter-constant-face)
-    ("constant.builtin"      . tree-sitter-constant-builtin-face)
-    ("constructor"           . tree-sitter-constructor-face)
-    ("escape"                . tree-sitter-escape-face)
-    ("function"              . tree-sitter-function-face)
-    ("function.builtin"      . tree-sitter-function-builtin-face)
-    ("function.macro"        . tree-sitter-function-macro-face)
-    ("function.method"       . tree-sitter-function-method-face)
-    ("function.call"         . tree-sitter-function-call-face)
-    ("identifier"            . tree-sitter-identifier-face)
-    ("keyword"               . tree-sitter-keyword-face)
-    ("label"                 . tree-sitter-label-face)
-    ("operator"              . tree-sitter-operator-face)
-    ("property"              . tree-sitter-property-face)
-    ("punctuation"           . tree-sitter-punctuation-face)
-    ("punctuation.bracket"   . tree-sitter-punctuation-bracket-face)
-    ("punctuation.delimiter" . tree-sitter-punctuation-delimiter-face)
-    ("string"                . tree-sitter-string-face)
-    ("type"                  . tree-sitter-type-face)
-    ("type.builtin"          . tree-sitter-type-builtin-face)
-    ("variable"              . tree-sitter-variable-face)
-    ("variable.builtin"      . tree-sitter-variable-builtin-face)
-    ("variable.parameter"    . tree-sitter-variable-parameter-face))
-  "Alist of query identifier to face used for highlighting matches."
-  :type '(alist :key-type string
-                :value-type face)
-  :group 'tree-sitter-hl)
+;;; ----------------------------------------------------------------------------
 
 (defvar-local tree-sitter-hl-default-patterns nil
   "Default syntax highlighting patterns.
@@ -183,7 +159,6 @@ language symbols, not major mode symbols.")
                                (list tree-sitter-hl-default-patterns))
                        "\n"))))
   tree-sitter-hl--query)
-
 
 ;;; TODO: Support adding/removing language-specific patterns.
 (defun tree-sitter-hl-add-patterns (patterns)
@@ -238,14 +213,18 @@ It also expects VALUE to be a single value, not a list."
 
 (defun tree-sitter-hl--highlight-capture (capture)
   (pcase-let* ((`(,name . ,node) capture)
-               (face (map-elt tree-sitter-hl-default-faces name nil #'string=))
+               ;; TODO: Optimize this. The list of names is known at query
+               ;; compilation time.
+               (face (intern (format "tree-sitter-hl-face:%s" name)))
                (`(,beg . ,end) (ts-node-position-range node)))
     ;; TODO: I think it's better to compute faces for each node first, in Rust.
     ;; Additionally, we can give certain combinations of capture names their own
     ;; faces. For example, it might be desirable for fontification of a node
     ;; that matches both "constructor" and "variable" to be different from the
     ;; union of "constructor fontification" and "variable fontification".
-    (when face
+    (when (facep face)
+      ;; TODO: If a scope does not have a corresponding face, check its ancestor
+      ;; scopes.
 
       ;; Naive `add-face-text-property' keeps adding the same face, slowing
       ;; things down.
