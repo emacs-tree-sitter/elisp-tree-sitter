@@ -8,3 +8,8 @@
        "Cargo.toml"
        "Cargo.lock"
        "src")
+
+(source melpa)
+
+(development
+ (depends-on "rust-mode"))

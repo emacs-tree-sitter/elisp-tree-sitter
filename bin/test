@@ -12,7 +12,7 @@ if [[ $* == "watch" ]]; then
         cargo watch -s bin/build -s bin/test
     )
 else
-    $EMACS --batch \
+    cask emacs --batch \
            --directory "$PROJECT_ROOT/lisp" \
            --directory "$PROJECT_ROOT/langs" \
            -l ert \

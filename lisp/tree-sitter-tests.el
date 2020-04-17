@@ -288,6 +288,24 @@ tree is held (since nodes internally reference the tree)."
         (should (memq 'tree-sitter-hl-face:function.macro
                       (get-text-property beg 'face)))))))
 
+(ert-deftest hl::bench ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
+    (require 'rust-mode)
+    (rust-mode)
+    (font-lock-mode)
+    (tree-sitter-hl-mode)
+    (garbage-collect)
+    (message "tree-sitter-hl  1 %s" (benchmark-run (font-lock-ensure)))
+    (garbage-collect)
+    (message "tree-sitter-hl 10 %s" (benchmark-run 10 (font-lock-ensure)))
+    (tree-sitter-hl-mode -1)
+    (font-lock-ensure)
+    (garbage-collect)
+    (message "     font-lock  1 %s" (benchmark-run (font-lock-ensure)))
+    (garbage-collect)
+    (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
