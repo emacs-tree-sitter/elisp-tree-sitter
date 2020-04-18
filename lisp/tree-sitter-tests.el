@@ -39,6 +39,9 @@
 (defun ts-test-use-lang (lang-symbol)
   "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
   (setq tree-sitter-language (tree-sitter-require lang-symbol))
+  (ignore-errors
+    (setq tree-sitter-hl-default-patterns
+          (tree-sitter-langs--hl-default-patterns lang-symbol)))
   (add-hook 'tree-sitter-after-first-parse-hook
             (lambda () (should (not (null tree-sitter-tree)))))
   (tree-sitter-mode))
@@ -139,6 +142,16 @@
                           body: (block))))
     (kill-region (point-min) (point-max))
     (ts-test-tree-sexp '(source_file))))
+
+(ert-deftest minor-mode::incremental:change-case-region ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/change-case-region.rs"
+    (let* ((orig-sexp (read (ts-tree-to-sexp tree-sitter-tree)))
+           (end (re-search-forward "this text"))
+           (beg (match-beginning 0)))
+      (upcase-initials-region beg end)
+      (ts-test-tree-sexp orig-sexp)
+      (downcase-region beg end)
+      (ts-test-tree-sexp orig-sexp))))
 
 (ert-deftest node::eq ()
   (ts-test-with 'rust parser

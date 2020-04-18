@@ -80,28 +80,38 @@ BEG and END are the begin and end of the text to be changed."
     (setq tree-sitter--start-point (ts--point-from-position beg)
           tree-sitter--old-end-point (ts--point-from-position end))))
 
-;;; TODO XXX: The doc says that `after-change-functions' can be called multiple times, with
-;;; different regions enclosed in the region passed to `before-change-functions'. Therefore what we
-;;; are doing may be a bit too naive. Several questions to investigate:
+;;; TODO: How do we batch *after* hooks to re-parse only once? Maybe using
+;;; `run-with-idle-timer' with 0-second timeout?
 ;;;
-;;; 1. Are the *after* regions recorded all at once, or one after another? Are they disjointed
-;;; (would imply the former)?.
-;;;
-;;; 2. Are the *after* regions recorded at the same time as the *before* region? If not, how can the
-;;; latter possibly enclose the former, e.g. in case of inserting a bunch of text?
-;;;
-;;; 3. How do we batch *after* hooks to re-parse only once? Maybe using `run-with-idle-timer' with
-;;; 0-second timeout?
-;;;
-;;; 4. What's the deal with several primitives calling `after-change-functions' *zero* or more
-;;; times? Does that mean we can't rely on this hook at all?
-(defun tree-sitter--after-change (_beg end _length)
+;;; XXX: Figure out how to detect whether it was a text-property-only change.
+;;; There's no point in reparsing in these situations.
+(defun tree-sitter--after-change (beg end length)
   "Update relevant editing states and reparse the buffer (incrementally).
 Installed on `after-change-functions'.
 
 END is the end of the changed text."
-  (setq tree-sitter--new-end-byte (position-bytes end)
-        tree-sitter--new-end-point (ts-point-from-position end))
+  (ts--save-context
+    (setq tree-sitter--start-byte (position-bytes beg)
+          tree-sitter--start-point (ts--point-from-position beg)
+          tree-sitter--new-end-byte (position-bytes end)
+          tree-sitter--new-end-point (ts--point-from-position end))
+    ;; The enclosing region passed to `before-change-functions' can be inexact,
+    ;; which can be larger than the actual changes. One example is
+    ;; `upcase-initials-region'. Therefore, we need to compute the exact change
+    ;; here. XXX: This is sometimes incorrect, because `ts--point-from-position'
+    ;; and `position-bytes' here look at other text in the same region, not the
+    ;; changed text. TODO FIX: Either figure out how we can get the exact
+    ;; old-end, or make `ts_tree_edit' accept position ranges.
+    (let ((old-end (+ beg length)))
+      ;; XXX: Additionally, in case of a deletion at the end of the buffer,
+      ;; trying to compute the old-end position/byte is impossible, because the
+      ;; text is already gone. When that happens, use the old-end previously
+      ;; recorded in `before-change-functions'.
+      (setq tree-sitter--old-end-point (or (ignore-errors
+                                             (ts--point-from-position old-end))
+                                           tree-sitter--old-end-point)
+            tree-sitter--old-end-byte (or (position-bytes old-end)
+                                          tree-sitter--old-end-byte))))
   (when tree-sitter-tree
     (ts-edit-tree tree-sitter-tree
                   tree-sitter--start-byte
