@@ -125,9 +125,8 @@ fn _set_timeout_micros(parser: &mut Parser, max_duration: u64) -> Result<()> {
 ///
 /// This is useful for parsing multi-language documents.
 #[defun]
-fn set_included_ranges(parser: &mut Parser, ranges: Value) -> Result<()> {
-    let ranges = Vector(ranges);
-    let len = ranges.size()?;
+fn set_included_ranges(parser: &mut Parser, ranges: Vector) -> Result<()> {
+    let len = ranges.len();
     let included = &mut Vec::with_capacity(len);
     for i in 0..len {
         let range: Range = ranges.get(i)?;

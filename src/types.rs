@@ -121,7 +121,7 @@ impl IntoLisp<'_> for Range {
         let inner = self.0;
         let start_byte_pos: BytePos = inner.start_byte.into();
         let end_byte_pos: BytePos = inner.end_byte.into();
-        env.call("vector", (
+        env.vector((
             start_byte_pos,
             end_byte_pos,
             Point(inner.start_point),
@@ -132,7 +132,7 @@ impl IntoLisp<'_> for Range {
 
 impl FromLisp<'_> for Range {
     fn from_lisp(value: Value) -> Result<Range> {
-        let vector = Vector(value);
+        let vector: Vector = value.into_rust()?;
         let start_byte = vector.get::<BytePos>(0)?.into();
         let end_byte = vector.get::<BytePos>(1)?.into();
         let start_point = vector.get::<Point>(2)?.into();

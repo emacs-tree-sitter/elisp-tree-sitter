@@ -11,7 +11,7 @@ name = "tree_sitter_dyn"
 crate-type = ["cdylib"]
 
 [dependencies]
-emacs = "0.13.0"
+emacs = "0.14.0"
 libloading = "0.5.1"
 tree-sitter = "0.6.3"
 
