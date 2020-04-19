@@ -245,18 +245,22 @@ It also expects VALUE to be a single value, not a list."
                         (ts--point-from-position beg)
                         (ts--point-from-position end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
-           ;; TODO: Use `ts-query-matches', for pattern priority.
-           (captures (ts-query-captures
+           (matches  (ts-query-matches
                       tree-sitter-hl--query
                       root-node
                       tree-sitter-hl--query-cursor
                       nil
                       #'ts--node-text)))
+      (sort matches (lambda (m1 m2)
+                      (< (car m1) (car m2))))
       ;; TODO: Handle quitting.
-      (with-silent-modifications
-        (font-lock-unfontify-region beg end)
-        ;; TODO: Handle uncaptured nodes.
-        (seq-do #'tree-sitter-hl--highlight-capture captures))
+      (let ((inhibit-point-motion-hooks t))
+        (with-silent-modifications
+          (font-lock-unfontify-region beg end)
+          ;; TODO: Handle uncaptured nodes.
+          (seq-doseq (match matches)
+            (pcase-let ((`(_ . ,captures) match))
+              (seq-do #'tree-sitter-hl--highlight-capture captures)))))
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))
 
