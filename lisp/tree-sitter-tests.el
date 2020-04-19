@@ -32,9 +32,14 @@
            (directory-file-name
             (file-name-directory (locate-library "tree-sitter")))) relative-path))
 
-(defun ts-test-tree-sexp (sexp)
-  "Check that the current syntax tree's sexp representation is SEXP."
-  (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
+(defun ts-test-tree-sexp (sexp &optional reset)
+  "Check that the current syntax tree's sexp representation is SEXP.
+If RESET is non-nil, also do another full parse and check again."
+  (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp))
+  (when reset
+    (setq tree-sitter-tree nil)
+    (tree-sitter--do-parse)
+    (ts-test-tree-sexp sexp)))
 
 (defun ts-test-use-lang (lang-symbol)
   "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
@@ -151,7 +156,15 @@
       (upcase-initials-region beg end)
       (ts-test-tree-sexp orig-sexp)
       (downcase-region beg end)
-      (ts-test-tree-sexp orig-sexp))))
+      (ts-test-tree-sexp orig-sexp :reset))))
+
+(ert-deftest minor-mode::incremental:delete-non-ascii-text ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/delete-non-ascii-text.rs"
+    (let* ((orig-sexp (read (ts-tree-to-sexp tree-sitter-tree)))
+           (end (re-search-forward "ấấấấấấấấ"))
+           (beg (match-beginning 0)))
+      (delete-region beg end)
+      (ts-test-tree-sexp orig-sexp :reset))))
 
 (ert-deftest node::eq ()
   (ts-test-with 'rust parser
