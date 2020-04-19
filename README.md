@@ -131,6 +131,8 @@ For consistency with Emacs's conventions, this binding has some differences comp
 
 Clone this repo and add its `lisp` and `langs` directories to `load-path`.
 
+Install [cask](https://cask.readthedocs.io) and run `cask install` to install dev dependencies.
+
 If you want to hack on the high-level features (in Lisp) only:
 - Evaluate this (once) to download the necessary binaries:
     ```emacs-lisp

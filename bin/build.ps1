@@ -17,6 +17,8 @@ Push-Location $project_root
 
 cargo build --all $extra
 
-Pop-Location
-
 Copy-Item $module_dir\$module_name.dll $project_root\lisp\$module_renamed.dll
+
+cask build
+
+Pop-Location
