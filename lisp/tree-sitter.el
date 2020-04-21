@@ -73,7 +73,8 @@ BEG and OLD-END are the begin and end positions of the text to be changed."
   (ts--without-restriction
     ;; TODO: Fallback to a full parse if this region is too big.
     (setq tree-sitter--text-before-change
-          (buffer-substring-no-properties beg old-end))))
+          (when (> old-end beg)
+            (buffer-substring-no-properties beg old-end)))))
 
 ;;; TODO: How do we batch *after* hooks to re-parse only once? Maybe using
 ;;; `run-with-idle-timer' with 0-second timeout?
@@ -100,11 +101,11 @@ OLD-LEN is the char length of the old text."
       ;; Tree-sitter works with byte positions, line numbers, byte columns.
       ;; Emacs primarily works with character positions. Converting the latter
       ;; to the former, for the end of the old text, requires looking at the
-      ;; actual old text's content. Tree-sitter itself cannot do this, because
+      ;; actual old text's content. Tree-sitter itself cannot do that, because
       ;; it is designed to keep track of only the numbers, not a mirror of the
-      ;; buffer's text. Without re-designing Emac's change tracking mechanism,
-      ;; we store the old text through`tree-sitter--before-change', and inspect
-      ;; it here. TODO XXX FIX: Improve Emac's change tracking mechanism.
+      ;; buffer's text. Without re-designing Emacs's change tracking mechanism,
+      ;; we store the old text through `tree-sitter--before-change', and inspect
+      ;; it here. TODO XXX FIX: Improve change tracking in Emacs.
       (if (= old-len 0)
           (setq old-end-byte beg-byte
                 old-end-point beg-point)
@@ -172,10 +173,6 @@ signal an error."
        (when err
          ,@error-forms))))
 
-;;; TODO: Support the use case where a temporary buffer is created just to
-;;; fontify some text. That's what `org-mode' and `markdown-mode' does. Ideally
-;;; though, in the long run, they should create multiple buffer-local parsers on
-;;; their own, one for each language with code blocks in the file.
 ;;;###autoload
 (define-minor-mode tree-sitter-mode
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
