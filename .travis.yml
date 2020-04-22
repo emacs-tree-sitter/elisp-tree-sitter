@@ -63,6 +63,7 @@ before_install:
   - evm config path /tmp
   - evm install $EVM_EMACS --use --skip
   - curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
+  - export PATH="$HOME/.cask/bin:$PATH"
 
 install:
   - cask install
