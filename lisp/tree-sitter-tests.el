@@ -275,6 +275,19 @@ tree is held (since nodes internally reference the tree)."
   (should-error (tree-sitter-require 'abc-xyz))
   (tree-sitter-require 'rust))
 
+(ert-deftest hl::extend-region ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/extend-region.rs"
+    (tree-sitter-hl-mode)
+    (let* ((beg (save-excursion
+                  (search-forward "abc")
+                  (backward-char)
+                  (point)))
+           (end (1+ beg)))
+      (tree-sitter-hl--highlight-region beg end)
+      (ert-info ("Highlighting a tiny region")
+        (should (memq 'tree-sitter-hl-face:function.macro
+                      (get-text-property beg 'face)))))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

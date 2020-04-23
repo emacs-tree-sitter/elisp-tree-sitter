@@ -17,6 +17,7 @@
   (require 'cl-lib))
 
 ;;; ----------------------------------------------------------------------------
+;;; Faces for commonly used capture names.
 
 (defgroup tree-sitter-hl nil
   "Syntax highlighting using tree-sitter."
@@ -131,6 +132,7 @@
   :group 'tree-sitter-hl-faces)
 
 ;;; ----------------------------------------------------------------------------
+;;; Interfaces for modes and end users.
 
 (defvar-local tree-sitter-hl-default-patterns nil
   "Default syntax highlighting patterns.
@@ -186,13 +188,52 @@ previously added patterns."
           (tree-sitter-hl--invalidate))))))
 
 ;;; ----------------------------------------------------------------------------
-;;; How syntax highlighting actually happens, e.g. invalidation, text properties.
+;;; Internal workings.
 
 (defvar-local tree-sitter-hl--query-cursor nil)
 
+
+(defconst tree-sitter-hl--extend-region-limit 2048
+  "The max size of the extended region, in characters.")
+
+(defconst tree-sitter-hl--extend-region-levels 4
+  "The max number of levels to walk up the syntax tree to extend the region.")
+
+(defun tree-sitter-hl--extend-region (beg end)
+  "Return a \"safe\" region that encloses (BEG . END), to run the query on.
+Because a match is returned only when all nodes in the pattern intersect the
+query cursor's range, relying on `ts-changed-ranges' alone is insufficient.
+
+Another pathological case is `jit-lock--run-funtions' being called on a very
+small region. An example is when `evil-adjust-cursor' triggers a
+`vertical-motion' (outside of a redisplay).
+
+See https://github.com/tree-sitter/tree-sitter/issues/598."
+  (pcase-let* ((region `(,beg . ,end))
+               (root-node (ts-root-node tree-sitter-tree))
+               (node (ts-get-descendant-for-position-range root-node beg end))
+               (`(,beg . ,end) (ts-node-position-range node))
+               (level 0))
+    ;; Repeatedly extend the region, within the limit. TODO: What if the region
+    ;; of the minimal enclosing node is already too large?
+    (while (and node
+                (< (- end beg) tree-sitter-hl--extend-region-limit))
+      (setcar region beg)
+      (setcdr region end)
+      ;; Walk up to the parent node.
+      (when (setq node (when (<= (cl-incf level)
+                                 tree-sitter-hl--extend-region-levels)
+                         (ts-get-parent node)))
+        (pcase-let ((`[,beg-byte ,end-byte] (ts-node-range node)))
+          (setq beg (byte-to-position beg-byte)
+                end (byte-to-position end-byte)))))
+    ;; TODO: Extend to whole lines?
+    region))
+
 (defun tree-sitter-hl--append-text-property (start end prop value &optional object)
-  "Like `font-lock-append-text-property', but deduplicates values
-It also expects VALUE to be a single value, not a list."
+  "Append VALUE to PROP of the text from START to END.
+This is similar to `font-lock-append-text-property', but deduplicates values. It
+also expects VALUE to be a single value, not a list."
   (let (next prev)
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
@@ -212,6 +253,7 @@ It also expects VALUE to be a single value, not a list."
       (setq start next))))
 
 (defun tree-sitter-hl--highlight-capture (capture)
+  "Highlight the given CAPTURE."
   (pcase-let* ((`(,name . ,node) capture)
                ;; TODO: Optimize this. The list of names is known at query
                ;; compilation time.
@@ -240,7 +282,16 @@ It also expects VALUE to be a single value, not a list."
 
 ;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
+  "Highlight the region (BEG . END).
+This is intended to be used as a buffer-local override of
+`font-lock-fontify-region-function'."
   (ts--save-context
+    ;; Extend the region to be highlighted, based on some heuristics, so that
+    ;; querying works in certain pathological cases. This is analogous to the
+    ;; extension done by `font-lock-default-fontify-region'. TODO: Consider
+    ;; distinguishing region to query from region to fontify.
+    (let ((region (tree-sitter-hl--extend-region beg end)))
+      (setf `(,beg . ,end) region))
     (ts-set-point-range tree-sitter-hl--query-cursor
                         (ts--point-from-position beg)
                         (ts--point-from-position end))
@@ -251,6 +302,7 @@ It also expects VALUE to be a single value, not a list."
                       tree-sitter-hl--query-cursor
                       nil
                       #'ts--node-text)))
+      ;; Prioritize captures from earlier patterns.
       (sort matches (lambda (m1 m2)
                       (< (car m1) (car m2))))
       ;; TODO: Handle quitting.
@@ -265,6 +317,10 @@ It also expects VALUE to be a single value, not a list."
       `(jit-lock-bounds ,beg . ,end))))
 
 (defun tree-sitter-hl--invalidate (&optional old-tree)
+  "Mark regions of text to be rehighlighted after a text change.
+Installed on `tree-sitter-after-change-functions'.
+
+OLD-TREE is the tree before the edit."
   (if old-tree
       ;; Incremental parse.
       (seq-doseq (range (ts-changed-ranges old-tree tree-sitter-tree))
@@ -284,6 +340,8 @@ It also expects VALUE to be a single value, not a list."
 (defun tree-sitter-hl--setup ()
   "Set up `tree-sitter-hl' in the current buffer.
 This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
+  ;; TODO: If there's an error, disable `tree-sitter-hl--extra-patterns-list'
+  ;; and retry.
   (tree-sitter-hl--ensure-query)
   (unless tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
