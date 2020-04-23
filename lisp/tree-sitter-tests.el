@@ -61,7 +61,8 @@ If RESET is non-nil, also do another full parse and check again."
   "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH."
   (declare (indent 1))
   `(with-temp-buffer
-     (insert-file-contents (ts-test-full-path ,relative-path))
+     (let ((coding-system-for-read 'utf-8))
+       (insert-file-contents (ts-test-full-path ,relative-path)))
      ,@body))
 
 (defmacro ts-test-lang-with-file (lang-symbol relative-path &rest body)
