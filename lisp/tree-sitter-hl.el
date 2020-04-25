@@ -229,9 +229,8 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
       (when (setq node (when (<= (cl-incf level)
                                  tree-sitter-hl--extend-region-levels)
                          (ts-get-parent node)))
-        (pcase-let ((`[,beg-byte ,end-byte] (ts-node-range node)))
-          (setq beg (byte-to-position beg-byte)
-                end (byte-to-position end-byte)))))
+        (let ((range (ts-node-position-range node)))
+          (setf `(,beg . ,end) range))))
     ;; TODO: Extend to whole lines?
     region))
 

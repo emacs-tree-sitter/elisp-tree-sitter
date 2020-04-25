@@ -11,9 +11,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'subr-x))
-
 (unless (functionp 'module-load)
   (error "Dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
@@ -28,7 +25,9 @@
 (require 'tree-sitter-dyn)
 
 (eval-when-compile
-  (require 'pcase))
+  (require 'pcase)
+  (require 'subr-x)
+  (require 'cl-lib))
 
 (defmacro ts--without-restriction (&rest body)
   "Execute BODY with narrowing disabled."
@@ -102,10 +101,8 @@ This function must be called with narrowing disabled, e.g. within a
 Prefer `ts-node-text', unless there's a real bottleneck.
 
 This function must be called within a `ts--without-restriction' block."
-  (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (buffer-substring-no-properties
-     (byte-to-position beg)
-     (byte-to-position end))))
+  (pcase-let ((`(,beg . ,end) (ts-node-position-range node)))
+    (buffer-substring-no-properties beg end)))
 
 (defun ts-node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree."
@@ -139,10 +136,10 @@ This function must be called within a `ts--without-restriction' block."
 
 (defun ts-node-position-range (node)
   "Return NODE's (START-POSITION . END-POSITION)."
-  (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (cons
-     (byte-to-position beg)
-     (byte-to-position end))))
+  (let ((range (ts-node-byte-range node)))
+    (cl-callf byte-to-position (car range))
+    (cl-callf byte-to-position (cdr range))
+    range))
 
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
