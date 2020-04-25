@@ -17,7 +17,7 @@
   (require 'cl-lib))
 
 ;;; ----------------------------------------------------------------------------
-;;; Faces for commonly used capture names.
+;;; Faces for commonly used highlight names.
 
 (defgroup tree-sitter-hl nil
   "Syntax highlighting using tree-sitter."
@@ -155,11 +155,16 @@ language symbols, not major mode symbols.")
   (unless tree-sitter-hl--query
     (setq tree-sitter-hl--query
           (ts-make-query
-            tree-sitter-language
-            (mapconcat #'ts--stringify-patterns
-                       (append tree-sitter-hl--extra-patterns-list
-                               (list tree-sitter-hl-default-patterns))
-                       "\n"))))
+           tree-sitter-language
+           (mapconcat #'ts--stringify-patterns
+                      (append tree-sitter-hl--extra-patterns-list
+                              (list tree-sitter-hl-default-patterns))
+                      "\n")
+           ;; TODO: Allow this to be customized.
+           (lambda (capture-name)
+             ;; Use faces to tag captures. TODO: If a scope does not have a
+             ;; corresponding face, check its ancestor scopes.
+             (intern (format "tree-sitter-hl-face:%s" capture-name))))))
   tree-sitter-hl--query)
 
 ;;; TODO: Support adding/removing language-specific patterns.
@@ -254,30 +259,14 @@ also expects VALUE to be a single value, not a list."
 
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
-  (pcase-let* ((`(,name . ,node) capture)
-               ;; TODO: Optimize this. The list of names is known at query
-               ;; compilation time.
-               (face (intern (format "tree-sitter-hl-face:%s" name)))
+  (pcase-let* ((`(,face . ,node) capture)
                (`(,beg . ,end) (ts-node-position-range node)))
-    ;; TODO: I think it's better to compute faces for each node first, in Rust.
-    ;; Additionally, we can give certain combinations of capture names their own
+    ;; (message " %s <- %s <- [%s %s]" face name beg end)
+    ;; TODO: Consider giving certain combinations of highlight names their own
     ;; faces. For example, it might be desirable for fontification of a node
     ;; that matches both "constructor" and "variable" to be different from the
     ;; union of "constructor fontification" and "variable fontification".
     (when (facep face)
-      ;; TODO: If a scope does not have a corresponding face, check its ancestor
-      ;; scopes.
-
-      ;; Naive `add-face-text-property' keeps adding the same face, slowing
-      ;; things down.
-      ;; (add-face-text-property beg end face)
-
-      ;; (font-lock-append-text-property beg end 'face face)
-
-      ;; `put-text-property' doesn't handle list of faces.
-      ;; (put-text-property beg end 'face face)
-
-      ;; TODO: Deal with faces previously set by us.
       (tree-sitter-hl--append-text-property beg end 'face face))))
 
 ;;; TODO: Handle embedded DSLs (injections).
@@ -292,15 +281,14 @@ This is intended to be used as a buffer-local override of
     ;; distinguishing region to query from region to fontify.
     (let ((region (tree-sitter-hl--extend-region beg end)))
       (setf `(,beg . ,end) region))
-    (ts-set-point-range tree-sitter-hl--query-cursor
-                        (ts--point-from-position beg)
-                        (ts--point-from-position end))
+    (ts-set-byte-range tree-sitter-hl--query-cursor
+                       (position-bytes beg)
+                       (position-bytes end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
            (matches  (ts-query-matches
                       tree-sitter-hl--query
                       root-node
                       tree-sitter-hl--query-cursor
-                      nil
                       #'ts--node-text)))
       ;; Prioritize captures from earlier patterns.
       (sort matches (lambda (m1 m2)

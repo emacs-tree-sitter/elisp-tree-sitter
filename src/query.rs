@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use emacs::{defun, Result, Value, Vector, Error, Env, IntoLisp};
 
-use tree_sitter::{Query, QueryCursor, Node};
+use tree_sitter::{QueryCursor, Node};
 
 use crate::types::*;
 
@@ -21,10 +21,25 @@ fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vecto
 ///
 /// The query is associated with LANGUAGE, and can only be run on syntax nodes
 /// parsed with LANGUAGE.
+///
+/// TAG-ASSIGNER is a function that is called to determine how captures are tagged
+/// in query results. It should take a capture name defined in SOURCE's patterns
+/// (e.g. "function.builtin"), and return a tag value. If the return value is nil,
+/// the associated capture name is disabled.
 #[defun(user_ptr)]
-fn _make_query(language: Language, source: String) -> Result<Query> {
+fn _make_query(language: Language, source: String, tag_assigner: Value) -> Result<Query> {
     // TODO: Better error message
-    Ok(Query::new(language.into(), &source).unwrap())
+    let mut raw = tree_sitter::Query::new(language.into(), &source).unwrap();
+    let capture_names = raw.capture_names().to_vec();
+    let mut capture_tags = vec![];
+    for name in &capture_names {
+        let value = tag_assigner.call((name, ))?;
+        if !value.is_not_nil() {
+            raw.disable_capture(name);
+        }
+        capture_tags.push(value.make_global_ref())
+    }
+    Ok(Query { raw, capture_tags })
 }
 
 macro_rules! defun_query_methods {
@@ -33,7 +48,7 @@ macro_rules! defun_query_methods {
             #[defun$((name = $lisp_name))?]
             $(#[$meta])*
             fn $name(query: &Query, $( $( $param : $type ),* )? ) -> Result<$rtype> {
-                Ok(query.$name( $( $( $param ),* )? )$(.$into())?)
+                Ok(query.raw.$name( $( $( $param ),* )? )$(.$into())?)
             }
         )*
     };
@@ -41,23 +56,34 @@ macro_rules! defun_query_methods {
 
 defun_query_methods! {
     /// Return the byte position where the NTH pattern starts in QUERY's source.
-    "query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> BytePos; into
+    "-query-start-byte-for-pattern" fn start_byte_for_pattern(nth: usize) -> BytePos; into
 
     /// Return the number of patterns in QUERY.
     "query-count-patterns" fn pattern_count -> usize
 }
 
 /// Return the names of the captures used in QUERY.
-#[defun(mod_in_name = true)]
-fn capture_names(query: Value) -> Result<Vector> {
+#[defun]
+fn _query_capture_names(query: Value) -> Result<Vector> {
     let env = query.env;
     let query = query.into_ref::<Query>()?;
-    let names = query.capture_names();
+    let names = query.raw.capture_names();
     let vec = env.make_vector(names.len(), ())?;
     for (i, name) in names.iter().enumerate() {
         vec.set(i, name)?;
     }
     Ok(vec)
+}
+
+/// Return all of QUERY's available capture tags.
+/// See `ts-make-query' for an explanation of capture tagging.
+#[defun(mod_in_name = true)]
+fn capture_tags<'e>(env: &'e Env, query: &Query) -> Result<Vector<'e>> {
+    let symbols = env.make_vector(query.capture_tags.len(), ())?;
+    for (i, symbol) in query.capture_tags.iter().enumerate() {
+        symbols.set(i, symbol)?;
+    }
+    Ok(symbols)
 }
 
 /// Disable a certain capture within QUERY, by specifying its NAME.
@@ -66,7 +92,7 @@ fn capture_names(query: Value) -> Result<Vector> {
 /// resource usage associated with recording the capture.
 #[defun]
 fn _disable_capture(query: &mut Query, name: String) -> Result<()> {
-    query.disable_capture(&name);
+    query.raw.disable_capture(&name);
     Ok(())
 }
 
@@ -100,18 +126,17 @@ fn _query_cursor_matches<'e>(
     cursor: &mut QueryCursor,
     query: &Query,
     node: &RNode,
-    index_only: Option<Value<'e>>,
     text_function: Value<'e>,
 ) -> Result<Vector<'e>> {
+    let raw = &query.raw;
     let error = RefCell::new(None);
     let matches = cursor.matches(
-        query,
+        raw,
         node.borrow().clone(),
         text_callback(node, text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    let capture_names = query.capture_names();
     for m in matches {
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
@@ -119,11 +144,10 @@ fn _query_cursor_matches<'e>(
         let captures = env.make_vector(m.captures.len(), ())?;
         for (ci, c) in m.captures.iter().enumerate() {
             let captured_node = node.map(|_| c.node);
-            let capture = if index_only.is_some() {
-                env.cons(c.index, captured_node)?
-            } else {
-                env.cons(&capture_names[c.index as usize], captured_node)?
-            };
+            let capture = env.cons(
+                &query.capture_tags[c.index as usize],
+                captured_node
+            )?;
             captures.set(ci, capture)?;
         }
         let _match = env.cons(m.pattern_index, captures)?;
@@ -135,34 +159,39 @@ fn _query_cursor_matches<'e>(
 #[defun]
 fn _query_cursor_captures<'e>(
     cursor: &mut QueryCursor,
-    query: &Query,
+    query: Value<'e>,
     node: &RNode,
-    index_only: Option<Value<'e>>,
     text_function: Value<'e>,
 ) -> Result<Vector<'e>> {
+    let query = query.into_rust::<&RefCell<Query>>()?.borrow();
+    let raw = &query.raw;
     let error = RefCell::new(None);
     let captures = cursor.captures(
-        query,
+        raw,
         node.borrow().clone(),
         text_callback(node, text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    let capture_names = query.capture_names();
     for (m, capture_index) in captures {
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
         }
         let c = m.captures[capture_index];
         let captured_node = node.map(|_| c.node);
-        let capture = if index_only.is_some() {
-            env.cons(c.index, captured_node)?
-        } else {
-            env.cons(&capture_names[c.index as usize], captured_node)?
-        };
+        let capture = env.cons(
+            &query.capture_tags[c.index as usize],
+            captured_node
+        )?;
         vec.push(capture);
     }
-    vec_to_vector(env, vec)
+
+    // XXX
+    let vector = env.make_vector(vec.len(), ())?;
+    for (i, v) in vec.into_iter().enumerate() {
+        vector.set(i, v)?;
+    }
+    Ok(vector)
 }
 
 /// Limit CURSOR's query executions to the range of byte positions, from BEG to END.

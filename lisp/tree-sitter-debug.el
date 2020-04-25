@@ -61,22 +61,22 @@ This mode displays the syntax tree in another buffer, and keeps it up-to-date."
     #'tree-sitter-debug--teardown))
 
 ;;;###autoload
-(defun tree-sitter-debug-query (patterns &optional matches index-only)
+(defun tree-sitter-debug-query (patterns &optional matches tag-assigner)
   "Execute query PATTERNS against the current syntax tree and return captures.
 
 If the optional arg MATCHES is non-nil, matches (from `ts-query-matches') are
 returned instead of captures (from `ts-query-captures').
 
-If the optional arg INDEX-ONLY is non-nil, return positions of capture patterns
-within the constructed query, instead of their names.
+If the optional arg TAG-ASSIGNER is non-nil, it is passed to `ts-make-query' to
+assign custom tags to capture names.
 
 This function is primarily useful for debugging purpose. Other packages should
 build queries and cursors once, then reuse them."
-  (let* ((query (ts-make-query tree-sitter-language patterns))
+  (let* ((query (ts-make-query tree-sitter-language patterns tag-assigner))
          (root-node (ts-root-node tree-sitter-tree)))
     (if matches
-        (ts-query-matches query root-node nil index-only)
-      (ts-query-captures query root-node nil index-only))))
+        (ts-query-matches query root-node nil)
+      (ts-query-captures query root-node nil))))
 
 ;;; TODO: Kill tree-buffer when `tree-sitter' minor mode is turned off.
 
