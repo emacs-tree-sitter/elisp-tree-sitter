@@ -228,7 +228,7 @@ If NODE is the root node, the sequence is empty."
 
 (defun ts--node-from-steps (tree steps)
   "Follow STEPS from TREE's root node; return the final node.
-STEPS shoud be a sequence of steps, as described by `ts--node-steps'.
+STEPS should be a sequence of steps, as described by `ts--node-steps'.
 
 If a step cannot be followed, signal a `ts--invalid-node-step' error."
   (let ((this (ts-root-node tree)))

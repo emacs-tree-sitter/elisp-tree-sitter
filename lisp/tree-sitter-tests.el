@@ -120,7 +120,7 @@
         ;; (message "reparse %s" reparse)
         (ert-info ("Same code should result in empty change ranges")
           (should (equal [] (ts-changed-ranges old-tree tree))))
-        (ert-info ("Incremental parsing shoud be faster than initial")
+        (ert-info ("Incremental parsing should be faster than initial")
           (should (> (car initial) (car reparse))))))))
 
 (ert-deftest minor-mode::basic-editing ()

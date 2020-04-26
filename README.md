@@ -143,7 +143,7 @@ If you want to hack on the high-level features (in Lisp) only:
 - Make changes to the `.el` files.
 - Add tests to `tree-sitter-tests.el` and run them with `./bin/test` (`.\bin\test` on Windows).
 
-If you want to build addtional (or all) grammars from source, or work on the core dynamic module, see the next 2 sections.
+If you want to build additional (or all) grammars from source, or work on the core dynamic module, see the next 2 sections.
 
 ### Building grammars from source
 
