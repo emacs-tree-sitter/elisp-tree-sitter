@@ -67,7 +67,7 @@ before_install:
 
 install:
   - cask install
-  - make build
+  - ./bin/build
 
 before_script:
   - nvm install 10
