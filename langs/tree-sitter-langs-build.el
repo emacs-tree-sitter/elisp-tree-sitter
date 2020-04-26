@@ -181,9 +181,10 @@ This function requires git and tree-sitter CLI."
     (if (file-directory-p dir)
         (let ((default-directory dir))
           (tree-sitter-langs--call "git" "remote" "-v" "update"))
-      (tree-sitter-langs--call "git" "clone" "-v" repo dir))
+      (tree-sitter-langs--call "git" "clone" "-q" repo dir))
     (let ((default-directory dir))
       (tree-sitter-langs--call "git" "reset" "--hard" version)
+      (tree-sitter-langs--call "npm" "set" "progress=false")
       ;; TODO: Figure out why we need to skip `npm install' for some repos.
       (ignore-errors
         (tree-sitter-langs--call "npm" "install"))
