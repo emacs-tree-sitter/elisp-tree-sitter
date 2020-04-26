@@ -81,7 +81,7 @@ for a more detailed explanation."
 
 ;;; Extracting buffer's text.
 
-(defun ts-buffer-input (bytepos _line-number _byte-column)
+(defun ts--buffer-input (bytepos _line-number _byte-column)
   "Return a portion of the current buffer's text, starting from BYTEPOS.
 BYTEPOS is automatically clamped to the range valid for the current buffer.
 

@@ -120,19 +120,18 @@ If RESET is non-nil, also do another full parse and check again."
 (ert-deftest parsing::rust-buffer ()
   (ts-test-with 'rust parser
     (ts-test-with-file "src/types.rs"
-      (let* ((tree) (old-tree)
-             (initial (benchmark-run
-                          (setq tree (ts-parse-chunks parser #'ts-buffer-input nil))))
-             (reparse (benchmark-run
-                          (progn
-                            (setq old-tree tree)
-                            (setq tree (ts-parse-chunks parser #'ts-buffer-input old-tree))))))
-        ;; (message "initial %s" initial)
-        ;; (message "reparse %s" reparse)
-        (ert-info ("Same code should result in empty change ranges")
-          (should (equal [] (ts-changed-ranges old-tree tree))))
-        (ert-info ("Incremental parsing shoud be faster than initial")
-          (should (> (car initial) (car reparse))))))))
+      (ts--without-restriction
+        (let* ((tree) (old-tree)
+               (initial (benchmark-run
+                            (setq tree (ts-parse-chunks parser #'ts--buffer-input nil))))
+               (reparse (benchmark-run
+                            (progn
+                              (setq old-tree tree)
+                              (setq tree (ts-parse-chunks parser #'ts--buffer-input old-tree))))))
+          (ert-info ("Same code should result in empty change ranges")
+            (should (equal [] (ts-changed-ranges old-tree tree))))
+          (ert-info ("Incremental parsing shoud be faster than initial")
+            (should (> (car initial) (car reparse)))))))))
 
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
