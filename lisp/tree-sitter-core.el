@@ -96,11 +96,20 @@ This function must be called with narrowing disabled, e.g. within a
          (end-pos (or (byte-to-position end-byte) max-pos)))
     (buffer-substring-no-properties beg-pos end-pos)))
 
+(defun ts--buffer-substring-no-properties (beg-byte end-byte)
+  "Return the current buffer's text from BEG-BYTE to END-BYTE.
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
+  (buffer-substring-no-properties
+   (byte-to-position beg-byte)
+   (byte-to-position end-byte)))
+
 (defun ts--node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree.
 Prefer `ts-node-text', unless there's a real bottleneck.
 
-This function must be called within a `ts--without-restriction' block."
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
   (pcase-let ((`(,beg . ,end) (ts-node-position-range node)))
     (buffer-substring-no-properties beg end)))
 
@@ -177,7 +186,7 @@ See also: `ts-query-captures' and `ts-query-matches'."
                   (or tag-assigner #'intern)))
 
 ;;; TODO: Use keyword parameters: `:cursor', `:capture', `:text-function'.
-(defun ts-query-matches (query node &optional cursor text-function)
+(defun ts-query-matches (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of matches.
 Matches are sorted in the order they were found.
 
@@ -186,15 +195,16 @@ the 0-based position of the matched pattern within QUERY, and MATCH-CAPTURES is
 a sequence of captures associated with the match, similar to that returned by
 `ts-query-captures'.
 
+TEXT-FUNCTION is called to get nodes' texts (for text-based predicates). It
+should take 2 parameters: (BEG-BYTE END-BYTE), and return the corresponding
+chunk of text in the source code.
+
 If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
-QUERY. Otherwise, a newly created query-cursor is used.
-
-If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text (for
-regular expression predicates). Otherwise, `ts-node-text' is used."
+QUERY. Otherwise, a newly created query-cursor is used."
   (ts--query-cursor-matches
-   (or cursor (ts-make-query-cursor)) query node (or text-function #'ts-node-text)))
+   (or cursor (ts-make-query-cursor)) query node text-function))
 
-(defun ts-query-captures (query node &optional cursor text-function)
+(defun ts-query-captures (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of captures.
 Captures are sorted in the order they appear.
 
@@ -203,13 +213,14 @@ symbol, whose name is the corresponding capture name defined in QUERY (without
 the prefix \"@\"). If QUERY was created with a custom tag assigner, CAPTURE-TAG
 is the value returned by that function instead. See also: `ts-make-query'.
 
-If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
-QUERY. Otherwise, a newly created query-cursor is used.
+TEXT-FUNCTION is called to get nodes' texts (for text-based predicates). It
+should take 2 parameters: (BEG-BYTE END-BYTE), and return the corresponding
+chunk of text in the source code.
 
-If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text (for
-regular expression predicates). Otherwise, `ts-node-text' is used."
+If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
+QUERY. Otherwise, a newly created query-cursor is used."
   (ts--query-cursor-captures
-   (or cursor (ts-make-query-cursor)) query node (or text-function #'ts-node-text)))
+   (or cursor (ts-make-query-cursor)) query node text-function))
 
 
 ;;; Utilities.

@@ -108,13 +108,13 @@ fn make_query_cursor() -> Result<QueryCursor> {
 }
 
 fn text_callback<'e>(
-    node: &'e RNode,
-    text_callback: Value<'e>,
+    text_function: Value<'e>,
     error: &'e RefCell<Option<Error>>,
 ) -> impl FnMut(Node<'e>) -> String + 'e {
     move |child| {
-        let child = node.map(|_| child);
-        text_callback.call((child,)).and_then(|v| v.into_rust()).unwrap_or_else(|e| {
+        let beg: BytePos = child.start_byte().into();
+        let end: BytePos = child.end_byte().into();
+        text_function.call((beg, end)).and_then(|v| v.into_rust()).unwrap_or_else(|e| {
             error.borrow_mut().replace(e);
             "".to_owned()
         })
@@ -133,7 +133,7 @@ fn _query_cursor_matches<'e>(
     let matches = cursor.matches(
         raw,
         node.borrow().clone(),
-        text_callback(node, text_function, &error),
+        text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
@@ -169,7 +169,7 @@ fn _query_cursor_captures<'e>(
     let captures = cursor.captures(
         raw,
         node.borrow().clone(),
-        text_callback(node, text_function, &error),
+        text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;

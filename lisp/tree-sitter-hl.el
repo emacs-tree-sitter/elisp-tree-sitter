@@ -287,8 +287,8 @@ This is intended to be used as a buffer-local override of
            (matches  (ts-query-matches
                       tree-sitter-hl--query
                       root-node
-                      tree-sitter-hl--query-cursor
-                      #'ts--node-text)))
+                      #'ts--buffer-substring-no-properties
+                      tree-sitter-hl--query-cursor)))
       ;; Prioritize captures from earlier patterns.
       (sort matches (lambda (m1 m2)
                       (< (car m1) (car m2))))

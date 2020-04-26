@@ -36,7 +36,8 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 ///
 /// INPUT-FUNCTION should take 3 parameters: (BYTEPOS LINE-NUMBER BYTE-COLUMN), and
 /// return a fragment of the source code, starting from the position identified by
-/// either BYTEPOS or (LINE-NUMBER . BYTE-COLUMN).
+/// either BYTEPOS or (LINE-NUMBER . BYTE-COLUMN). It should return an empty string
+/// to signal the end of the source code.
 ///
 /// BYTEPOS is Emacs's 1-based byte position.
 ///

@@ -74,9 +74,10 @@ This function is primarily useful for debugging purpose. Other packages should
 build queries and cursors once, then reuse them."
   (let* ((query (ts-make-query tree-sitter-language patterns tag-assigner))
          (root-node (ts-root-node tree-sitter-tree)))
-    (if matches
-        (ts-query-matches query root-node nil)
-      (ts-query-captures query root-node nil))))
+    (ts--without-restriction
+      (if matches
+          (ts-query-matches query root-node #'ts--buffer-substring-no-properties)
+        (ts-query-captures query root-node #'ts--buffer-substring-no-properties)))))
 
 ;;; TODO: Kill tree-buffer when `tree-sitter' minor mode is turned off.
 
