@@ -285,22 +285,17 @@ This is intended to be used as a buffer-local override of
                        (position-bytes beg)
                        (position-bytes end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
-           (matches  (ts--query-cursor-matches-1
-                      tree-sitter-hl--query-cursor
-                      tree-sitter-hl--query
-                      root-node
-                      #'ts--buffer-substring-no-properties)))
-      ;; Prioritize captures from earlier patterns.
-      (sort matches (lambda (m1 m2)
-                      (< (car m1) (car m2))))
+           (captures  (ts--query-cursor-captures-1
+                       tree-sitter-hl--query-cursor
+                       tree-sitter-hl--query
+                       root-node
+                       #'ts--buffer-substring-no-properties)))
       ;; TODO: Handle quitting.
       (let ((inhibit-point-motion-hooks t))
         (with-silent-modifications
           (font-lock-unfontify-region beg end)
           ;; TODO: Handle uncaptured nodes.
-          (seq-doseq (match matches)
-            (pcase-let ((`(_ . ,captures) match))
-              (seq-do #'tree-sitter-hl--highlight-capture captures)))))
+          (mapc #'tree-sitter-hl--highlight-capture captures)))
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))
 

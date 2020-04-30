@@ -156,41 +156,44 @@ fn _query_cursor_matches<'e>(
     vec_to_vector(env, vec)
 }
 
-// TODO: Make _query_cursor_matches accept a `capture_type` instead, e.g. node type, byte range.
+// TODO: Make _query_cursor_captures accept a `capture_type` instead, e.g. node type, byte range.
 #[defun]
-fn _query_cursor_matches_1<'e>(
+fn _query_cursor_captures_1<'e>(
     cursor: &mut QueryCursor,
-    query: &Query,
+    query: Value<'e>,
     node: &RNode,
     text_function: Value<'e>,
 ) -> Result<Vector<'e>> {
+    let query = query.into_rust::<&RefCell<Query>>()?.borrow();
     let raw = &query.raw;
     let error = RefCell::new(None);
-    let matches = cursor.matches(
+    let captures = cursor.captures(
         raw,
         node.borrow().clone(),
         text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    for m in matches {
+    for (m, capture_index) in captures {
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
         }
-        let captures = env.make_vector(m.captures.len(), ())?;
-        for (ci, c) in m.captures.iter().enumerate() {
-            let beg: BytePos = c.node.start_byte().into();
-            let end: BytePos = c.node.end_byte().into();
-            let capture = env.cons(
-                &query.capture_tags[c.index as usize],
-                env.cons(beg, end)?,
-            )?;
-            captures.set(ci, capture)?;
-        }
-        let _match = env.cons(m.pattern_index, captures)?;
-        vec.push(_match);
+        let c = m.captures[capture_index];
+        let beg: BytePos = c.node.start_byte().into();
+        let end: BytePos = c.node.end_byte().into();
+        let capture = env.cons(
+            &query.capture_tags[c.index as usize],
+            env.cons(beg, end)?,
+        )?;
+        vec.push((m.pattern_index, capture));
     }
-    vec_to_vector(env, vec)
+    // Prioritize captures from earlier patterns.
+    vec.sort_unstable_by_key(|(i, _)| *i);
+    let vector = env.make_vector(vec.len(), ())?;
+    for (i, (_, v)) in vec.into_iter().enumerate() {
+        vector.set(i, v)?;
+    }
+    Ok(vector)
 }
 
 #[defun]
