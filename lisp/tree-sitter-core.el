@@ -185,7 +185,6 @@ See also: `ts-query-captures' and `ts-query-matches'."
   (ts--make-query language (ts--stringify-patterns patterns)
                   (or tag-assigner #'intern)))
 
-;;; TODO: Use keyword parameters: `:cursor', `:capture', `:text-function'.
 (defun ts-query-matches (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of matches.
 Matches are sorted in the order they were found.

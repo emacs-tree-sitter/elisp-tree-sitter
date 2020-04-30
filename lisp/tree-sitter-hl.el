@@ -258,8 +258,9 @@ also expects VALUE to be a single value, not a list."
 
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
-  (pcase-let* ((`(,face . ,node) capture)
-               (`(,beg . ,end) (ts-node-position-range node)))
+  (pcase-let* ((`(,face . (,beg-byte . ,end-byte)) capture)
+               (beg (byte-to-position beg-byte))
+               (end (byte-to-position end-byte)))
     ;; (message " %s <- %s <- [%s %s]" face name beg end)
     ;; TODO: Consider giving certain combinations of highlight names their own
     ;; faces. For example, it might be desirable for fontification of a node
@@ -284,11 +285,11 @@ This is intended to be used as a buffer-local override of
                        (position-bytes beg)
                        (position-bytes end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
-           (matches  (ts-query-matches
+           (matches  (ts--query-cursor-matches-1
+                      tree-sitter-hl--query-cursor
                       tree-sitter-hl--query
                       root-node
-                      #'ts--buffer-substring-no-properties
-                      tree-sitter-hl--query-cursor)))
+                      #'ts--buffer-substring-no-properties)))
       ;; Prioritize captures from earlier patterns.
       (sort matches (lambda (m1 m2)
                       (< (car m1) (car m2))))

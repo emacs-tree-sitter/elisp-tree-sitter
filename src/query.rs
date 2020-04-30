@@ -156,6 +156,43 @@ fn _query_cursor_matches<'e>(
     vec_to_vector(env, vec)
 }
 
+// TODO: Make _query_cursor_matches accept a `capture_type` instead, e.g. node type, byte range.
+#[defun]
+fn _query_cursor_matches_1<'e>(
+    cursor: &mut QueryCursor,
+    query: &Query,
+    node: &RNode,
+    text_function: Value<'e>,
+) -> Result<Vector<'e>> {
+    let raw = &query.raw;
+    let error = RefCell::new(None);
+    let matches = cursor.matches(
+        raw,
+        node.borrow().clone(),
+        text_callback(text_function, &error),
+    );
+    let mut vec = vec![];
+    let env = text_function.env;
+    for m in matches {
+        if let Some(error) = error.borrow_mut().take() {
+            return Err(error);
+        }
+        let captures = env.make_vector(m.captures.len(), ())?;
+        for (ci, c) in m.captures.iter().enumerate() {
+            let beg: BytePos = c.node.start_byte().into();
+            let end: BytePos = c.node.end_byte().into();
+            let capture = env.cons(
+                &query.capture_tags[c.index as usize],
+                env.cons(beg, end)?,
+            )?;
+            captures.set(ci, capture)?;
+        }
+        let _match = env.cons(m.pattern_index, captures)?;
+        vec.push(_match);
+    }
+    vec_to_vector(env, vec)
+}
+
 #[defun]
 fn _query_cursor_captures<'e>(
     cursor: &mut QueryCursor,
