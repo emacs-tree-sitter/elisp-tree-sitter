@@ -88,7 +88,7 @@ If VERSION and OS are not spcified, use the defaults of
     (php        "v0.16.1")
     (python     "v0.16.0")
     (ruby       "v0.16.1")
-    (rust       "v0.16.0")
+    (rust       "3e5ec5a")
     (scala      "v0.13.0")
     (swift      "a22fa5e")
     (typescript "v0.16.1" ("typescript" "tsx")))
