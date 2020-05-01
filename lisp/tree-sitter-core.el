@@ -25,7 +25,9 @@
 (require 'tree-sitter-dyn)
 
 (eval-when-compile
-  (require 'pcase))
+  (require 'pcase)
+  (require 'subr-x)
+  (require 'cl-lib))
 
 (defmacro ts--without-restriction (&rest body)
   "Execute BODY with narrowing disabled."
@@ -79,7 +81,7 @@ for a more detailed explanation."
 
 ;;; Extracting buffer's text.
 
-(defun ts-buffer-input (bytepos _line-number _byte-column)
+(defun ts--buffer-input (bytepos _line-number _byte-column)
   "Return a portion of the current buffer's text, starting from BYTEPOS.
 BYTEPOS is automatically clamped to the range valid for the current buffer.
 
@@ -94,15 +96,22 @@ This function must be called with narrowing disabled, e.g. within a
          (end-pos (or (byte-to-position end-byte) max-pos)))
     (buffer-substring-no-properties beg-pos end-pos)))
 
+(defun ts--buffer-substring-no-properties (beg-byte end-byte)
+  "Return the current buffer's text from BEG-BYTE to END-BYTE.
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
+  (buffer-substring-no-properties
+   (byte-to-position beg-byte)
+   (byte-to-position end-byte)))
+
 (defun ts--node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree.
 Prefer `ts-node-text', unless there's a real bottleneck.
 
-This function must be called within a `ts--without-restriction' block."
-  (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (buffer-substring-no-properties
-     (byte-to-position beg)
-     (byte-to-position end))))
+This function must be called with narrowing disabled, e.g. within a
+`ts--without-restriction' block."
+  (pcase-let ((`(,beg . ,end) (ts-node-position-range node)))
+    (buffer-substring-no-properties beg end)))
 
 (defun ts-node-text (node)
   "Return NODE's text, assuming it's from the current buffer's syntax tree."
@@ -136,10 +145,10 @@ This function must be called within a `ts--without-restriction' block."
 
 (defun ts-node-position-range (node)
   "Return NODE's (START-POSITION . END-POSITION)."
-  (pcase-let ((`[,beg ,end] (ts-node-range node)))
-    (cons
-     (byte-to-position beg)
-     (byte-to-position end))))
+  (let ((range (ts-node-byte-range node)))
+    (cl-callf byte-to-position (car range))
+    (cl-callf byte-to-position (cdr range))
+    range))
 
 (defun ts-goto-first-child-for-position (cursor position)
   "Move CURSOR to the first child that extends beyond the given POSITION.
@@ -149,50 +158,68 @@ Return the index of the child node if one was found, nil otherwise."
 
 ;;; Querying.
 
-(defun ts-make-query (language patterns)
+(defun ts--stringify-patterns (patterns)
+  "Convert PATTERNS into a query string that can be passed to `ts--make-query'."
+  (cond
+   ((stringp patterns) patterns)
+   ((sequencep patterns)
+    ;; XXX: This is hacky.
+    (thread-last (mapconcat (lambda (p) (format "%S" p)) patterns "\n")
+      (replace-regexp-in-string (regexp-quote "\\?") "?")
+      (replace-regexp-in-string (regexp-quote "\\.") ".")))
+   (t (error "Invalid patterns"))))
+
+(defun ts-make-query (language patterns &optional tag-assigner)
   "Create a new query for LANGUAGE from a sequence of S-expression PATTERNS.
 The query is associated with LANGUAGE, and can only be run on syntax nodes
-parsed with LANGUAGE."
-  (let ((source (cond
-                 ((stringp patterns) patterns)
-                 ;; FIX: This doesn't work with predicates, in which '?' would be escaped.
-                 ((sequencep patterns) (mapconcat (lambda (p) (format "%S" p)) patterns "\n"))
-                 (t (format "%S" patterns)))))
-    (ts--make-query language source)))
+parsed with LANGUAGE.
 
-(defun ts-query-matches (query node &optional cursor index-only text-function)
+When the query is executed, each captured node is tagged with a symbol, whose
+name is the corresponding capture name defined in PATTERNS. For example, nodes
+that are captured as \"@function.builtin\" will be tagged with the symbol
+`function.builtin'. This behavior can be customized by the optional function
+TAG-ASSIGNER, which should return a tag value when given a capture name (without
+the prefix \"@\"). If it returns nil, the associated capture name is disabled.
+
+See also: `ts-query-captures' and `ts-query-matches'."
+  (ts--make-query language (ts--stringify-patterns patterns)
+                  (or tag-assigner #'intern)))
+
+(defun ts-query-matches (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of matches.
 Matches are sorted in the order they were found.
 
 Each match has the form (PATTERN-INDEX . MATCH-CAPTURES), where PATTERN-INDEX is
-the position of the matched pattern within QUERY, and MATCH-CAPTURES is a
-sequence of captures associated with the match, similar to that returned by
-`ts-query-captures'. If the optional arg INDEX-ONLY is non-nil, positions of the
-capture patterns within QUERY are returned instead of their names.
+the 0-based position of the matched pattern within QUERY, and MATCH-CAPTURES is
+a sequence of captures associated with the match, similar to that returned by
+`ts-query-captures'.
+
+TEXT-FUNCTION is called to get nodes' texts (for text-based predicates). It
+should take 2 parameters: (BEG-BYTE END-BYTE), and return the corresponding
+chunk of text in the source code.
 
 If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
-QUERY. Otherwise a new query-cursor is used.
-
-If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
-Otherwise `ts-node-text' is used."
+QUERY. Otherwise, a newly created query-cursor is used."
   (ts--query-cursor-matches
-   (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
+   (or cursor (ts-make-query-cursor)) query node text-function))
 
-(defun ts-query-captures (query node &optional cursor index-only text-function)
+(defun ts-query-captures (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of captures.
-Matches are sorted in the order they appear.
+Captures are sorted in the order they appear.
 
-Each capture has the form (CAPTURE-NAME . CAPTURED-NODE). If the optional arg
-INDEX-ONLY is non-nil, the position of the capture pattern within QUERY is
-returned instead of its name.
+Each capture has the form (CAPTURE-TAG . CAPTURED-NODE), where CAPTURE-TAG is a
+symbol, whose name is the corresponding capture name defined in QUERY (without
+the prefix \"@\"). If QUERY was created with a custom tag assigner, CAPTURE-TAG
+is the value returned by that function instead. See also: `ts-make-query'.
+
+TEXT-FUNCTION is called to get nodes' texts (for text-based predicates). It
+should take 2 parameters: (BEG-BYTE END-BYTE), and return the corresponding
+chunk of text in the source code.
 
 If the optional arg CURSOR is non-nil, it is used as the query-cursor to execute
-QUERY. Otherwise a new query-cursor is used.
-
-If the optional arg TEXT-FUNCTION is non-nil, it is used to get nodes' text.
-Otherwise `ts-node-text' is used."
+QUERY. Otherwise, a newly created query-cursor is used."
   (ts--query-cursor-captures
-   (or cursor (ts-make-query-cursor)) query node index-only (or text-function #'ts-node-text)))
+   (or cursor (ts-make-query-cursor)) query node text-function))
 
 
 ;;; Utilities.

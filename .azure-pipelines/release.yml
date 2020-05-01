@@ -33,10 +33,11 @@ jobs:
   steps:
   - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
+  - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
   - template: steps/-build.yml
     parameters:
       target: release
-  - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
   - template: steps/setup-tree-sitter-cli.yml
   - template: steps/-test.yml
   - template: steps/-save-binaries.yml

@@ -36,7 +36,8 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 ///
 /// INPUT-FUNCTION should take 3 parameters: (BYTEPOS LINE-NUMBER BYTE-COLUMN), and
 /// return a fragment of the source code, starting from the position identified by
-/// either BYTEPOS or (LINE-NUMBER . BYTE-COLUMN).
+/// either BYTEPOS or (LINE-NUMBER . BYTE-COLUMN). It should return an empty string
+/// to signal the end of the source code.
 ///
 /// BYTEPOS is Emacs's 1-based byte position.
 ///
@@ -125,9 +126,8 @@ fn _set_timeout_micros(parser: &mut Parser, max_duration: u64) -> Result<()> {
 ///
 /// This is useful for parsing multi-language documents.
 #[defun]
-fn set_included_ranges(parser: &mut Parser, ranges: Value) -> Result<()> {
-    let ranges = Vector(ranges);
-    let len = ranges.size()?;
+fn set_included_ranges(parser: &mut Parser, ranges: Vector) -> Result<()> {
+    let len = ranges.len();
     let included = &mut Vec::with_capacity(len);
     for i in 0..len {
         let range: Range = ranges.get(i)?;

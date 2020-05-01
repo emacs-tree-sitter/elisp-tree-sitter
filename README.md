@@ -38,7 +38,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
 - Show the debug view of a buffer's parse tree
     ```emacs-lisp
     (require 'tree-sitter-debug)
-    (tree-sitter-debug-enable)
+    (tree-sitter-debug-mode)
     ```
 - Get names of all functions in a Rust file:
     ```emacs-lisp
@@ -46,7 +46,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
       (seq-map (lambda (capture)
                  (pcase-let ((`(_ . ,node) capture))
                    (ts-node-text node)))
-               (tree-sitter-query [(function_item (identifier) @name)])))
+               (tree-sitter-debug-query [(function_item (identifier) @name)])))
     ```
 - Write a simple extension to `expand-region`:
     ```emacs-lisp
@@ -125,11 +125,12 @@ For consistency with Emacs's conventions, this binding has some differences comp
     + `ts-make-query`: create a new query.
     + `ts-make-query-cursor`: create a new query cursor.
     + `ts-query-matches`, `ts-query-captures`: execute a query, returning matches/captures.
-    + `ts-set-byte-range`, `ts-set-point-range`: limit query execution to a range.
 
 ## Setup for Development
 
 Clone this repo and add its `lisp` and `langs` directories to `load-path`.
+
+Install [cask](https://cask.readthedocs.io) and run `cask install` to install dev dependencies.
 
 If you want to hack on the high-level features (in Lisp) only:
 - Evaluate this (once) to download the necessary binaries:

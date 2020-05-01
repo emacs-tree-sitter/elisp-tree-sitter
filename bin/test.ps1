@@ -19,7 +19,7 @@ if ($args[0] -eq "watch") {
     # https://github.com/PowerShell/PowerShell/issues/4002
     # https://stackoverflow.com/questions/2095088/error-when-calling-3rd-party-executable-from-powershell-when-using-an-ide
     $ErrorActionPreference = 'Continue'
-    emacs --batch `
+    cask emacs --batch `
       --directory "$project_root\lisp" `
       --directory "$project_root\langs" `
       -l ert `

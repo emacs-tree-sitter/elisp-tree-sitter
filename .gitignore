@@ -1,6 +1,6 @@
 /target
 **/*.rs.bk
-**/*.elc
+**/*.elc*
 **/.cask
 grammars/
 lisp/tree-sitter-dyn.*

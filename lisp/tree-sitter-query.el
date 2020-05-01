@@ -15,7 +15,7 @@
 (require 'tree-sitter)
 
 (defgroup tree-sitter-query nil
-  "Tree-Sitter playground."
+  "Tree-sitter playground."
   :group 'tree-sitter)
 
 (define-derived-mode tree-sitter-query-mode prog-mode "ts-query-builder"
@@ -51,13 +51,14 @@
 (defun tree-sitter-query--eval-query (patterns)
   "Evaluate query PATTERNS against the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
-    (remove-overlays)
-    (let* ((query (ts-make-query tree-sitter-language patterns))
-           (root-node (ts-root-node tree-sitter-tree))
-           (captures (ts-query-captures query root-node)))
-      (if (= (length captures) 0)
-          (message "No matches found")
-        (mapc #'tree-sitter-query--highlight-capture captures)))))
+    (ts--without-restriction
+      (remove-overlays)
+      (let* ((query (ts-make-query tree-sitter-language patterns #'identity))
+             (root-node (ts-root-node tree-sitter-tree))
+             (captures (ts-query-captures query root-node #'ts--buffer-substring-no-properties)))
+        (if (= (length captures) 0)
+            (message "No matches found")
+          (mapc #'tree-sitter-query--highlight-capture captures))))))
 
 (defun tree-sitter-query--after-change (&rest _args)
   "Run query patterns against the target buffer and update highlighted texts."

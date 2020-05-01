@@ -32,13 +32,23 @@
            (directory-file-name
             (file-name-directory (locate-library "tree-sitter")))) relative-path))
 
-(defun ts-test-tree-sexp (sexp)
-  "Check that the current syntax tree's sexp representation is SEXP."
-  (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp)))
+(defun ts-test-tree-sexp (sexp &optional reset)
+  "Check that the current syntax tree's sexp representation is SEXP.
+If RESET is non-nil, also do another full parse and check again."
+  (should (equal (read (ts-tree-to-sexp tree-sitter-tree)) sexp))
+  (when reset
+    (setq tree-sitter-tree nil)
+    (tree-sitter--do-parse)
+    (ts-test-tree-sexp sexp)))
 
 (defun ts-test-use-lang (lang-symbol)
   "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
   (setq tree-sitter-language (tree-sitter-require lang-symbol))
+  (ignore-errors
+    (setq tree-sitter-hl-default-patterns
+          (tree-sitter-langs--hl-default-patterns lang-symbol)))
+  (add-hook 'tree-sitter-after-first-parse-hook
+            (lambda () (should (not (null tree-sitter-tree)))))
   (tree-sitter-mode))
 
 (defmacro ts-test-with (lang-symbol var &rest body)
@@ -51,7 +61,8 @@
   "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH."
   (declare (indent 1))
   `(with-temp-buffer
-     (insert-file-contents (ts-test-full-path ,relative-path))
+     (let ((coding-system-for-read 'utf-8))
+       (insert-file-contents (ts-test-full-path ,relative-path)))
      ,@body))
 
 (defmacro ts-test-lang-with-file (lang-symbol relative-path &rest body)
@@ -109,19 +120,18 @@
 (ert-deftest parsing::rust-buffer ()
   (ts-test-with 'rust parser
     (ts-test-with-file "src/types.rs"
-      (let* ((tree) (old-tree)
-             (initial (benchmark-run
-                          (setq tree (ts-parse-chunks parser #'ts-buffer-input nil))))
-             (reparse (benchmark-run
-                          (progn
-                            (setq old-tree tree)
-                            (setq tree (ts-parse-chunks parser #'ts-buffer-input old-tree))))))
-        ;; (message "initial %s" initial)
-        ;; (message "reparse %s" reparse)
-        (ert-info ("Same code should result in empty change ranges")
-          (should (equal [] (ts-changed-ranges old-tree tree))))
-        (ert-info ("Incremental parsing should be faster than initial")
-          (should (> (car initial) (car reparse))))))))
+      (ts--without-restriction
+        (let* ((tree) (old-tree)
+               (initial (benchmark-run
+                            (setq tree (ts-parse-chunks parser #'ts--buffer-input nil))))
+               (reparse (benchmark-run
+                            (progn
+                              (setq old-tree tree)
+                              (setq tree (ts-parse-chunks parser #'ts--buffer-input old-tree))))))
+          (ert-info ("Same code should result in empty change ranges")
+            (should (equal [] (ts-changed-ranges old-tree tree))))
+          (ert-info ("Incremental parsing shoud be faster than initial")
+            (should (> (car initial) (car reparse)))))))))
 
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
@@ -137,6 +147,24 @@
                           body: (block))))
     (kill-region (point-min) (point-max))
     (ts-test-tree-sexp '(source_file))))
+
+(ert-deftest minor-mode::incremental:change-case-region ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/change-case-region.rs"
+    (let* ((orig-sexp (read (ts-tree-to-sexp tree-sitter-tree)))
+           (end (re-search-forward "this text"))
+           (beg (match-beginning 0)))
+      (upcase-initials-region beg end)
+      (ts-test-tree-sexp orig-sexp)
+      (downcase-region beg end)
+      (ts-test-tree-sexp orig-sexp :reset))))
+
+(ert-deftest minor-mode::incremental:delete-non-ascii-text ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/delete-non-ascii-text.rs"
+    (let* ((orig-sexp (read (ts-tree-to-sexp tree-sitter-tree)))
+           (end (re-search-forward "ấấấấấấấấ"))
+           (beg (match-beginning 0)))
+      (delete-region beg end)
+      (ts-test-tree-sexp orig-sexp :reset))))
 
 (ert-deftest node::eq ()
   (ts-test-with 'rust parser
@@ -224,7 +252,7 @@ tree is held (since nodes internally reference the tree)."
   (ts-test-lang-with-file 'rust "src/query.rs"
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
-    (let* ((captures (tree-sitter-query
+    (let* ((captures (tree-sitter-debug-query
                       "((function_item (identifier) @function)
                         (match? @function \"make_query\"))
                        (macro_definition (identifier) @macro)"))
@@ -232,19 +260,77 @@ tree is held (since nodes internally reference the tree)."
                                  (pcase-let ((`(_ . ,node) capture))
                                    (ts-node-text node)))
                                captures))
-           (capture-names (mapcar (lambda (capture)
-                                    (pcase-let ((`(,name . _) capture)) name))
+           (capture-tags (mapcar (lambda (capture)
+                                    (pcase-let ((`(,tag . _) capture)) tag))
                                   captures)))
       (ert-info ("Should match specified functions and not more")
         (should (member "_make_query" node-texts))
         (should (member "make_query_cursor" node-texts))
         (should (not (member "capture_names" node-texts))))
       (ert-info ("Should capture some macros")
-        (should (member "macro" capture-names))))))
+        (should (member 'macro capture-tags))))))
 
 (ert-deftest load ()
   (should-error (tree-sitter-require 'abc-xyz))
   (tree-sitter-require 'rust))
+
+(ert-deftest hl::extend-region ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/extend-region.rs"
+    (tree-sitter-hl-mode)
+    (let* ((beg (save-excursion
+                  (search-forward "abc")
+                  (backward-char)
+                  (point)))
+           (end (1+ beg)))
+      (tree-sitter-hl--highlight-region beg end)
+      (ert-info ("Highlighting a tiny region")
+        (should (memq 'tree-sitter-hl-face:function.macro
+                      (get-text-property beg 'face)))))))
+
+(ert-deftest hl::face-mapping ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (ert-info ("Keywords should be highlighted by default")
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (memq 'tree-sitter-hl-face:keyword (get-text-property 1 'face))))
+    (tree-sitter-hl-mode -1)
+    (ert-info ("Keywords should not be highlighted if their capture name is disabled")
+      ;; Disable keyword highlighting.
+      (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
+                    (lambda (capture-name)
+                      (not (string= capture-name "keyword"))))
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (null (get-text-property 1 'face)))
+      (ert-info ("Other elements should still be highlighted")
+        (should-not (null (next-single-property-change 1 'face)))))
+    (tree-sitter-hl-mode -1)
+    (ert-info ("Nothing should be highlighted if all capture names are disabled")
+      (add-function :override (local 'tree-sitter-hl-face-mapping-function)
+                    (lambda (capture-name) nil))
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (ert-info ("`face' should be nil for the whole buffer")
+        (should (null (get-text-property 1 'face)))
+        (should (null (next-single-property-change 1 'face)))))))
+
+(ert-deftest hl::bench ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
+    (require 'rust-mode)
+    (rust-mode)
+    (font-lock-mode)
+    (tree-sitter-hl-mode)
+    (garbage-collect)
+    (message "tree-sitter-hl  1 %s" (benchmark-run (font-lock-ensure)))
+    (garbage-collect)
+    (message "tree-sitter-hl 10 %s" (benchmark-run 10 (font-lock-ensure)))
+    (tree-sitter-hl-mode -1)
+    (font-lock-ensure)
+    (garbage-collect)
+    (message "     font-lock  1 %s" (benchmark-run (font-lock-ensure)))
+    (garbage-collect)
+    (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
 
 ;; Local Variables:
 ;; no-byte-compile: t

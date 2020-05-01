@@ -1,4 +1,4 @@
-use emacs::{defun, Value, Result};
+use emacs::{defun, Value, Result, Env};
 
 use tree_sitter::InputEdit;
 
@@ -91,6 +91,15 @@ defun_node_props! {
 
     /// Return NODE's number of named children.
     "count-named-children" fn named_child_count -> usize
+}
+
+/// Return NODE's (START-BYTEPOS . END-BYTEPOS).
+#[defun]
+fn node_byte_range<'e>(env: &'e Env, node: &RNode) -> Result<Value<'e>> {
+    let node = node.borrow();
+    let beg: BytePos = node.start_byte().into();
+    let end: BytePos = node.end_byte().into();
+    env.cons(beg, end)
 }
 
 /// Return t if two nodes are identical.

@@ -11,20 +11,37 @@
 
 ;;; Commentary:
 
-;; This is a convenient bundle of language grammars for `tree-sitter'. It serves
-;; as an interim distribution mechanism, until `tree-sitter' is widespread
-;; enough for language major modes to include the definitions on their own.
+;; This is a convenient bundle of language grammars and queries for
+;; `tree-sitter'. It serves as an interim distribution mechanism, until
+;; `tree-sitter' is widespread enough for language major modes to include these
+;; definitions on their own.
+;;
+;; Basically it's a multi-step process:
+;;
+;; 1. `tree-sitter-langs' populates global registries of grammars and queries.
+;;    These global registries are defined by `tree-sitter-mode' and other
+;;    `tree-sitter'-based language-agnostic minor modes, to extend existing
+;;    major modes.
+;;
+;; 2. New `tree-sitter'-based language-specific minor modes use these global
+;;    registries to extend existing major modes.
+;;
+;; 3. Major modes adopt new `tree-sitter'-based features, and distribute the
+;;    grammars and queries on their own. They can either put these definitions
+;;    in the global registries, or keep using them only internally.
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (require 'tree-sitter)
 (require 'tree-sitter-load)
+(require 'tree-sitter-hl)
 
 (require 'tree-sitter-langs-build)
 
 (eval-when-compile
-  (require 'pcase)
-  (require 'cl-lib))
+  (require 'pcase))
 
 (defun tree-sitter-langs-ensure (lang-symbol)
   "Return the language object identified by LANG-SYMBOL.
@@ -70,6 +87,27 @@ See `tree-sitter-langs-repos'."
                 (typescript-mode . typescript))))
   (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
         lang-symbol))
+
+(defun tree-sitter-langs--hl-default-patterns (lang-symbol)
+  "Return default syntax highlighting patterns for LANG-SYMBOL."
+  (let ((query-path (cl-reduce
+                     (lambda (dir name) (expand-file-name name dir))
+                     `("repos" ,(format "tree-sitter-%s" lang-symbol)
+                       "queries" "highlights.scm")
+                     :initial-value tree-sitter-langs--dir)))
+    (with-temp-buffer
+      (insert-file-contents query-path)
+      (buffer-string))))
+
+(defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
+  "Use syntax highlighting patterns provided by `tree-sitter-langs'."
+  (unless tree-sitter-hl-default-patterns
+    (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
+      (setq tree-sitter-hl-default-patterns
+            (tree-sitter-langs--hl-default-patterns lang-symbol)))))
+
+(advice-add 'tree-sitter-hl--setup :before
+            #'tree-sitter-langs--set-hl-default-patterns)
 
 (provide 'tree-sitter-langs)
 ;;; tree-sitter-langs.el ends here

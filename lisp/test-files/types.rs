@@ -7,9 +7,9 @@ use std::{
     marker::PhantomData,
 };
 
-use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Vector, ErrorKind, GlobalRef};
+use emacs::{defun, Env, Value, Result, IntoLisp, FromLisp, Vector, ErrorKind};
 
-use tree_sitter::{Tree, Node, TreeCursor, Parser, QueryCursor};
+use tree_sitter::{Tree, Node, TreeCursor, Parser, Query, QueryCursor};
 
 pub fn shared<T>(t: T) -> Shared<T> {
     Rc::new(RefCell::new(t))
@@ -345,12 +345,6 @@ impl RCursor {
         let cursor: &'e mut _ = unsafe { mem::transmute(&mut self.inner) };
         RCursorBorrowMut { reft, cursor }
     }
-}
-
-// -------------------------------------------------------------------------------------------------
-pub struct Query {
-    pub(crate) raw: tree_sitter::Query,
-    pub(crate) capture_tags: Vec<GlobalRef>,
 }
 
 // -------------------------------------------------------------------------------------------------
