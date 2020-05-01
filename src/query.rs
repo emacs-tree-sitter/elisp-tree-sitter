@@ -236,7 +236,7 @@ fn _query_cursor_captures<'e>(
 
 /// Limit CURSOR's query executions to the range of byte positions, from BEG to END.
 #[defun]
-fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Result<()> {
+fn _query_cursor_set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Result<()> {
     cursor.set_byte_range(beg.into(), end.into());
     Ok(())
 }
@@ -246,7 +246,7 @@ fn set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: BytePos) -> Resul
 /// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
 /// `ts-parse-chunks' for a more detailed explanation.
 #[defun]
-fn set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
+fn _query_cursor_set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());
     Ok(())
 }

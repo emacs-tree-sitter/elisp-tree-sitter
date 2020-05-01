@@ -290,9 +290,9 @@ This is intended to be used as a buffer-local override of
     ;; distinguishing region to query from region to fontify.
     (let ((region (tree-sitter-hl--extend-region beg end)))
       (setf `(,beg . ,end) region))
-    (ts-set-byte-range tree-sitter-hl--query-cursor
-                       (position-bytes beg)
-                       (position-bytes end))
+    (ts--query-cursor-set-byte-range tree-sitter-hl--query-cursor
+                                     (position-bytes beg)
+                                     (position-bytes end))
     (let* ((root-node (ts-root-node tree-sitter-tree))
            (captures  (ts--query-cursor-captures-1
                        tree-sitter-hl--query-cursor

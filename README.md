@@ -125,7 +125,6 @@ For consistency with Emacs's conventions, this binding has some differences comp
     + `ts-make-query`: create a new query.
     + `ts-make-query-cursor`: create a new query cursor.
     + `ts-query-matches`, `ts-query-captures`: execute a query, returning matches/captures.
-    + `ts-set-byte-range`, `ts-set-point-range`: limit query execution to a range.
 
 ## Setup for Development
 
