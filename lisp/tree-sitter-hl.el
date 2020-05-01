@@ -134,6 +134,18 @@
 ;;; ----------------------------------------------------------------------------
 ;;; Interfaces for modes and end users.
 
+(defcustom tree-sitter-hl-face-mapping-function
+  #'tree-sitter-hl-face-from-common-scope
+  "Function used to map capture names in query patterns to highlighting faces.
+This can also be used to selectively disable certain capture names. For example,
+the following code disables keyword highlighting:
+
+ (add-function :before-while 'tree-sitter-hl-face-mapping-function
+               (lambda (capture-name)
+                 (not (string= capture-name \"keyword\"))))"
+  :group 'tree-sitter-hl
+  :type 'function)
+
 (defvar-local tree-sitter-hl-default-patterns nil
   "Default syntax highlighting patterns.
 This should be set by major modes that want to integrate with `tree-sitter-hl'.
@@ -160,12 +172,13 @@ language symbols, not major mode symbols.")
                       (append tree-sitter-hl--extra-patterns-list
                               (list tree-sitter-hl-default-patterns))
                       "\n")
-           ;; TODO: Allow this to be customized.
-           (lambda (capture-name)
-             ;; Use faces to tag captures. TODO: If a scope does not have a
-             ;; corresponding face, check its ancestor scopes.
-             (intern (format "tree-sitter-hl-face:%s" capture-name))))))
+           tree-sitter-hl-face-mapping-function)))
   tree-sitter-hl--query)
+
+(defun tree-sitter-hl-face-from-common-scope (capture-name)
+  "Return the default face used to highlight CAPTURE-NAME."
+  ;; TODO: If a scope does not have a corresponding face, check its ancestors.
+  (intern (format "tree-sitter-hl-face:%s" capture-name)))
 
 ;;; TODO: Support adding/removing language-specific patterns.
 (defun tree-sitter-hl-add-patterns (patterns)
@@ -196,7 +209,6 @@ previously added patterns."
 ;;; Internal workings.
 
 (defvar-local tree-sitter-hl--query-cursor nil)
-
 
 (defconst tree-sitter-hl--extend-region-limit 2048
   "The max size of the extended region, in characters.")
@@ -261,11 +273,8 @@ also expects VALUE to be a single value, not a list."
   (pcase-let* ((`(,face . (,beg-byte . ,end-byte)) capture)
                (beg (byte-to-position beg-byte))
                (end (byte-to-position end-byte)))
-    ;; (message " %s <- %s <- [%s %s]" face name beg end)
-    ;; TODO: Consider giving certain combinations of highlight names their own
-    ;; faces. For example, it might be desirable for fontification of a node
-    ;; that matches both "constructor" and "variable" to be different from the
-    ;; union of "constructor fontification" and "variable fontification".
+    ;; TODO: Add an option to disable unknown faces earlier, when compiling the
+    ;; query from patterns.
     (when (facep face)
       (tree-sitter-hl--append-text-property beg end 'face face))))
 
@@ -294,7 +303,11 @@ This is intended to be used as a buffer-local override of
       (let ((inhibit-point-motion-hooks t))
         (with-silent-modifications
           (font-lock-unfontify-region beg end)
-          ;; TODO: Handle uncaptured nodes.
+          ;; TODO: Consider giving certain combinations of highlight names their
+          ;; own faces. For example, it might be desirable for fontification of
+          ;; a node that matches both "constructor" and "variable" to be
+          ;; different from the union of "constructor fontification" and
+          ;; "variable fontification".
           (mapc #'tree-sitter-hl--highlight-capture captures)))
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))

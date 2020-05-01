@@ -287,6 +287,33 @@ tree is held (since nodes internally reference the tree)."
         (should (memq 'tree-sitter-hl-face:function.macro
                       (get-text-property beg 'face)))))))
 
+(ert-deftest hl::face-mapping ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (ert-info ("Keywords should be highlighted by default")
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (memq 'tree-sitter-hl-face:keyword (get-text-property 1 'face))))
+    (tree-sitter-hl-mode -1)
+    (ert-info ("Keywords should not be highlighted if their capture name is disabled")
+      ;; Disable keyword highlighting.
+      (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
+                    (lambda (capture-name)
+                      (not (string= capture-name "keyword"))))
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (null (get-text-property 1 'face)))
+      (ert-info ("Other elements should still be highlighted")
+        (should-not (null (next-single-property-change 1 'face)))))
+    (tree-sitter-hl-mode -1)
+    (ert-info ("Nothing should be highlighted if all capture names are disabled")
+      (add-function :override (local 'tree-sitter-hl-face-mapping-function)
+                    (lambda (capture-name) nil))
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (ert-info ("`face' should be nil for the whole buffer")
+        (should (null (get-text-property 1 'face)))
+        (should (null (next-single-property-change 1 'face)))))))
+
 (ert-deftest hl::bench ()
   (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
     (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
