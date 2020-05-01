@@ -341,7 +341,11 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (tree-sitter-hl--ensure-query)
   (unless tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
-    ;; Invalidate the buffer only if we were actually disabled previously.
+    ;; Invalidate the buffer, only if we were actually disabled previously.
+    ;; TODO: Find a way to disable `font-lock-defaults', while keeping
+    ;; modifications added locally through `font-lock-add-keywords'. The problem
+    ;; is, `font-lock-mode' itself doesn't seem to be able to do that. (See
+    ;; `font-lock-refresh-defaults'.)
     (tree-sitter-hl--invalidate))
   ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
   ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
