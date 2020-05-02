@@ -43,9 +43,17 @@
 (eval-when-compile
   (require 'pcase))
 
+(defvar tree-sitter-langs--testing)
+(eval-when-compile
+  (unless (bound-and-true-p tree-sitter-langs--testing)
+    (tree-sitter-langs-install-grammars :skip-if-installed)))
+
 (defun tree-sitter-langs-ensure (lang-symbol)
   "Return the language object identified by LANG-SYMBOL.
 If it cannot be loaded, this function tries to compile the grammar.
+
+This function also tries to copy highlight query from the language repo, if it
+exists.
 
 See `tree-sitter-langs-repos'."
   (unwind-protect

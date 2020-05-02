@@ -11,9 +11,13 @@
 ;;; Code:
 
 (require 'tree-sitter)
-(require 'tree-sitter-langs)
 (require 'tree-sitter-debug)
 
+(defvar tree-sitter-langs--testing)
+;;; Disable grammar downloading.
+(let ((tree-sitter-langs--testing t))
+  (require 'tree-sitter-langs))
+;;; Build the grammars, if necessary.
 (dolist (lang-symbol '(rust bash javascript))
   (tree-sitter-langs-ensure lang-symbol))
 

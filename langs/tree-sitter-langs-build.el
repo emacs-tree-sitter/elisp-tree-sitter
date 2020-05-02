@@ -44,6 +44,8 @@ This is bumped whenever `tree-sitter-langs-repos' is updated, which should be
 infrequent (grammar-only changes). It is different from the version of
 `tree-sitter-langs', which can change frequently (when queries change).")
 
+(defconst tree-sitter-langs--bundle-version-file "BUNDLE-VERSION")
+
 (defconst tree-sitter-langs--os
   (pcase system-type
     ('darwin "macos")
@@ -64,6 +66,7 @@ If VERSION and OS are not spcified, use the defaults of
   "Return the URL to download the grammar bundle.
 If VERSION and OS are not specified, use the defaults of
 `tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
+  ;; TODO: Use https://elpa.ubolonton.org/packages/bin as the canonical source.
   (format "https://dl.bintray.com/ubolonton/emacs/%s"
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
@@ -240,26 +243,50 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
                (tar-opts (pcase system-type
                            ('windows-nt '("--force-local")))))
-          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files)))
+          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files))
+          (with-temp-file tree-sitter-langs--bundle-version-file
+            (let ((coding-system-for-write 'utf-8))
+              (insert tree-sitter-langs--bundle-version))))
       (when errors
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (display-warning 'tree-sitter
                          (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
 ;;;###autoload
-(defun tree-sitter-langs-install-grammars (&optional version os keep-bundle)
+(defun tree-sitter-langs-install-grammars (&optional skip-if-installed version os keep-bundle)
   "Download and install the specified VERSION of the language grammar bundle.
-If VERSION and OS are not specified, use the defaults of
+If VERSION or OS is not specified, use the default of
 `tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
+
+This installs the grammar bundle even if the same version was already installed,
+unless SKIP-IF-INSTALLED is non-nil.
 
 The download bundle file is deleted after installation, unless KEEP-BUNDLE is
 non-nil."
-  (interactive)
-  (let ((dir tree-sitter-langs--bin-dir))
-    (unless (file-directory-p dir)
-      (make-directory dir t))
-    (let ((default-directory dir)
-          (bundle-file (tree-sitter-langs--bundle-file ".gz" version os)))
+  (interactive (list
+                nil
+                (read-string "Bundle version: " tree-sitter-langs--bundle-version)
+                tree-sitter-langs--os
+                nil))
+  (unless (file-directory-p tree-sitter-langs--bin-dir)
+    (make-directory tree-sitter-langs--bin-dir t))
+  (let* ((version (or version tree-sitter-langs--bundle-version))
+         (default-directory tree-sitter-langs--bin-dir)
+         (bundle-file (tree-sitter-langs--bundle-file ".gz" version os))
+         (current-version (when (file-exists-p
+                                 tree-sitter-langs--bundle-version-file)
+                            (with-temp-buffer
+                              (let ((coding-system-for-read 'utf-8))
+                                (insert-file-contents
+                                 tree-sitter-langs--bundle-version-file)
+                                (buffer-string))))))
+    (cl-block nil
+      (if (string= version current-version)
+          (if skip-if-installed
+              (progn (message "tree-sitter-langs: Grammar bundle v%s was already installed; skipped" version)
+                     (cl-return))
+            (message "tree-sitter-langs: Grammar bundle v%s was already installed; reinstalling" version))
+        (message "tree-sitter-langs: Installing grammar bundle v%s (was v%s)" version current-version))
       ;; FIX: Handle HTTP errors properly.
       (url-copy-file (tree-sitter-langs--bundle-url version os)
                      bundle-file 'ok-if-already-exists)
@@ -267,10 +294,15 @@ non-nil."
         (insert-file-contents bundle-file)
         (tar-mode)
         (tar-untar-buffer))
+      ;; FIX: This should be a metadata file in the bundle itself.
+      (with-temp-file tree-sitter-langs--bundle-version-file
+        (let ((coding-system-for-write 'utf-8))
+          (insert version)))
       (unless keep-bundle
         (delete-file bundle-file 'trash))
-      (when (y-or-n-p (format "Show installed grammars in %s? " dir))
-        (with-current-buffer (find-file dir)
+      (when (and (called-interactively-p 'any)
+                 (y-or-n-p (format "Show installed grammars in %s? " tree-sitter-langs--bin-dir)))
+        (with-current-buffer (find-file tree-sitter-langs--bin-dir)
           (when (bound-and-true-p dired-omit-mode)
             (dired-omit-mode -1)))))))
 
