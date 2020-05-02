@@ -48,14 +48,16 @@
 If it cannot be loaded, this function tries to compile the grammar.
 
 See `tree-sitter-langs-repos'."
-  (condition-case nil
-      (tree-sitter-require lang-symbol)
-    (error
-     (display-warning 'tree-sitter-test
-                      (format "Could not load grammar for `%s', trying to compile it"
-                              lang-symbol))
-     (tree-sitter-langs-compile lang-symbol)
-     (tree-sitter-require lang-symbol))))
+  (unwind-protect
+      (condition-case nil
+          (tree-sitter-require lang-symbol)
+        (error
+         (display-warning 'tree-sitter-test
+                          (format "Could not load grammar for `%s', trying to compile it"
+                                  lang-symbol))
+         (tree-sitter-langs-compile lang-symbol)
+         (tree-sitter-require lang-symbol)))
+    (tree-sitter-langs-copy-query lang-symbol)))
 
 ;;; Add the bundle directory.
 (cl-pushnew tree-sitter-langs--bin-dir
@@ -90,11 +92,10 @@ See `tree-sitter-langs-repos'."
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return default syntax highlighting patterns for LANG-SYMBOL."
-  (let ((query-path (cl-reduce
-                     (lambda (dir name) (expand-file-name name dir))
-                     `("repos" ,(format "tree-sitter-%s" lang-symbol)
-                       "queries" "highlights.scm")
-                     :initial-value tree-sitter-langs--dir)))
+  (let ((query-path (concat (file-name-as-directory
+                             (concat tree-sitter-langs--queries-dir
+                                     (symbol-name lang-symbol)))
+                            "highlights.scm")))
     (with-temp-buffer
       (insert-file-contents query-path)
       (buffer-string))))

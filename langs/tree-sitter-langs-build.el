@@ -34,6 +34,10 @@
   (file-name-as-directory
    (concat tree-sitter-langs--dir "bin")))
 
+(defconst tree-sitter-langs--queries-dir
+  (file-name-as-directory
+   (concat tree-sitter-langs--dir "queries")))
+
 (defconst tree-sitter-langs--version
   (let ((main-file (locate-library "tree-sitter-langs.el")))
     (unless main-file
@@ -302,6 +306,34 @@ non-nil."
       (url-copy-file url gz-file)
       ;; FIX: Uncompressing with `dired-compress-file' doesn't work on Windows.
       (dired-compress-file gz-file))))
+
+(defun tree-sitter-langs-copy-query (lang-symbol &optional force)
+  "Copy highlights.scm file of LANG-SYMBOL to `tree-sitter-langs--queries-dir'.
+This assumes the repo has already been set up, for example by
+`tree-sitter-langs-compile'."
+  (let ((src (thread-first tree-sitter-langs--repos-dir
+               (concat (format "tree-sitter-%s" lang-symbol))
+               file-name-as-directory (concat "queries")
+               file-name-as-directory (concat "highlights.scm"))))
+    (when (file-exists-p src)
+      (let ((dst-dir  (file-name-as-directory
+                       (concat tree-sitter-langs--queries-dir
+                               (symbol-name lang-symbol)))))
+        (unless (file-directory-p dst-dir)
+          (make-directory dst-dir t))
+        (message "Copying highlights.scm for %s" lang-symbol)
+        (when force
+          (let ((default-directory dst-dir))
+            (when (file-exists-p "highlights.scm")
+              (delete-file "highlights.scm"))))
+        (copy-file src dst-dir (not force))))))
+
+(defun tree-sitter-langs-copy-queries ()
+  "Copy highlights.scm files to `tree-sitter-langs--queries-dir'.
+This assumes the repos have already been cloned set up, for example by
+`tree-sitter-langs-create-bundle'."
+  (pcase-dolist (`(,lang-symbol . _) tree-sitter-langs-repos)
+    (tree-sitter-langs-copy-query lang-symbol :force)))
 
 (provide 'tree-sitter-langs-build)
 ;;; tree-sitter-langs-build.el ends here
