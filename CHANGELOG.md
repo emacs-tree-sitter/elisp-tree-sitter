@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.0] - 2020-05-02
 - Added `global-tree-sitter-mode`.
 - Added library `tree-sitter-hl`, which provides query-based syntax highlighting by overriding certain parts of `font-lock`.
 - Reworked query APIs for performance and clarity, most notably `ts-make-query`, `ts-query-matches`, `ts-query-captures`.
@@ -39,7 +41,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.7.0...HEAD
+[0.7.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.3.0...0.4.0

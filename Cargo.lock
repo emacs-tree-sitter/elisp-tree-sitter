@@ -187,7 +187,7 @@ dependencies = [
 
 [[package]]
 name = "emacs-tree-sitter"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "emacs 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
