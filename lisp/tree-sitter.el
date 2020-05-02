@@ -184,8 +184,12 @@ signal an error."
                   (run-hooks 'tree-sitter-after-first-parse-hook)))
   (if tree-sitter-mode
       (tree-sitter--error-protect
-          (progn (tree-sitter--setup)
-                 (run-hooks 'tree-sitter-after-on-hook))
+          (progn
+            (tree-sitter--setup)
+            ;; TODO: When the dependent mode requested us, but then failed to
+            ;; turn itself on, we should probably turn ourselves off as well.
+            (with-demoted-errors "tree-sitter-after-on-hook: %S"
+              (run-hooks 'tree-sitter-after-on-hook)))
         (setq tree-sitter-mode nil)
         (tree-sitter--teardown))
     (run-hooks 'tree-sitter--before-off-hook)
