@@ -38,15 +38,11 @@
   (file-name-as-directory
    (concat tree-sitter-langs--dir "queries")))
 
-(defconst tree-sitter-langs--version
-  (let ((main-file (locate-library "tree-sitter-langs.el")))
-    (unless main-file
-      (error "Could not find tree-sitter-langs.el"))
-    (with-temp-buffer
-      (insert-file-contents main-file)
-      (unless (re-search-forward ";; Version: \\(.+\\)")
-        (error "Could not determine tree-sitter-langs version"))
-      (match-string 1))))
+(defconst tree-sitter-langs--bundle-version "0.3.0"
+  "Version of the grammar bundle.
+This is bumped whenever `tree-sitter-langs-repos' is updated, which should be
+infrequent (grammar-only changes). It is different from the version of
+`tree-sitter-langs', which can change frequently (when queries change).")
 
 (defconst tree-sitter-langs--os
   (pcase system-type
@@ -58,16 +54,16 @@
 (defun tree-sitter-langs--bundle-file (&optional ext version os)
   "Return the grammar bundle file's name, with optional EXT.
 If VERSION and OS are not spcified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
   (format "tree-sitter-grammars-%s-%s.tar%s"
           (or os tree-sitter-langs--os)
-          (or version tree-sitter-langs--version)
+          (or version tree-sitter-langs--bundle-version)
           (or ext "")))
 
 (defun tree-sitter-langs--bundle-url (&optional version os)
   "Return the URL to download the grammar bundle.
-If VERSION and OS are not spcified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+If VERSION and OS are not specified, use the defaults of
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
   (format "https://dl.bintray.com/ubolonton/emacs/%s"
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
@@ -96,7 +92,9 @@ If VERSION and OS are not spcified, use the defaults of
     (scala      "v0.13.0")
     (swift      "a22fa5e")
     (typescript "a80ef55" ("typescript" "tsx")))
-  "List of language symbols and their corresponding grammar sources.")
+  "List of language symbols and their corresponding grammar sources.
+Note that these are mostly for the grammars. We treat the queries they include
+as references, instead of using them directly for syntax highlighting.")
 
 (defconst tree-sitter-langs--repos-dir
   (file-name-as-directory
@@ -249,10 +247,10 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                          (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
 ;;;###autoload
-(defun tree-sitter-langs-install (&optional version os keep-bundle)
+(defun tree-sitter-langs-install-grammars (&optional version os keep-bundle)
   "Download and install the specified VERSION of the language grammar bundle.
 If VERSION and OS are not specified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'.
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
 
 The download bundle file is deleted after installation, unless KEEP-BUNDLE is
 non-nil."

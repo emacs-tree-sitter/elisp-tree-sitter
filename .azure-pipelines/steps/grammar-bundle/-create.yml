@@ -1,6 +1,6 @@
 steps:
 - powershell: |
-    $bundle_version = ((cask eval "(progn (require 'tree-sitter-langs-build) (princ tree-sitter-langs--version))") | Out-String).Trim()
+    $bundle_version = ((cask eval "(progn (require 'tree-sitter-langs-build) (princ tree-sitter-langs--bundle-version))") | Out-String).Trim()
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$bundle_version"
     cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-create-bundle))"
     ls
@@ -11,7 +11,7 @@ steps:
 
 - bash: |
     set -e
-    BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs-build) (princ tree-sitter-langs--version))")
+    BUNDLE_VERSION=$(cask eval "(progn (require 'tree-sitter-langs-build) (princ tree-sitter-langs--bundle-version))")
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$BUNDLE_VERSION"
     cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-create-bundle))"
     ls

@@ -4,9 +4,3 @@ steps:
   inputs:
     targetPath: langs/tree-sitter-grammars-$(BUNDLE_OS)-$(BUNDLE_VERSION).tar.gz
     artifactName: tree-sitter-grammars-$(BUNDLE_OS)
-
-- task: PublishPipelineArtifact@1
-  displayName: Save tree-sitter-langs-$(BUNDLE_VERSION).tar for $(BUNDLE_OS)
-  inputs:
-    targetPath: langs/dist/tree-sitter-langs-$(BUNDLE_VERSION).tar
-    artifactName: tree-sitter-langs-$(BUNDLE_OS)
