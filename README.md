@@ -33,7 +33,12 @@ If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for De
     ```emacs-lisp
     (require 'tree-sitter)
     (require 'tree-sitter-langs)
-    (add-hook 'rust-mode-hook #'tree-sitter-mode)
+    (global-tree-sitter-mode)
+    ```
+- Enable tree-based syntax highlighting for supported languages:
+    ```emacs-lisp
+    (require 'tree-sitter-hl)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
     ```
 - Show the debug view of a buffer's parse tree
     ```emacs-lisp

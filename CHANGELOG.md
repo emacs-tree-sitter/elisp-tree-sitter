@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Added `global-tree-sitter-mode`.
+- Added library `tree-sitter-hl`, which provides query-based syntax highlighting by overriding certain parts of `font-lock`.
+- Reworked query APIs for performance and clarity, most notably `ts-make-query`, `ts-query-matches`, `ts-query-captures`.
+- Fixed incorrect parsing caused by misunderstandings of Emacs's clumsy change tracking machinery.
 
 ## [0.6.0] - 2020-04-11
 - Renamed `ts-parse` into `ts-parse-chunks`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
