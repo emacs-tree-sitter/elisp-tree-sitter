@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.1.0
-;; Package-Requires: ((emacs "25.1") (tree-sitter "0.4.0"))
+;; Version: 0.4.0
+;; Package-Requires: ((emacs "25.1") (tree-sitter "0.7.0"))
 ;; License: MIT
 
 ;;; Commentary:
@@ -43,19 +43,29 @@
 (eval-when-compile
   (require 'pcase))
 
+(defvar tree-sitter-langs--testing)
+(eval-when-compile
+  (unless (bound-and-true-p tree-sitter-langs--testing)
+    (tree-sitter-langs-install-grammars :skip-if-installed)))
+
 (defun tree-sitter-langs-ensure (lang-symbol)
   "Return the language object identified by LANG-SYMBOL.
 If it cannot be loaded, this function tries to compile the grammar.
 
+This function also tries to copy highlight query from the language repo, if it
+exists.
+
 See `tree-sitter-langs-repos'."
-  (condition-case nil
-      (tree-sitter-require lang-symbol)
-    (error
-     (display-warning 'tree-sitter-test
-                      (format "Could not load grammar for `%s', trying to compile it"
-                              lang-symbol))
-     (tree-sitter-langs-compile lang-symbol)
-     (tree-sitter-require lang-symbol))))
+  (unwind-protect
+      (condition-case nil
+          (tree-sitter-require lang-symbol)
+        (error
+         (display-warning 'tree-sitter-test
+                          (format "Could not load grammar for `%s', trying to compile it"
+                                  lang-symbol))
+         (tree-sitter-langs-compile lang-symbol)
+         (tree-sitter-require lang-symbol)))
+    (tree-sitter-langs--copy-query lang-symbol)))
 
 ;;; Add the bundle directory.
 (cl-pushnew tree-sitter-langs--bin-dir
@@ -90,11 +100,10 @@ See `tree-sitter-langs-repos'."
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return default syntax highlighting patterns for LANG-SYMBOL."
-  (let ((query-path (cl-reduce
-                     (lambda (dir name) (expand-file-name name dir))
-                     `("repos" ,(format "tree-sitter-%s" lang-symbol)
-                       "queries" "highlights.scm")
-                     :initial-value tree-sitter-langs--dir)))
+  (let ((query-path (concat (file-name-as-directory
+                             (concat tree-sitter-langs--queries-dir
+                                     (symbol-name lang-symbol)))
+                            "highlights.scm")))
     (with-temp-buffer
       (insert-file-contents query-path)
       (buffer-string))))

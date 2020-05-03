@@ -143,8 +143,6 @@ If you want to hack on the high-level features (in Lisp) only:
     (require 'tree-sitter-langs-build)
     ;; Download pre-compiled `tree-sitter-dyn'.
     (tree-sitter-download-dyn-module)
-    ;; Download pre-compiled language grammars.
-    (tree-sitter-langs-install)
     ```
 - Make changes to the `.el` files.
 - Add tests to `tree-sitter-tests.el` and run them with `./bin/test` (`.\bin\test` on Windows).

@@ -34,15 +34,17 @@
   (file-name-as-directory
    (concat tree-sitter-langs--dir "bin")))
 
-(defconst tree-sitter-langs--version
-  (let ((main-file (locate-library "tree-sitter-langs.el")))
-    (unless main-file
-      (error "Could not find tree-sitter-langs.el"))
-    (with-temp-buffer
-      (insert-file-contents main-file)
-      (unless (re-search-forward ";; Version: \\(.+\\)")
-        (error "Could not determine tree-sitter-langs version"))
-      (match-string 1))))
+(defconst tree-sitter-langs--queries-dir
+  (file-name-as-directory
+   (concat tree-sitter-langs--dir "queries")))
+
+(defconst tree-sitter-langs--bundle-version "0.3.0"
+  "Version of the grammar bundle.
+This is bumped whenever `tree-sitter-langs-repos' is updated, which should be
+infrequent (grammar-only changes). It is different from the version of
+`tree-sitter-langs', which can change frequently (when queries change).")
+
+(defconst tree-sitter-langs--bundle-version-file "BUNDLE-VERSION")
 
 (defconst tree-sitter-langs--os
   (pcase system-type
@@ -54,45 +56,48 @@
 (defun tree-sitter-langs--bundle-file (&optional ext version os)
   "Return the grammar bundle file's name, with optional EXT.
 If VERSION and OS are not spcified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
   (format "tree-sitter-grammars-%s-%s.tar%s"
           (or os tree-sitter-langs--os)
-          (or version tree-sitter-langs--version)
+          (or version tree-sitter-langs--bundle-version)
           (or ext "")))
 
 (defun tree-sitter-langs--bundle-url (&optional version os)
   "Return the URL to download the grammar bundle.
-If VERSION and OS are not spcified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'."
+If VERSION and OS are not specified, use the defaults of
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
+  ;; TODO: Use https://elpa.ubolonton.org/packages/bin as the canonical source.
   (format "https://dl.bintray.com/ubolonton/emacs/%s"
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
 (defconst tree-sitter-langs-repos
   '((agda       "v1.2.1")
-    (bash       "v0.16.0")
-    (c          "v0.16.0")
+    (bash       "v0.16.1")
+    (c          "0.16.1")
     (c-sharp    "v0.16.1")
-    (cpp        "v0.16.0")
+    (cpp        "7234819")
     (css        "v0.16.0")
     (fluent     "v0.12.0")
-    (go         "v0.16.0")
+    (go         "d6b3306")
     (haskell    "v0.13.0")
     (html       "v0.16.0")
-    (java       "v0.16.0")
-    (javascript "v0.16.0")
+    (java       "c43d89e")
+    (javascript "cef83f4")
     (jsdoc      "v0.16.0")
     (json       "v0.16.0")
     (julia      "v0.0.3")
     (ocaml      "v0.15.0")
     (php        "v0.16.1")
-    (python     "v0.16.0")
-    (ruby       "v0.16.1")
+    (python     "v0.16.1")
+    (ruby       "9cd3d80")
     (rust       "3e5ec5a")
     (scala      "v0.13.0")
     (swift      "a22fa5e")
-    (typescript "v0.16.1" ("typescript" "tsx")))
-  "List of language symbols and their corresponding grammar sources.")
+    (typescript "a80ef55" ("typescript" "tsx")))
+  "List of language symbols and their corresponding grammar sources.
+Note that these are mostly for the grammars. We treat the queries they include
+as references, instead of using them directly for syntax highlighting.")
 
 (defconst tree-sitter-langs--repos-dir
   (file-name-as-directory
@@ -238,26 +243,50 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                ;; https://unix.stackexchange.com/questions/13377/tar/13381#13381.
                (tar-opts (pcase system-type
                            ('windows-nt '("--force-local")))))
-          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files)))
+          (apply #'tree-sitter-langs--call "tar" "-zcvf" tar-file (append tar-opts files))
+          (with-temp-file tree-sitter-langs--bundle-version-file
+            (let ((coding-system-for-write 'utf-8))
+              (insert tree-sitter-langs--bundle-version))))
       (when errors
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (display-warning 'tree-sitter
                          (format "Could not compile grammars:\n%s" (pp-to-string errors)))))))
 
 ;;;###autoload
-(defun tree-sitter-langs-install (&optional version os keep-bundle)
+(defun tree-sitter-langs-install-grammars (&optional skip-if-installed version os keep-bundle)
   "Download and install the specified VERSION of the language grammar bundle.
-If VERSION and OS are not specified, use the defaults of
-`tree-sitter-langs--version' and `tree-sitter-langs--os'.
+If VERSION or OS is not specified, use the default of
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
+
+This installs the grammar bundle even if the same version was already installed,
+unless SKIP-IF-INSTALLED is non-nil.
 
 The download bundle file is deleted after installation, unless KEEP-BUNDLE is
 non-nil."
-  (interactive)
-  (let ((dir tree-sitter-langs--bin-dir))
-    (unless (file-directory-p dir)
-      (make-directory dir t))
-    (let ((default-directory dir)
-          (bundle-file (tree-sitter-langs--bundle-file ".gz" version os)))
+  (interactive (list
+                nil
+                (read-string "Bundle version: " tree-sitter-langs--bundle-version)
+                tree-sitter-langs--os
+                nil))
+  (unless (file-directory-p tree-sitter-langs--bin-dir)
+    (make-directory tree-sitter-langs--bin-dir t))
+  (let* ((version (or version tree-sitter-langs--bundle-version))
+         (default-directory tree-sitter-langs--bin-dir)
+         (bundle-file (tree-sitter-langs--bundle-file ".gz" version os))
+         (current-version (when (file-exists-p
+                                 tree-sitter-langs--bundle-version-file)
+                            (with-temp-buffer
+                              (let ((coding-system-for-read 'utf-8))
+                                (insert-file-contents
+                                 tree-sitter-langs--bundle-version-file)
+                                (buffer-string))))))
+    (cl-block nil
+      (if (string= version current-version)
+          (if skip-if-installed
+              (progn (message "tree-sitter-langs: Grammar bundle v%s was already installed; skipped" version)
+                     (cl-return))
+            (message "tree-sitter-langs: Grammar bundle v%s was already installed; reinstalling" version))
+        (message "tree-sitter-langs: Installing grammar bundle v%s (was v%s)" version current-version))
       ;; FIX: Handle HTTP errors properly.
       (url-copy-file (tree-sitter-langs--bundle-url version os)
                      bundle-file 'ok-if-already-exists)
@@ -265,10 +294,15 @@ non-nil."
         (insert-file-contents bundle-file)
         (tar-mode)
         (tar-untar-buffer))
+      ;; FIX: This should be a metadata file in the bundle itself.
+      (with-temp-file tree-sitter-langs--bundle-version-file
+        (let ((coding-system-for-write 'utf-8))
+          (insert version)))
       (unless keep-bundle
         (delete-file bundle-file 'trash))
-      (when (y-or-n-p (format "Show installed grammars in %s? " dir))
-        (with-current-buffer (find-file dir)
+      (when (and (called-interactively-p 'any)
+                 (y-or-n-p (format "Show installed grammars in %s? " tree-sitter-langs--bin-dir)))
+        (with-current-buffer (find-file tree-sitter-langs--bin-dir)
           (when (bound-and-true-p dired-omit-mode)
             (dired-omit-mode -1)))))))
 
@@ -302,6 +336,34 @@ non-nil."
       (url-copy-file url gz-file)
       ;; FIX: Uncompressing with `dired-compress-file' doesn't work on Windows.
       (dired-compress-file gz-file))))
+
+(defun tree-sitter-langs--copy-query (lang-symbol &optional force)
+  "Copy highlights.scm file of LANG-SYMBOL to `tree-sitter-langs--queries-dir'.
+This assumes the repo has already been set up, for example by
+`tree-sitter-langs-compile'."
+  (let ((src (thread-first tree-sitter-langs--repos-dir
+               (concat (format "tree-sitter-%s" lang-symbol))
+               file-name-as-directory (concat "queries")
+               file-name-as-directory (concat "highlights.scm"))))
+    (when (file-exists-p src)
+      (let ((dst-dir  (file-name-as-directory
+                       (concat tree-sitter-langs--queries-dir
+                               (symbol-name lang-symbol)))))
+        (unless (file-directory-p dst-dir)
+          (make-directory dst-dir t))
+        (message "Copying highlights.scm for %s" lang-symbol)
+        (when force
+          (let ((default-directory dst-dir))
+            (when (file-exists-p "highlights.scm")
+              (delete-file "highlights.scm"))))
+        (copy-file src dst-dir (not force))))))
+
+(defun tree-sitter-langs--copy-queries ()
+  "Copy highlights.scm files to `tree-sitter-langs--queries-dir'.
+This assumes the repos have already been cloned set up, for example by
+`tree-sitter-langs-create-bundle'."
+  (pcase-dolist (`(,lang-symbol . _) tree-sitter-langs-repos)
+    (tree-sitter-langs--copy-query lang-symbol :force)))
 
 (provide 'tree-sitter-langs-build)
 ;;; tree-sitter-langs-build.el ends here

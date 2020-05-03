@@ -2,7 +2,6 @@
 
 (files "tree-sitter-langs.el"
        "tree-sitter-langs-build.el"
-       ("bin"
-        "bin/*.dylib"
-        "bin/*.dll"
-        "bin/*.so"))
+       ;; XXX: Figure out how to include only .scm files under a level of directories.
+       ("queries"
+        "queries/*"))
