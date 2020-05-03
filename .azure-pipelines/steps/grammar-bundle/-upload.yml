@@ -37,19 +37,6 @@ steps:
   displayName: List compiled binaries
   workingDirectory: langs/bin
 
-- task: ExtractFiles@1
-  displayName: Extract tree-sitter-langs archive (.tar)
-  inputs:
-    archiveFilePatterns: langs/macos/tree-sitter-langs-*.tar
-    destinationFolder: /tmp
-    cleanDestinationFolder: no
-
-- task: CopyFiles@2
-  displayName: Copy highlighting queries
-  inputs:
-    sourceFolder: /tmp/tree-sitter-langs-$(BUNDLE_VERSION)/queries
-    targetFolder: langs/queries
-
 - bash: cask package
   displayName: Create a "universal" tree-sitter-langs package
   workingDirectory: langs

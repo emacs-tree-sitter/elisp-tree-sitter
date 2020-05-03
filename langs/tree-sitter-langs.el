@@ -57,7 +57,7 @@ See `tree-sitter-langs-repos'."
                                   lang-symbol))
          (tree-sitter-langs-compile lang-symbol)
          (tree-sitter-require lang-symbol)))
-    (tree-sitter-langs-copy-query lang-symbol)))
+    (tree-sitter-langs--copy-query lang-symbol)))
 
 ;;; Add the bundle directory.
 (cl-pushnew tree-sitter-langs--bin-dir

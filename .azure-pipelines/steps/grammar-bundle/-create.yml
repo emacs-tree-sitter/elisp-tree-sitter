@@ -4,7 +4,6 @@ steps:
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$bundle_version"
     cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-create-bundle))"
     ls
-    cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-copy-queries))"
     cask package
   displayName: Create grammar bundle (Windows)
   workingDirectory: langs
@@ -16,7 +15,6 @@ steps:
     echo "##vso[task.setvariable variable=BUNDLE_VERSION]$BUNDLE_VERSION"
     cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-create-bundle))"
     ls
-    cask eval "(progn (require 'tree-sitter-langs-build) (tree-sitter-langs-copy-queries))"
     cask package
   displayName: Create grammar bundle
   workingDirectory: langs
