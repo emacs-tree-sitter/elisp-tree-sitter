@@ -1,5 +1,10 @@
 (comment) @comment
 
+;; (selectors) @function
+
+(id_selector) @function
+(class_selector) @type
+
 (tag_name) @tag
 (nesting_selector) @tag
 (universal_selector) @tag
@@ -26,10 +31,10 @@
 (pseudo_element_selector (tag_name) @attribute)
 (pseudo_class_selector (class_name) @attribute)
 
-(class_name) @property
-(id_name) @property
+;; (class_name) @property
+;; (id_name) @property
 (namespace_name) @property
-(property_name) @property
+(property_name) @variable
 (feature_name) @property
 
 (attribute_name) @attribute
@@ -55,9 +60,11 @@
 (string_value) @string
 (color_value) @string.special
 
+(unit) @type
 (integer_value) @number
 (float_value) @number
-(unit) @type
+(plain_value) @keyword
+;; (color_value) @attribute
 
 "#" @punctuation.delimiter
 "," @punctuation.delimiter
