@@ -128,7 +128,15 @@
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:variable.parameter '((default :inherit font-lock-variable-name-face))
-  "Faced used for variable.parameter"
+  "Face used for variable.parameter"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:tag '((default :inherit font-lock-builtin-face))
+  "Face used for tag"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:number '((default :inherit font-lock-constant-face))
+  "Face used for number"
   :group 'tree-sitter-hl-faces)
 
 ;;; ----------------------------------------------------------------------------
