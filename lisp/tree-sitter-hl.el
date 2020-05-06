@@ -356,7 +356,19 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
             nil :local)
   ;; XXX
   (add-function :override (local 'font-lock-fontify-region-function)
-                #'tree-sitter-hl--highlight-region))
+                #'tree-sitter-hl--highlight-region)
+  ;; When the major mode did not set up `font-lock-defaults', we integrate with
+  ;; `jit-lock-mode' directly. This allows turning on tree-based syntax
+  ;; highlighting by "faking the major mode". For example:
+  ;;
+  ;; (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
+  ;;
+  ;; TODO: Allow user to set `tree-sitter-language' directly instead.
+  (unless font-lock-set-defaults
+    (unless jit-lock-mode
+      (jit-lock-mode t))
+    (unless jit-lock-functions
+      (jit-lock-register #'tree-sitter-hl--highlight-region))))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
@@ -368,8 +380,13 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (setq tree-sitter-hl--query nil)
   (when tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor nil)
-    ;; Invalidate the buffer only if we were actually enabled previously.
-    (font-lock-flush)))
+    ;; Invalidate the buffer, only if we were actually enabled previously.
+    (font-lock-flush))
+  ;; Remove direct integration with `jit-lock-mode'.
+  (jit-lock-unregister #'tree-sitter-hl--highlight-region)
+  (unless font-lock-set-defaults
+    (jit-lock-mode nil)
+    (font-lock-unfontify-buffer)))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-hl-mode
