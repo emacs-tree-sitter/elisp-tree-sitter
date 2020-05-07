@@ -292,13 +292,8 @@ tree is held (since nodes internally reference the tree)."
                       (get-text-property beg 'face)))))))
 
 (ert-deftest hl::face-mapping ()
-  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
-    (ert-info ("Keywords should be highlighted by default")
-      (tree-sitter-hl-mode)
-      (font-lock-ensure)
-      (should (memq 'tree-sitter-hl-face:keyword (get-text-property 1 'face))))
-    (tree-sitter-hl-mode -1)
-    (ert-info ("Keywords should not be highlighted if their capture name is disabled")
+  (ert-info ("Keywords should not be highlighted if their capture name is disabled")
+    (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
       ;; Disable keyword highlighting.
       (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
                     (lambda (capture-name)
@@ -307,9 +302,25 @@ tree is held (since nodes internally reference the tree)."
       (font-lock-ensure)
       (should (null (get-text-property 1 'face)))
       (ert-info ("Other elements should still be highlighted")
-        (should-not (null (next-single-property-change 1 'face)))))
-    (tree-sitter-hl-mode -1)
-    (ert-info ("Nothing should be highlighted if all capture names are disabled")
+        (should-not (null (next-single-property-change 1 'face))))))
+  (ert-info ("Keywords should be highlighted by default")
+    (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (memq 'tree-sitter-hl-face:keyword (get-text-property 1 'face)))))
+  (ert-info ("Keywords should not be highlighted if their capture name is disabled")
+    (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+      ;; Disable keyword highlighting.
+      (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
+                    (lambda (capture-name)
+                      (not (string= capture-name "keyword"))))
+      (tree-sitter-hl-mode)
+      (font-lock-ensure)
+      (should (null (get-text-property 1 'face)))
+      (ert-info ("Other elements should still be highlighted")
+        (should-not (null (next-single-property-change 1 'face))))))
+  (ert-info ("Nothing should be highlighted if all capture names are disabled")
+    (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
       (add-function :override (local 'tree-sitter-hl-face-mapping-function)
                     (lambda (capture-name) nil))
       (tree-sitter-hl-mode)

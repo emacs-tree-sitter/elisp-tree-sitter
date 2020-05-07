@@ -357,18 +357,19 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   ;; XXX
   (add-function :override (local 'font-lock-fontify-region-function)
                 #'tree-sitter-hl--highlight-region)
-  ;; When the major mode did not set up `font-lock-defaults', we integrate with
-  ;; `jit-lock-mode' directly. This allows turning on tree-based syntax
-  ;; highlighting by "faking the major mode". For example:
+  ;; When `font-lock-defaults' is not set up, `font-lock-mode' only does a
+  ;; partial initialization. In that case, we initialize it directly. This
+  ;; allows turning on tree-based syntax highlighting by temporarily binding
+  ;; `major-mode', even though such a major mode may not be installed, or does
+  ;; not exist. For example:
   ;;
-  ;; (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
+  ;;     (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
   ;;
-  ;; TODO: Allow user to set `tree-sitter-language' directly instead.
+  ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
+  ;; e.g. so that fontification is updated in-time, instead of eventually in
+  ;; some cases.
   (unless font-lock-set-defaults
-    (unless jit-lock-mode
-      (jit-lock-mode t))
-    (unless jit-lock-functions
-      (jit-lock-register #'tree-sitter-hl--highlight-region))))
+    (font-lock-turn-on-thing-lock)))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
@@ -382,11 +383,10 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     (setq tree-sitter-hl--query-cursor nil)
     ;; Invalidate the buffer, only if we were actually enabled previously.
     (font-lock-flush))
-  ;; Remove direct integration with `jit-lock-mode'.
-  (jit-lock-unregister #'tree-sitter-hl--highlight-region)
+  ;; If we did a hackish initialization of `font-lock-mode', de-initialize it.
   (unless font-lock-set-defaults
-    (jit-lock-mode nil)
-    (font-lock-unfontify-buffer)))
+    (font-lock-unfontify-buffer)
+    (font-lock-turn-off-thing-lock)))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-hl-mode

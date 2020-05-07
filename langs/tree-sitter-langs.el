@@ -111,6 +111,7 @@ See `tree-sitter-langs-repos'."
 (defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
   "Use syntax highlighting patterns provided by `tree-sitter-langs'."
   (unless tree-sitter-hl-default-patterns
+    ;; TODO: Get lang symbol from `tree-sitter-language' instead.
     (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
       (setq tree-sitter-hl-default-patterns
             (tree-sitter-langs--hl-default-patterns lang-symbol)))))
