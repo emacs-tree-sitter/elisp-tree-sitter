@@ -352,11 +352,11 @@ This assumes the repo has already been set up, for example by
         (unless (file-directory-p dst-dir)
           (make-directory dst-dir t))
         (message "Copying highlights.scm for %s" lang-symbol)
-        (when force
-          (let ((default-directory dst-dir))
-            (when (file-exists-p "highlights.scm")
-              (delete-file "highlights.scm"))))
-        (copy-file src dst-dir (not force))))))
+        (let ((default-directory dst-dir))
+          (if (file-exists-p "highlights.scm")
+              (when force
+                (copy-file src dst-dir :force))
+            (copy-file src dst-dir)))))))
 
 (defun tree-sitter-langs--copy-queries ()
   "Copy highlights.scm files to `tree-sitter-langs--queries-dir'.
