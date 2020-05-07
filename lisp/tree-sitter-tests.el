@@ -335,6 +335,7 @@ tree is held (since nodes internally reference the tree)."
     (require 'rust-mode)
     (rust-mode)
     (font-lock-mode)
+    (font-lock-set-defaults)
     (tree-sitter-hl-mode)
     (garbage-collect)
     (message "tree-sitter-hl  1 %s" (benchmark-run (font-lock-ensure)))
