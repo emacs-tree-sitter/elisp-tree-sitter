@@ -67,12 +67,12 @@
   "Face used for function.special"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.method '((default :inherit font-lock-function-name-face))
-  "Face used for function.method"
+(defface tree-sitter-hl-face:function.call '((default :inherit (link font-lock-function-name-face) :underline nil))
+  "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.call '((default :inherit link :underline nil))
-  "Face used for function.call"
+(defface tree-sitter-hl-face:function.method '((default :inherit tree-sitter-hl-face:function.call))
+  "Face used for function.method"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:identifier '((default :inherit font-lock-function-name-face))
@@ -91,7 +91,7 @@
   "Face used for operator"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:property '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-hl-face:property '((default :inherit font-lock-variable-name-face :slant italic))
   "Face used for property"
   :group 'tree-sitter-hl-faces)
 
@@ -109,6 +109,14 @@
 
 (defface tree-sitter-hl-face:string '((default :inherit font-lock-string-face))
   "Face used for string"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:doc '((default :inherit font-lock-doc-face))
+  "Face used for doc"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:embedded '((default :inherit default))
+  "Face used for embedded"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:type '((default :inherit font-lock-type-face))
@@ -273,6 +281,28 @@ also expects VALUE to be a single value, not a list."
       (unless (memq value prev)
         (put-text-property start next prop
                            (append prev (list value))
+                           object))
+      (setq start next))))
+
+(defun tree-sitter-hl--prepend-text-property (start end prop value &optional object)
+  "Prepend VALUE to PROP of the text from START to END.
+This is similar to `font-lock-prepend-text-property', but deduplicates values. It
+also expects VALUE to be a single value, not a list."
+  (let (next prev)
+    (while (/= start end)
+      (setq next (next-single-property-change start prop object end)
+            prev (get-text-property start prop object))
+      ;; Canonicalize old forms of face property.
+      (and (memq prop '(face font-lock-face))
+           (listp prev)
+           (or (keywordp (car prev))
+               (memq (car prev) '(foreground-color background-color)))
+           (setq prev (list prev)))
+      (unless (listp prev)
+        (setq prev (list prev)))
+      (unless (memq value prev)
+        (put-text-property start next prop
+                           (cons value prev)
                            object))
       (setq start next))))
 
