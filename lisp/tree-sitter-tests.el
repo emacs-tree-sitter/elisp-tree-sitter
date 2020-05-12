@@ -348,6 +348,11 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)
     (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
 
+(ert-deftest hl::hack ()
+  ;; (ts-hack "/opt/local/bin/emacs" "current_thread")
+  ;; (ts-hack "/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs" "current_thread")
+  (ts-hack "/Applications/MacPorts/VLC.app/Contents/MacOS/VLC" "current_thread"))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
