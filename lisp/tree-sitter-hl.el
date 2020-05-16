@@ -47,12 +47,16 @@
   "Face used for constructor"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:escape '(())
+(defface tree-sitter-hl-face:escape '((default :inherit font-lock-regexp-grouping-backslash))
   "Face used for escape"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:function '((default :inherit font-lock-function-name-face))
   "Face used for function"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:function.method '((default :inherit tree-sitter-hl-face:function))
+  "Face used for function.method"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:function.builtin '((default :inherit font-lock-builtin-face))
@@ -71,10 +75,6 @@
   "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.method '((default :inherit tree-sitter-hl-face:function.call))
-  "Face used for function.method"
-  :group 'tree-sitter-hl-faces)
-
 (defface tree-sitter-hl-face:identifier '((default :inherit font-lock-function-name-face))
   "Face used for identifier"
   :group 'tree-sitter-hl-faces)
@@ -91,19 +91,19 @@
   "Face used for operator"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:property '((default :inherit font-lock-variable-name-face :slant italic))
-  "Face used for property"
+(defface tree-sitter-hl-face:property '((default :inherit font-lock-constant-face))
+  "Face used for property.declaration"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:punctuation '(())
   "Face used for punctuation"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:punctuation.bracket '(())
+(defface tree-sitter-hl-face:punctuation.bracket '((default :inherit tree-sitter-hl-face:punctuation))
   "Face used for punctuation.bracket"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:punctuation.delimiter '(())
+(defface tree-sitter-hl-face:punctuation.delimiter '((default :inherit tree-sitter-hl-face:punctuation))
   "Face used for punctuation.delimiter"
   :group 'tree-sitter-hl-faces)
 
@@ -123,6 +123,14 @@
   "Faced used for type"
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:type.parameter '((default :inherit font-lock-variable-name-face))
+  "Faced used for type.parameter"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:type.argument '((default :inherit tree-sitter-hl-face:type))
+  "Faced used for type.argument"
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:type.builtin '((default :inherit font-lock-builtin-face))
   "Face used for type.builtin"
   :group 'tree-sitter-hl-faces)
@@ -135,7 +143,7 @@
   "Face used for variable.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:variable.parameter '((default :inherit font-lock-variable-name-face))
+(defface tree-sitter-hl-face:variable.parameter '((default :inherit tree-sitter-hl-face:variable))
   "Face used for variable.parameter"
   :group 'tree-sitter-hl-faces)
 
@@ -311,8 +319,9 @@ also expects VALUE to be a single value, not a list."
   (pcase-let* ((`(,face . (,beg-byte . ,end-byte)) capture)
                (beg (byte-to-position beg-byte))
                (end (byte-to-position end-byte)))
-    ;; TODO: Add an option to disable unknown faces earlier, when compiling the
-    ;; query from patterns.
+    ;; TODO: Make more specific face override more generic face. For example,
+    ;; `tree-sitter-hl-face:function.call' should override
+    ;; `tree-sitter-hl-face:function'.
     (when (facep face)
       (tree-sitter-hl--append-text-property beg end 'face face))))
 
