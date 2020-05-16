@@ -81,7 +81,6 @@ If VERSION and OS are not specified, use the defaults of
     (css        "23f2cb9")
     (fluent     "858fdd6")
     (go         "f5cae4e")
-    (haskell    "2a0aa1c")
     (html       "92c17db")
     (java       "0b18a22")
     (javascript "687e20a")
