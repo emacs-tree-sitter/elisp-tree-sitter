@@ -12,8 +12,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 emacs = "0.14.0"
-libloading = "0.5.1"
-tree-sitter = "0.6.3"
+libloading = "0.6.2"
+tree-sitter = "0.16.0"
 
 [profile.release]
 opt-level = 3
