@@ -1,10 +1,10 @@
 ; Identifier naming conventions
 
 ((identifier) @constructor
- (match? @constructor "^[A-Z]"))
+ (#match? @constructor "^[A-Z]"))
 
 ((identifier) @constant
- (match? @constant "^[A-Z][A-Z_]*$"))
+ (#match? @constant "^[A-Z][A-Z_]*$"))
 
 ; Function calls
 
@@ -12,7 +12,7 @@
 
 ((call
   function: (identifier) @function.builtin)
- (match?
+ (#match?
    @function.builtin
    "^(abs|all|any|ascii|bin|bool|breakpoint|bytearray|bytes|callable|chr|classmethod|compile|complex|delattr|dict|dir|divmod|enumerate|eval|exec|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|isinstance|issubclass|iter|len|list|locals|map|max|memoryview|min|next|object|oct|open|ord|pow|print|property|range|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|vars|zip|__import__)$"))
 (call
@@ -26,7 +26,7 @@
   name: (identifier) @function)
 
 ((identifier) @constant.builtin
- (eq? @constant.builtin "self"))
+ (#eq? @constant.builtin "self"))
 
 (assignment (expression_list (identifier) @variable) (*))
 
@@ -56,9 +56,9 @@
 
 (comment) @comment
 ((string) @constant
- (match? @constant "^'"))
-;; ((string) @doc
-;;  (match? @doc "^\"\"\""))
+ (#match? @constant "^'"))
+((string) @doc
+ (#match? @doc "^\"\"\""))
 (string) @string
 (escape_sequence) @escape
 
