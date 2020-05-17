@@ -34,15 +34,23 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
   module-file-suffix ; should be non-nil
 #+end_src
 
+{{% notice note %}}The methods below only work for macOS, Windows, Linux on x86_64, since they download pre-compiled binaries. For other systems, you will have to build from source.{{% /notice %}}
+
 ** Installing from an ELPA
 - Add tree-sitter's ELPA to ~package-archives~:
     #+begin_src emacs-lisp
       (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
     #+end_src
-- ~M-x package-refresh-contents~.
+- Run ~M-x package-refresh-contents~.
 - Install ~tree-sitter~ and ~tree-sitter-langs~ packages.
+- Add this to your config:
+    #+begin_src emacs-lisp
+      (require 'tree-sitter-langs)
+    #+end_src
 
 ** Installing with straight.el
+TODO
+
 ** Installing from Source
 - Clone the source repo:
     #+begin_src sh
@@ -55,14 +63,14 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
       (add-to-list 'load-path "/path-to/emacs-tree-sitter/langs")
     #+end_src
 
-- Evaluate this  to download the necessary binaries, /once/:
+- Evaluate this to download the necessary binaries, /once/:
     #+begin_src emacs-lisp
       (require 'tree-sitter-langs-build)
       ;; Download pre-compiled `tree-sitter-dyn'.
       (tree-sitter-download-dyn-module)
     #+end_src
 
-- Load the package:
+- Load the libraries in your config:
     #+begin_src emacs-lisp
       (require 'tree-sitter)
       (require 'tree-sitter-hl)
@@ -75,30 +83,52 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 :PROPERTIES:
 :EXPORT_FILE_NAME: getting-started
 :END:
-** Turn on Syntax Highlighting
 ** Tree-sitter Minor Mode
-The minor mode ~tree-sitter~ provides a buffer-local syntax tree, which is kept up-to-date with changes to the buffer's text.
+The minor mode ~tree-sitter-mode~ provides a buffer-local syntax tree, which is kept up-to-date with changes to the buffer's text.
 
-It can be enabled in supported major modes:
+It can be toggled in a buffer by the command ~tree-sitter-mode~, or enabled through major mode hooks:
 
 #+begin_src emacs-lisp
-  (require 'tree-sitter)
-  (require 'tree-sitter-langs)
-
   (add-hook 'rust-mode-hook #'tree-sitter-mode)
+#+end_src
+
+To enable in for all supported major modes:
+
+#+begin_src emacs-lisp
+  (global-tree-sitter-mode)
 #+end_src
 
 For a full list of supported major modes, check the variable ~tree-sitter-major-mode-language-alist~.
 
-~tree-sitter-node-at-point~
-~tree-sitter-save-excursion~
+# ~tree-sitter-node-at-point~
+# ~tree-sitter-save-excursion~
+
+** Syntax Highlighting
+The minor mode ~tree-sitter-hl-mode~ overrides the regex-based syntax highlighting provided by ~font-lock-mode~, using the syntax tree provided by ~tree-sitter-mode~.
+
+It can be toggled in a buffer by the command ~tree-sitter-hl-mode~, or enabled through major mode hooks:
+
+#+begin_src emacs-lisp
+  (add-hook 'rust-mode-hook #'tree-sitter-hl-mode)
+#+end_src
+
+To enable it whenever possible:
+
+#+begin_src emacs-lisp
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+#+end_src
+
+# TODO: Example screenshots.
 
 ** View the Syntax Tree
-To view the current buffer's syntax tree, run ~M-x tree-sitter-debug-enable~.
+Run ~M-x tree-sitter-debug-mode~ to show the current buffer's syntax tree in a separate buffer.
 
 {{% notice warning %}}Printing the syntax tree can be slow for very large buffers, as it hasn't been optimized yet.{{% /notice %}}
 
-** Play around with Tree Query
+# TODO: Example screenshots.
+
+** Play around with Tree Queries
 Run ~M-x tree-sitter-query-builder~ to open the query playground, where you can write tree queries and see matches highlighted in the source buffer.
 
 Here are some example queries to try:
@@ -121,12 +151,18 @@ Here are some example queries to try:
 
 For more details on tree queries, see the [[*Querying][section on Queyring]].
 
+# TODO: Example screenshots.
 
 * Syntax Highlighting
 ** Custom Highlighting Patterns
+- [ ] Customize tree-sitter-hl faces
+- [ ] Use different faces for some capture names
+- [ ] Use custom capture names
 ** Interface for Modes
+- [ ] Major mode: tree-sitter-hl-default-patterns
+- [ ] Minor mode: tree-sitter-hl-add-patterns
 ** Contributing Highlighting Patterns
-TODO: Describe how to set up a live env to see new patterns highlighted after saving =highlights.scm=.
+- [ ] Set up a live env to see new patterns highlighted after saving =highlights.scm=.
 * API Overview
 :PROPERTIES:
 :EXPORT_FILE_NAME: api-overview
