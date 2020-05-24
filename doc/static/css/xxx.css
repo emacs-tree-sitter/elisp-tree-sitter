@@ -1,17 +1,18 @@
 /* -------------------------------------------------------------------------- */
 
+
+/* -------------------------------------------------------------------------- */
+
 /* body { */
 /*   background-color: #fdf6e3; */
 /* } */
 
+/* /\* TODO: Pink *\/ */
 /* code { */
 /*   border: 1px solid #DDD; */
 /*   background-color: #EEE; */
 /* } */
 
-body {
-
-}
 
 /* -------------------------------------------------------------------------- */
 /* Spacing */
@@ -28,6 +29,13 @@ body {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Fix wrong vertical alignment of inline code (was `bottom`). */
+
+#body-inner code {
+  vertical-align: baseline;
+}
+
+/* -------------------------------------------------------------------------- */
 
 h1, h2 {
   /* font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; */
@@ -37,6 +45,12 @@ h1, h2 {
 
 h1 {
   font-weight: bold;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -84,10 +98,32 @@ code + .copy-to-clipboard {
 }
 
 /* -------------------------------------------------------------------------- */
+
 #sidebar ul li > div > a {
   width: 100%;
+  padding-left: 0.5rem !important;
+}
+
+#sidebar ul li.active {
+  background: inherit !important;
+}
+
+#sidebar ul.topics ul {
+  padding-bottom: 0.4rem;
 }
 
 #sidebar ul li.active > div > a {
-  /* padding-left: inherit; */
+  /* padding-left: 0.5rem; */
+  /* color: #555 !important; */
+  /* background-color: #fdf6e3; */
+}
+
+#sidebar li.alwaysopen i.fa {
+  display: none;
+}
+
+/* -------------------------------------------------------------------------- */
+
+div.notices p::after {
+  display: none;
 }
