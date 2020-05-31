@@ -1,0 +1,23 @@
+{{- $currentNode := . }}
+{{- $showvisitedlinks := .Site.Params.showVisitedLinks -}}
+
+{{- if eq .Site.Params.ordersectionsby "title"}}
+  {{- range .Site.Sections.ByTitle}}
+    {{- template "section-tree-nav" dict "sect" . "currentnode" $currentNode "showvisitedlinks" $showvisitedlinks}}
+  {{- end}}
+{{- else}}
+  {{- if .Site.Home.Sections}}
+    {{- .Scratch.Set "pages" (.Site.Home.RegularPages | union .Site.Home.Sections) }}
+  {{- else -}}
+    {{- .Scratch.Set "pages" .Site.Home.RegularPages }}
+  {{- end}}
+  {{- $pages := (.Scratch.Get "pages") }}
+  {{- range $pages.ByWeight}}
+    {{- template "section-tree-nav" dict "sect" . "currentnode" $currentNode "showvisitedlinks" $showvisitedlinks}}
+  {{- end}}
+{{- end}}
+
+<!--
+     Even though the partial is overridden, its defined template "section-tree-nav" is still available.
+     XXX WTF: On the surface that seems convenient. In reality, that's confusing template lookup logic...
+-->

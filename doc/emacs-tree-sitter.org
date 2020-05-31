@@ -1,0 +1,391 @@
+#+TITLE: Emacs Tree-sitter
+
+#+HUGO_BASE_DIR: .
+#+HUGO_SECTION: /
+
+# https://docdock.netlify.com/content-organisation/#unfolded-menu-entry-by-default
+#+HUGO_CUSTOM_FRONT_MATTER: :alwaysopen true
+
+* Tree-sitter
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_TYPE: homepage
+:END:
+
+~emacs-tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][tree-sitter]], an incremental parsing system.
+
+It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
+- Faster, fine-grained code highlighting.
+- More flexible code folding.
+- Structural editing (like Paredit, or even better) for non-Lisp code.
+- More informative indexing for imenu.
+
+The author of tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
+
+* Installation
+:PROPERTIES:
+:EXPORT_FILE_NAME: installation
+:END:
+~emacs-tree-sitter~ requires Emacs 25.1 or above, built with dynamic module support. Some Emacs distributions have this disabled by default. To check whether your Emacs has dynamic module support enabled, try evaluating one of these:
+
+#+begin_src emacs-lisp
+  (functionp 'module-load) ; should be t
+
+  module-file-suffix ; should be non-nil
+#+end_src
+
+{{% notice note %}}
+The methods below only work for macOS, Windows, Linux on x86_64, since they download pre-compiled binaries. For other systems, you will have to build from source.
+{{% /notice %}}
+
+** Installing from an ELPA
+- Add tree-sitter's ELPA to ~package-archives~:
+    #+begin_src emacs-lisp
+      (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
+    #+end_src
+- Run ~M-x package-refresh-contents~.
+- Install ~tree-sitter~ and ~tree-sitter-langs~ packages.
+- Add this to your config:
+    #+begin_src emacs-lisp
+      (require 'tree-sitter-langs)
+    #+end_src
+
+** Installing with straight.el
+TODO
+
+** Installing from Source
+- Clone the source repo:
+    #+begin_src sh
+      git clone https://github.com/ubolonton/emacs-tree-sitter
+    #+end_src
+
+- Add its =lisp= and =langs= directories to ~load-path~:
+    #+begin_src emacs-lisp
+      (add-to-list 'load-path "/path-to/emacs-tree-sitter/lisp")
+      (add-to-list 'load-path "/path-to/emacs-tree-sitter/langs")
+    #+end_src
+
+- Evaluate this to download the necessary binaries, /once/:
+    #+begin_src emacs-lisp
+      (require 'tree-sitter-langs-build)
+      ;; Download pre-compiled `tree-sitter-dyn'.
+      (tree-sitter-download-dyn-module)
+    #+end_src
+
+- Load the libraries in your config:
+    #+begin_src emacs-lisp
+      (require 'tree-sitter)
+      (require 'tree-sitter-hl)
+      (require 'tree-sitter-langs)
+      (require 'tree-sitter-debug)
+      (require 'tree-sitter-query)
+    #+end_src
+
+* Getting Started
+:PROPERTIES:
+:EXPORT_FILE_NAME: getting-started
+:END:
+The minor mode ~tree-sitter-mode~ provides a buffer-local syntax tree, which is kept up-to-date with changes to the buffer's text.
+
+It can be toggled in a buffer by the command ~tree-sitter-mode~, or enabled through major mode hooks:
+
+#+begin_src emacs-lisp
+  (add-hook 'rust-mode-hook #'tree-sitter-mode)
+#+end_src
+
+To enable it for all supported major modes:
+
+#+begin_src emacs-lisp
+  (global-tree-sitter-mode)
+#+end_src
+
+For the full list of supported major modes, check the variable ~tree-sitter-major-mode-language-alist~.
+
+# TODO: Describe how to turn it on without installing the corresponding major modes first.
+
+# ~tree-sitter-node-at-point~
+# ~tree-sitter-save-excursion~
+
+** Turn on Syntax Highlighting
+Run ~M-x tree-sitter-hl-mode~ to replace the regex-based highlighting provided by ~font-lock-mode~ with tree-based syntax highlighting.
+
+For more details, see [[*Syntax Highlighting]].
+
+# TODO: Example screenshots.
+
+** View the Syntax Tree
+Run ~M-x tree-sitter-debug-mode~ to show the current buffer's syntax tree in a separate buffer.
+
+{{% notice warning %}}
+Printing the syntax tree can be slow for very large buffers, as it hasn't been optimized yet.
+{{% /notice %}}
+
+# TODO: Example screenshots.
+
+** Play around with Tree Queries
+Run ~M-x tree-sitter-query-builder~ to open the query playground, where you can write tree queries and see matches highlighted in the source buffer.
+
+Here are some example queries to try:
+
+- Rust:
+    #+begin_src scheme
+      (function_item (identifier) @func)
+      (impl_item (type_identifier) @impl)
+    #+end_src
+- Python:
+    #+begin_src scheme
+      (class_definition (identifier) @class)
+      (function_definition (identifier) @func)
+    #+end_src
+- JavaScript:
+    #+begin_src scheme
+      (function_declaration (identifier) @func)
+      (variable_declarator (identifier) @var)
+    #+end_src
+
+For more details on tree queries, see [[*Queries]].
+
+# TODO: Example screenshots.
+
+* Syntax Highlighting
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: syntax-highlighting
+:END:
+** _
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_TITLE: Syntax Highlighting
+:END:
+
+Syntax highlighting is provided by the minor mode ~tree-sitter-hl-mode~. It overrides the regex-based highlighting provided by ~font-lock-mode~, using the syntax tree provided by ~tree-sitter-mode~. It is based on *tree queries*, a system for pattern-matching on Tree-sitter's syntax trees.
+
+It can be toggled in a buffer by the command ~tree-sitter-hl-mode~, or enabled through major mode hooks:
+#+begin_src emacs-lisp
+  (add-hook 'rust-mode-hook #'tree-sitter-hl-mode)
+#+end_src
+
+To enable it whenever possible (assuming the language major modes were already installed):
+#+begin_src emacs-lisp
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+#+end_src
+
+It can also be enabled without installing the corresponding language major modes:
+#+begin_src emacs-lisp
+  (let ((major-mode 'go-mode))
+    (tree-sitter-hl-mode))
+#+end_src
+
+The package ~tree-sitter-langs~ is a language bundle that provides syntax highlighting queries for some languages:
+- C
+- C++
+- CSS
+- Go
+- HTML
+- Java
+- JavaScript
+- PHP
+- Python
+- Ruby
+- Rust
+- TypeScript
+
+{{% notice info %}}
+Most of the queries in the bundle are very basic, as they are copies of those included in the grammar repos. Only the queries for Rust, Python and CSS have received additional work to leverage more of the querying system's expressiveness.
+
+Contribution to highlighting queries is welcome.
+{{% /notice %}}
+
+** Queries
+:PROPERTIES:
+:EXPORT_FILE_NAME: queries
+:END:
+
+A query is a set of patterns, written in a Lisp-like syntax.
+
+{{% notice info %}}
+Queries are language-specific. Different language grammars use different node types and field names. Examples in this section apply to Rust.
+{{% /notice %}}
+
+*** Patterns
+A *pattern* is an S-expression (Lisp form), optionally /preceded/ by a field name, /suffixed/ with a quantifier, and/or /followed/ by a capture name.
+
+# Capture names can follow top-level forms. Field names cannot precede top-level forms.
+
+A node form is a list form whose first element is a symbol (except for the special symbols, described later). The symbol specifies the type of node to match, while the remaining elements describe what the inner structure of a matched node (i.e. its child nodes) should look like.
+#+begin_src scheme
+  ;; Match any function call.
+  (call_expression)
+
+  ;; Match any function call where at least one arg is an identifier.
+  (call_expression (arguments (identifier)))
+#+end_src
+
+# Anonymous Nodes. TODO: Link to an internal section.
+A string literal denotes an *anonymous node*.
+#+begin_src scheme
+  ;; Match the operator `==' .
+  "=="
+#+end_src
+
+*** Captures and Field Names
+# Captures.
+Captures allow associating names with specific nodes in a pattern. A symbol starting with the character ~@~ denotes a *capture name*. It is written after the pattern it refers to. When used for syntax highlighting, capture names are then mapped to display faces, which determine the appearance of the corresponding nodes.
+#+begin_src scheme
+  ;; Match function calls. For each match, the function name is captured
+  ;; under the name `function.call', and the argument list is associated
+  ;; with the name `function.args'.
+  (call_expression
+   (identifier) @function.call
+   (arguments) @function.args)
+#+end_src
+
+# Field Names. TODO: Link to an internal section.
+Certain node types assign unique *field names* to specific child nodes. Within a pattern, a field name is denoted by a symbol ending with the character ~:~, written before the child pattern it refers to.
+#+begin_src scheme
+  ;; Using field names, for clarity.
+  (call_expression
+   function: (identifier) @function.call
+   arguments: (arguments) @function.args)
+#+end_src
+
+*** Groups and Predicates
+# Grouping Sibling Nodes ("group forms").
+A *group* form is a list form whose first element is a node form. It is used to denote a sequence of sibling nodes, and to group predicate forms with node forms.
+#+begin_src scheme
+  ;; Match a comment followed by a function declaration.
+  ((line_comment)
+   (function_item))
+#+end_src
+
+# Predicates ("predicate forms").
+A *predicate* form can appear anywhere in a group form. It is a list form whose first element is a symbol starting with the character ~#~. Each remaining element is either a capture name, or a string literal.
+#+begin_src scheme
+  ;; Match identifiers written in SCREAMING_SNAKE_CASE.
+  ((identifier) @constant
+   (#match? @constant "^[A-Z][A-Z_\\d]+"))
+#+end_src
+
+For syntax highlighting, the supported predicates are currently ~#match?~ and ~#eq?~.
+
+*** Misc
+# Quantification Operators.
+A form can be suffixed by one of the *quantification operators*: at-most-once ~?~, at-least-once ~+~, zero-or-more ~*~.
+#+begin_src scheme
+  ;; Match any function call. Capture a string arg, if any.
+  (call_expression
+    function: (identifier) @function.call
+    arguments: (arguments (string_literal)? @the-string-arg))
+#+end_src
+
+# Wildcard.
+The special *wildcard* symbol ~_~ matches any node (except for anonymous nodes).
+#+begin_src scheme
+  ;; Leaving out child nodes' types, for brevity.
+  (call_expression
+   function: (_) @function.call
+   arguments: (_) @function.args)
+#+end_src
+
+For more details, see Tree-sitter's documentation:
+- https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries
+- https://tree-sitter.github.io/tree-sitter/syntax-highlighting#queries
+
+# TODO: Playground
+** Customization
+:PROPERTIES:
+:EXPORT_FILE_NAME: customization
+:END:
+*** Faces
+~tree-sitter-hl-mode~ provides a richer set of faces than ~font-lock-mode~. For example, function definitions are highlighted with ~tree-sitter-hl-face:function~, while function calls are highlighted with ~tree-sitter-hl-face:function.call~. However, for compatibility with existing themes, the default values for most of these faces inherit from built-in font-lock faces.
+
+If you want to leverage the full power of Tree-sitter's syntax highlighting approach, you should customize these faces.
+# TODO: Example
+
+*** Capture Mappings
+By default, when the highlighting query associates a node with ~CAPTURE-NAME~, it will be highlighted with the face ~tree-sitter-hl-face:CAPTURE-NAME~. This behavior can be changed by customizing the variable ~tree-sitter-hl-face-mapping-function~.
+#+begin_src emacs-lisp
+  ;; Don't highlight strings.
+  (add-function :before-while
+                'tree-sitter-hl-face-mapping-function
+                (lambda (capture-name)
+                  (not (string= capture-name "string"))))
+#+end_src
+
+#+begin_src emacs-lisp
+  ;; Highlight only keywords in Python.
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (add-function :before-while
+                            (local 'tree-sitter-hl-face-mapping-function)
+                            (lambda (capture-name)
+                              (string= capture-name "keyword")))))
+#+end_src
+
+#+begin_src emacs-lisp
+  ;; Highlight Python docstrings with a different face.
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (add-function :before-until
+                            (local 'tree-sitter-hl-face-mapping-function)
+                            (lambda (capture-name)
+                              (pcase capture-name
+                                ("doc" 'font-lock-comment-face))))))
+#+end_src
+
+*** Patterns
+You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~). For example, to highlight uses of "unsafe code" in Rust with a custom face:
+#+begin_src emacs-lisp
+  (defun my/customize-tree-sitter-hl-rust ()
+    (tree-sitter-hl-add-patterns [(unsafe_block) @rust.unsafe.use
+                                  (impl_item "unsafe") @rust.unsafe.use])
+    (add-function :before-until
+                  (local 'tree-sitter-hl-face-mapping-function)
+                  (lambda (capture-name)
+                    (pcase capture-name
+                      ("rust.unsafe.use" 'my-dangerous-code-pattern-face)))))
+
+  (add-hook 'rust-mode-hook #'my/customize-tree-sitter-hl-rust)
+#+end_src
+
+# TODO: Describe face priority.
+
+# TODO: Describe how to find and make changes to highlighting queries defined by tree-sitter-langs.
+
+** Interface for Modes
+:PROPERTIES:
+:EXPORT_FILE_NAME: interface-for-modes
+:END:
+/Major modes/ that want to integrate with ~tree-sitter-hl-mode~ should set the variable ~tree-sitter-hl-default-patterns~. It plays a similar role to ~font-lock-defaults~.
+
+# TODO: Update this part after making tree-sitter-hl-add-patterns support language-specific patterns.
+/Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~.
+
+The language-bundle package ~tree-sitter-langs~ provides highlighting queries for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
+
+* Languages
+** Loading Mechanism
+** Language Mappings
+** tree-sitter-langs
+** Grammar Definitions
+* APIs
+** API Overview
+*** Naming Conventions
+*** Data Types
+** Parsing
+*** Parsing a String
+*** Parsing with an Input Function
+*** Incremental Parsing
+** Inspecting
+{{% alert theme="danger" %}}TODO: Explain node comparison and ts-node-eq{{% /alert %}}
+*** Named vs. Anonymous Nodes
+*** Node's Fields
+** Walking
+** Querying
+** Writing a Dependent Mode
+* Advanced Topics
+** Multi-language Buffers
+** Compiling Binaries from Source
+*** Main Package tree-sitter
+*** Grammar Bundle tree-sitter-langs
+** Creating a Language Grammar

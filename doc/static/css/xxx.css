@@ -1,0 +1,140 @@
+/* -------------------------------------------------------------------------- */
+
+
+/* -------------------------------------------------------------------------- */
+
+/* body { */
+/*   background-color: #fdf6e3; */
+/* } */
+
+/* /\* TODO: Pink *\/ */
+/* code { */
+/*   border: 1px solid #DDD; */
+/*   background-color: #EEE; */
+/* } */
+
+/* body { */
+/*   text-align: justify; */
+/* } */
+
+/* -------------------------------------------------------------------------- */
+/* Spacing */
+/* The general idea is that padding should decrease with nesting. */
+
+#body-inner .chroma, #body-inner ul, #body-inner .notices, #body-inner .panel {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+#body-inner ul li p, #body-inner ul li .chroma {
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Fix wrong vertical alignment of inline code (was `bottom`). */
+
+#body-inner code {
+  vertical-align: baseline;
+}
+
+/* -------------------------------------------------------------------------- */
+
+h1, h2 {
+  /* font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; */
+  /* font-weight: bold; */
+  text-transform: none;
+}
+
+h1 {
+  font-weight: bold;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Make code highlighting work */
+
+/* https://discourse.gohugo.io/t/solved-syntax-highlighting-changed-with-hugo-0-29-from-0-27/8678 */
+/* https://github.com/alecthomas/chroma/issues/41 */
+/* We don't modify syntax.css because we want to treat that entire file as machine-generated. */
+
+.chroma code {
+  color: inherit;
+  background-color: inherit;
+}
+
+.chroma {
+  color: #777;
+  background-color: #EEE;
+  border: 1px solid #DDD;
+  box-shadow: 2px 2px 2px #EEE;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Make top bar sticky. */
+/* TODO: Make it sticky only when it's needed to toggle the sidebar. */
+
+#body > .padding {
+  overflow: visible;
+}
+
+#top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hide copy-to-clipboard button, except for code blocks. */
+
+code + .copy-to-clipboard {
+  display: none;
+}
+
+.chroma .copy-to-clipboard {
+  display: inline;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#sidebar ul li > div > a {
+  width: 100%;
+  padding-left: 0.5rem !important;
+}
+
+#sidebar ul li.active {
+  background: inherit !important;
+}
+
+#sidebar ul.topics ul {
+  padding-bottom: 0.4rem;
+}
+
+#sidebar ul li.active > div > a {
+  /* padding-left: 0.5rem; */
+  /* color: #555 !important; */
+  /* background-color: #fdf6e3; */
+}
+
+#sidebar li.alwaysopen i.fa {
+  display: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* XXX: Either docdock's styling is bad, or ox-hugo's rendering of shortcodes is broken. */
+
+div.notices {
+  padding-bottom: 1px;
+}
+
+div.notices p {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0.7rem;
+  margin-bottom: 0.7rem;
+}

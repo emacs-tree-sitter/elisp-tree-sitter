@@ -1,0 +1,78 @@
+{{- $currentPage := . }}
+
+{{- range .Site.Menus.main.ByWeight -}}
+  {{- template "menu-item" dict "menuEntry" . "currentPage" $currentPage -}}
+{{- end -}}
+
+{{- define "menu-item" -}}
+  {{- $currentPage := .currentPage -}}
+  {{- $showvisitedlinks := .Site.Params.showVisitedLinks -}}
+  {{- with .menuEntry -}}
+    {{- $menuEntry := . -}}
+    {{- $isCurrent := $currentPage.IsMenuCurrent .Menu . -}}
+    {{- $isAncestor := $currentPage.HasMenuCurrent .Menu . -}}
+    {{- $children := .Children -}}
+    {{- $numberOfChildren := (len $children) }}
+
+    {{- if ne $numberOfChildren 0 -}}
+      {{- if ne .Page nil -}}
+        {{- with .Page -}}
+          {{- $alwaysOpen := .Params.alwaysopen -}}
+          <li data-nav-id="{{.Permalink}}" class="dd-item haschildren
+                           {{- if $isAncestor}} parent{{end}}
+                           {{- if $isCurrent}} active{{end}}
+                           {{- if $alwaysOpen}} alwaysopen{{end -}}
+                           ">
+            <div>
+              <a href="{{ .RelPermalink}}">{{safeHTML $menuEntry.Pre}}{{.LinkTitle}}{{safeHTML $menuEntry.Post}}</a>
+              {{- if or $isAncestor (.Params.alwaysopen) }}
+                <i class="fa fa-angle-down fa-lg category-icon"></i>
+              {{- else -}}
+                <i class="fa fa-angle-right fa-lg category-icon"></i>
+              {{- end}}
+              {{- if $showvisitedlinks}}<i class="fa fa-circle-thin read-icon"></i>{{end}}
+            </div>
+            {{- template "menu-children" dict "menuEntry" $menuEntry "currentPage" $currentPage -}}
+          </li>
+        {{- end -}}
+      {{- else -}}
+        <li class="dd-item haschildren">
+          <div>
+            <a href="{{ .URL}}">{{- safeHTML .Pre -}}{{- safeHTML .Name -}}{{- safeHTML .Post -}}</a>
+          </div>
+          {{- template "menu-children" dict "menuEntry" . "currentPage" $currentPage -}}
+        </li>
+      {{- end -}}
+    {{- else -}}
+      {{- if ne .Page nil -}}
+        {{- with .Page -}}
+          <li data-nav-id="{{.Permalink}}" class="dd-item
+                           {{- if $isCurrent}} active{{end -}}
+                           ">
+            <div>
+              <a href="{{ .RelPermalink}}">
+                {{safeHTML $menuEntry.Pre}}{{.LinkTitle}}{{safeHTML $menuEntry.Post}}
+              </a>
+              {{- if $showvisitedlinks}}<i class="fa fa-circle-thin read-icon"></i>{{end}}
+            </div>
+          </li>
+        {{- end -}}
+      {{- else -}}
+        <li class="dd-item">
+          <div>
+            <a href="{{ .URL}}">{{- safeHTML .Pre -}}{{- safeHTML .Name -}}{{- safeHTML .Post -}}</a>
+          </div>
+        </li>
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "menu-children" -}}
+  {{- $currentPage := .currentPage -}}
+  <ul>
+    {{- range .menuEntry.Children -}}
+      {{- template "menu-item" dict "menuEntry" . "currentPage" $currentPage -}}
+    {{- end -}}
+  </ul>
+{{- end -}}

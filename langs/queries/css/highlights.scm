@@ -2,12 +2,12 @@
 
 ;; (selectors) @function
 
-(id_selector) @function
-(class_selector) @type
-
 (tag_name) @tag
 (nesting_selector) @tag
 (universal_selector) @tag
+
+(id_selector) @function
+(class_selector) @type
 
 "~" @operator
 ">" @operator

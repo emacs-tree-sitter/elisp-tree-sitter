@@ -1,0 +1,27 @@
+# baseURL = "http://ubolonton.github.io/emacs-tree-sitter/"
+languageCode = "en-us"
+title = "Emacs Tree-sitter"
+
+relativeURLs = true
+
+theme = [
+  "docdock",
+  # "learn",
+  # "alabaster",
+  # "hugo-bare-min-theme",
+  # "techdoc",
+
+  # "docsy",
+  # "book",
+  # "docuapi",
+]
+
+[markup.highlight]
+# style = "github"
+noClasses = false
+
+[params]
+themeStyle = "original"
+
+[outputs]
+home = [ "HTML", "RSS", "JSON"]

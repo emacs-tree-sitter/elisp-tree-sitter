@@ -28,7 +28,11 @@
 ((identifier) @constant.builtin
  (#eq? @constant.builtin "self"))
 
-(assignment (expression_list (identifier) @variable) (*))
+(assignment left: (_ (identifier) @variable))
+(assignment left: (_ (subscript subscript: (identifier) @variable)?
+                     (attribute attribute: (identifier) @variable)?))
+(augmented_assignment (expression_list (identifier) @variable))
+;; ((identifier) @variable "+=")
 
 ;; (identifier) @variable
 (parameters (identifier) @variable)
@@ -36,6 +40,9 @@
 (default_parameter name: (identifier) @variable)
 (typed_default_parameter name: (identifier) @variable)
 (attribute attribute: (identifier) @property)
+(subscript subscript: (identifier) @property)
+(for_statement (variables (identifier) @variable))
+(named_expression name: (identifier) @variable)
 (type (identifier) @type)
 
 (keyword_argument name: (identifier) @variable)
@@ -51,7 +58,7 @@
 
 (interpolation
  "{" @punctuation.special
- (*) @embedded
+ (_) @embedded
  "}" @punctuation.special)
 
 (comment) @comment

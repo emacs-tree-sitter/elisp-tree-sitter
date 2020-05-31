@@ -1,0 +1,1 @@
+Can't symlink whole directories, because Hugo seems to have broken handling of template lookup
