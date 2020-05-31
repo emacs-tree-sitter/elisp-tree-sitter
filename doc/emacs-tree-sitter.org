@@ -34,7 +34,9 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
   module-file-suffix ; should be non-nil
 #+end_src
 
-{{% notice note %}}The methods below only work for macOS, Windows, Linux on x86_64, since they download pre-compiled binaries. For other systems, you will have to build from source.{{% /notice %}}
+{{% notice note %}}
+The methods below only work for macOS, Windows, Linux on x86_64, since they download pre-compiled binaries. For other systems, you will have to build from source.
+{{% /notice %}}
 
 ** Installing from an ELPA
 - Add tree-sitter's ELPA to ~package-archives~:
@@ -114,7 +116,9 @@ For more details, see [[*Syntax Highlighting]].
 ** View the Syntax Tree
 Run ~M-x tree-sitter-debug-mode~ to show the current buffer's syntax tree in a separate buffer.
 
-{{% notice warning %}}Printing the syntax tree can be slow for very large buffers, as it hasn't been optimized yet.{{% /notice %}}
+{{% notice warning %}}
+Printing the syntax tree can be slow for very large buffers, as it hasn't been optimized yet.
+{{% /notice %}}
 
 # TODO: Example screenshots.
 
@@ -199,7 +203,9 @@ Contribution to highlighting queries is welcome.
 
 A query is a set of patterns, written in a Lisp-like syntax.
 
-{{% notice info %}}Queries are language-specific. Different language grammars use different node types and field names. Examples in this section apply to Rust.{{% /notice %}}
+{{% notice info %}}
+Queries are language-specific. Different language grammars use different node types and field names. Examples in this section apply to Rust.
+{{% /notice %}}
 
 *** Patterns
 A *pattern* is an S-expression (Lisp form), optionally /preceded/ by a field name, /suffixed/ with a quantifier, and/or /followed/ by a capture name.

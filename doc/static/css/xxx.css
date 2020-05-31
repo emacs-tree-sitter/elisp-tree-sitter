@@ -13,6 +13,9 @@
 /*   background-color: #EEE; */
 /* } */
 
+/* body { */
+/*   text-align: justify; */
+/* } */
 
 /* -------------------------------------------------------------------------- */
 /* Spacing */
@@ -123,7 +126,15 @@ code + .copy-to-clipboard {
 }
 
 /* -------------------------------------------------------------------------- */
+/* XXX: Either docdock's styling is bad, or ox-hugo's rendering of shortcodes is broken. */
 
-div.notices p::after {
-  display: none;
+div.notices {
+  padding-bottom: 1px;
+}
+
+div.notices p {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0.7rem;
+  margin-bottom: 0.7rem;
 }
