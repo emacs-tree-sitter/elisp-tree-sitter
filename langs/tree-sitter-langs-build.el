@@ -6,7 +6,7 @@
 
 ;;; Commentary:
 
-;; This file contains functions to obtain and build `tree-sitter' grammars.
+;; This file contains utilities to obtain and build `tree-sitter' grammars.
 
 ;;; Code:
 
@@ -23,6 +23,7 @@
 
 (declare-function dired-omit-mode "dired-x" (&optional arg))
 (declare-function magit-get-current-tag "magit-git" (&optional rev with-distance))
+(declare-function magit-rev-parse "magit-git" (&rest args))
 
 (defconst tree-sitter-langs--suffixes '(".dylib" ".dll" ".so")
   "List of suffixes for shared libraries that define tree-sitter languages.")
@@ -72,29 +73,28 @@ If VERSION and OS are not specified, use the defaults of
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
 (defconst tree-sitter-langs-repos
-  '((agda       "v1.2.1")
-    (bash       "v0.16.1")
-    (c          "0.16.1")
-    (c-sharp    "v0.16.1")
-    (cpp        "7234819")
-    (css        "v0.16.0")
-    (fluent     "v0.12.0")
-    (go         "d6b3306")
-    (haskell    "v0.13.0")
-    (html       "v0.16.0")
-    (java       "c43d89e")
-    (javascript "cef83f4")
-    (jsdoc      "v0.16.0")
-    (json       "v0.16.0")
-    (julia      "v0.0.3")
-    (ocaml      "v0.15.0")
-    (php        "v0.16.1")
-    (python     "v0.16.1")
-    (ruby       "9cd3d80")
-    (rust       "3e5ec5a")
-    (scala      "v0.13.0")
+  '((agda       "d710ff1")
+    (bash       "f226a4b")
+    (c          "99151b1")
+    (c-sharp    "075a1b2")
+    (cpp        "5e7476b")
+    (css        "23f2cb9")
+    (fluent     "858fdd6")
+    (go         "f5cae4e")
+    (html       "92c17db")
+    (java       "0b18a22")
+    (javascript "687e20a")
+    (jsdoc      "77e7785")
+    (json       "d3976b2")
+    (julia      "165e2ae")
+    (ocaml      "9e4f226")
+    (php        "7df0460")
+    (python     "649e752")
+    (ruby       "1ce58f2")
+    (rust       "40620bf")
+    (scala      "904e2b1")
     (swift      "a22fa5e")
-    (typescript "a80ef55" ("typescript" "tsx")))
+    (typescript "ebd10b4" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.
 Note that these are mostly for the grammars. We treat the queries they include
 as references, instead of using them directly for syntax highlighting.")
@@ -138,19 +138,31 @@ If BUFFER is nil, `princ' is used to forward its stdout+stderr."
     (unless (= exit-code 0)
       (error "Error calling %s, exit code is %s" command exit-code))))
 
-(defun tree-sitter-langs--get-latest-tags ()
-  "Return the `tree-sitter-langs-repos' with versions replaced by latest tags.
-If there's no tag, return \"origin/master\"."
+(defun tree-sitter-langs--update-repos ()
+  "Update lang repos' remotes."
+  (seq-map
+   (lambda (desc)
+     (pcase-let* ((`(,lang-symbol . _) desc)
+                  (default-directory (concat tree-sitter-langs--repos-dir
+                                             (format "tree-sitter-%s" lang-symbol))))
+       (tree-sitter-langs--call "git" "remote" "update")))
+   tree-sitter-langs-repos))
+
+(defun tree-sitter-langs--get-latest (type)
+  "Return the `tree-sitter-langs-repos' with versions replaced by latest tags/commits.
+TYPE should be either `:commits' or `:tags'. If there's no tag, return the
+latest commit."
   (require 'magit)
   (seq-map
    (lambda (desc)
-     (pcase-let*
-         ((`(,lang-symbol . _) desc)
-          (lang-name (symbol-name lang-symbol))
-          (default-directory (concat tree-sitter-langs--repos-dir
-                                     (format "tree-sitter-%s" lang-name))))
-       `(,lang-symbol ,(or (magit-get-current-tag "origin/master")
-                           "origin/master"))))
+     (pcase-let* ((`(,lang-symbol _ . ,extra) desc)
+                  (default-directory (concat tree-sitter-langs--repos-dir
+                                             (format "tree-sitter-%s" lang-symbol))))
+       `(,lang-symbol ,(pcase type
+                         (:commits (magit-rev-parse "--short=7" "origin/master"))
+                         (:tags (or (magit-get-current-tag "origin/master")
+                                    (magit-rev-parse "--short=7" "origin/master"))))
+                      . ,extra)))
    tree-sitter-langs-repos))
 
 (defun tree-sitter-langs--buffer (name)
