@@ -43,11 +43,7 @@
   "Face used for constant.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:constructor '((default :inherit font-lock-type-face))
-  "Face used for constructor"
-  :group 'tree-sitter-hl-faces)
-
-(defface tree-sitter-hl-face:escape '((default :inherit font-lock-regexp-grouping-backslash))
+(defface tree-sitter-hl-face:escape '((default :inherit font-lock-keyword-face))
   "Face used for escape"
   :group 'tree-sitter-hl-faces)
 
@@ -75,6 +71,12 @@
   "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:function.method.call
+  '((default :inherit (tree-sitter-hl-face:function.call
+                       tree-sitter-hl-face:function.method) :underline nil))
+  "Face used for function.method.call"
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:identifier '((default :inherit font-lock-function-name-face))
   "Face used for identifier"
   :group 'tree-sitter-hl-faces)
@@ -91,8 +93,12 @@
   "Face used for operator"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:property '((default :inherit font-lock-constant-face))
-  "Face used for property.declaration"
+(defface tree-sitter-hl-face:property '((default :inherit font-lock-constant-face :slant italic))
+  "Face used for property"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:property.definition '((default :inherit tree-sitter-hl-face:property))
+  "Face used for property.definition"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:punctuation '(())
@@ -120,23 +126,36 @@
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:type '((default :inherit font-lock-type-face))
-  "Faced used for type"
+  "Face used for type"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:type.parameter '((default :inherit font-lock-variable-name-face))
-  "Faced used for type.parameter"
+  "Face used for type.parameter"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:type.argument '((default :inherit tree-sitter-hl-face:type))
-  "Faced used for type.argument"
+  "Face used for type.argument"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:type.builtin '((default :inherit font-lock-builtin-face))
   "Face used for type.builtin"
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:type.super '((default :inherit tree-sitter-hl-face:type :slant italic))
+  "Face used for type.super"
+  :group 'tree-sitter-hl-faces)
+
+;; TODO: Decide whether we really need this.
+(defface tree-sitter-hl-face:constructor '((default :inherit tree-sitter-hl-face:type))
+  "Face used for constructor"
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:variable '((default :inherit font-lock-variable-name-face))
   "Face used for variable"
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:variable.use '((default :inherit default))
+  "Face used for variable.use"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:variable.builtin '((default :inherit font-lock-builtin-face))
