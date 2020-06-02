@@ -8,8 +8,6 @@
 
 ; Function calls
 
-(decorator) @function.call
-
 ((call
   function: (identifier) @function.builtin)
  (#match?
@@ -62,8 +60,6 @@
  "}" @punctuation.special)
 
 (comment) @comment
-((string) @constant
- (#match? @constant "^'"))
 ((string) @doc
  (#match? @doc "^\"\"\""))
 (string) @string
@@ -136,3 +132,5 @@
 "while" @keyword
 "with" @keyword
 "yield" @keyword
+
+(decorator) @function.special
