@@ -1,0 +1,128 @@
+{
+  "abc_def_ghk_00": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_01": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_02": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_03": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_04": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_05": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_06": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_07": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_08": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_09": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_10": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_11": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_12": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "abc_def_ghk_13": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  }
+}
