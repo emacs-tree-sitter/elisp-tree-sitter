@@ -8,6 +8,7 @@ mod tree;
 mod node;
 mod cursor;
 mod query;
+mod matches_vs_captures;
 
 emacs::plugin_is_GPL_compatible! {}
 

@@ -1,8 +1,8 @@
-(null) @keyword
-(true) @keyword
-(false) @keyword
+;; (null) @keyword
+;; (true) @keyword
+;; (false) @keyword
 
-(number) @number
+;; (number) @number
 
 (pair
  key: (_) @keyword)

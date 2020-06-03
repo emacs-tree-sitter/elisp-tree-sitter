@@ -348,6 +348,9 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)
     (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
 
+(ert-deftest query::matches-vs-captures-1 ()
+  (ts--matches-vs-captures))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
