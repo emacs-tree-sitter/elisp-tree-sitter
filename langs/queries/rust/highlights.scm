@@ -1,15 +1,15 @@
-; Identifier conventions
+;;; Identifier conventions
 
 ((identifier) @keyword
  (#eq? @keyword "Self"))
 ((type_identifier) @keyword
  (#eq? @keyword "Self"))
 
-; Assume all-caps names are constants
+;; Assume all-cap names are constants.
 ((identifier) @constant
  (#match? @constant "^[A-Z][A-Z\\d_]+$'"))
 
-; Assume that uppercase names in paths are types
+;; Assume that uppercase names in paths are types.
 ((scoped_identifier
   path: (identifier) @type)
  (#match? @type "^[A-Z]"))
@@ -18,14 +18,14 @@
          name: (identifier) @type))
  (#match? @type "^[A-Z]"))
 
-; Assume other uppercase names are enum constructors
+;; Assume other uppercase names are enum constructors
 ((identifier) @constructor
  (#match? @constructor "^[A-Z]"))
 
-; Function calls
+;;; Function calls.
 
 (call_expression
-  function: (identifier) @function.call)
+ function: (identifier) @function.call)
 (call_expression
  function: (field_expression
             field: (field_identifier) @function.call))
@@ -34,7 +34,7 @@
             name: (identifier) @function.call))
 
 (generic_function
-  function: (identifier) @function)
+ function: (identifier) @function)
 (generic_function
  function: (scoped_identifier
             name: (identifier) @function))
@@ -46,139 +46,142 @@
   macro: (identifier) @function.macro
   "!" @function.macro)
 
-; Function definitions
+;;; Function definitions.
 
 (function_item (identifier) @function)
 (function_signature_item (identifier) @function)
 
-; Other identifiers
+;;; Types.
 
-(type_arguments
- "<" @punctuation.bracket
- ">" @punctuation.bracket)
-(type_parameters
- "<" @punctuation.bracket
- ">" @punctuation.bracket)
+(type_arguments "<" @punctuation.bracket
+                ">" @punctuation.bracket)
+(type_parameters "<" @punctuation.bracket
+                 ">" @punctuation.bracket)
 (where_predicate
  left: (type_identifier) @type.parameter)
-(type_arguments
- (type_identifier) @type.argument)
 (type_parameters
  (type_identifier) @type.parameter)
+(type_arguments
+ (type_identifier) @type.argument)
 
 (type_identifier) @type
 (primitive_type) @type.builtin
+
+;;; Properties.
+
 (field_declaration
- name: (field_identifier) @property)
+ name: (field_identifier) @property.definition)
 (field_identifier) @property
+
+;;; Comments and docstrings.
 
 ((line_comment) @doc
  (#match? @doc "^///"))
-(line_comment) @comment
-(block_comment) @comment
+[(line_comment)
+ (block_comment)] @comment
 
-"(" @punctuation.bracket
-")" @punctuation.bracket
-"[" @punctuation.bracket
-"]" @punctuation.bracket
+;;; Punctuations.
 
+["("
+ ")"
+ "["
+ "]"] @punctuation.bracket
 
-"::" @punctuation.delimiter
-"." @punctuation.delimiter
-";" @punctuation.delimiter
+["::"
+ "."
+ ";"] @punctuation.delimiter
 
 ;;; Variable bindings
-(let_declaration
- pattern: (identifier) @variable)
-(let_declaration
- pattern: (_ (identifier) @variable))
-(if_let_expression
- pattern: (identifier) @variable)
-(if_let_expression
- pattern: (_ (identifier) @variable))
-(for_expression
- pattern: (identifier) @variable)
-(for_expression
- pattern: (_ (identifier) @variable))
+
+(let_declaration pattern: (identifier) @variable)
+(let_declaration pattern: (_ (identifier) @variable))
+(if_let_expression pattern: (identifier) @variable)
+(if_let_expression pattern: (_ (identifier) @variable))
+(for_expression pattern: (identifier) @variable)
+(for_expression pattern: (_ (identifier) @variable))
 
 (parameter (identifier) @variable.parameter)
+
+;;; Lifetime.
 
 ((lifetime (identifier) @type.builtin)
  (#eq? @type.builtin "static"))
 (lifetime (identifier) @label)
 
-"break" @keyword
-"const" @keyword
-"continue" @keyword
-"default" @keyword
-"dyn" @keyword
-"else" @keyword
-"enum" @keyword
-"extern" @keyword
-"fn" @keyword
-"for" @keyword
-"if" @keyword
-"impl" @keyword
-"in" @keyword
-"let" @keyword
-"let" @keyword
-"loop" @keyword
-"macro_rules!" @keyword
-"match" @keyword
-"mod" @keyword
-"move" @keyword
-"pub" @keyword
-"ref" @keyword
-"return" @keyword
-"static" @keyword
-"struct" @keyword
-"trait" @keyword
-"type" @keyword
-"union" @keyword
-"unsafe" @keyword
-"use" @keyword
-"where" @keyword
-"while" @keyword
-"?" @keyword
-(mutable_specifier) @keyword
-(use_list (self) @keyword)
-(scoped_use_list (self) @keyword)
-(scoped_identifier (self) @keyword)
-(super) @keyword
-(visibility_modifier
- (_) @keyword)
+;;; Keywords.
 
-(self) @keyword
+["break"
+ "const"
+ "continue"
+ "default"
+ "dyn"
+ "else"
+ "enum"
+ "extern"
+ "fn"
+ "for"
+ "if"
+ "impl"
+ "in"
+ "let"
+ "let"
+ "loop"
+ "macro_rules!"
+ "match"
+ "mod"
+ "move"
+ "pub"
+ "ref"
+ "return"
+ "static"
+ "struct"
+ "trait"
+ "type"
+ "union"
+ "unsafe"
+ "use"
+ "where"
+ "while"] @keyword
 
-(char_literal) @string
-(string_literal) @string
-(raw_string_literal) @string
+[(self)
+ (super)
+ (crate)
+ (mutable_specifier)] @keyword
 
-(boolean_literal) @constant.builtin
-(integer_literal) @constant.builtin
-(float_literal) @constant.builtin
+;;; Misc.
+
+[(char_literal)
+ (string_literal)
+ (raw_string_literal)] @string
+
+[(boolean_literal)
+ (integer_literal)
+ (float_literal)] @constant.builtin
 
 (escape_sequence) @escape
 
-(attribute_item) @attribute
-(inner_attribute_item) @attribute
+[(attribute_item)
+ (inner_attribute_item)] @attribute
 
-"as" @operator
-"*" @operator
-"&" @operator
-"'" @operator
-"==" @operator
+["as"
+ "*"
+ "&"
+ "'"
+ "=="
+ "?"] @operator
 
 ;;; Paths' prefixes. TODO: Use a different scope.
-(scoped_identifier
- path: (identifier) @constant)
-(scoped_identifier
- path: (_ (identifier) @constant))
-(scoped_type_identifier
- path: (identifier) @constant)
-(scoped_type_identifier
- path: (_ (identifier) @constant))
-(scoped_use_list
- path: (identifier) @constant)
-(scoped_use_list
- path: (_ (identifier) @constant))
+
+(scoped_identifier path: [(identifier) @constant
+                          (scoped_identifier name: (identifier) @constant)])
+(scoped_type_identifier path: (identifier) @constant)
+(scoped_use_list path: [(identifier) @constant
+                        (scoped_identifier name: (identifier) @constant)])
+(use_wildcard [(identifier) @constant
+               (scoped_identifier name: (identifier) @constant)])
+
+;; (use_declaration
+;;  [(identifier) @function
+;;   (scoped_identifier
+;;    name: (identifier) @function)])
+;; (use_list (identifier) @function)
