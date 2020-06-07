@@ -2,6 +2,8 @@
 languageCode = "en-us"
 title = "Emacs Tree-sitter"
 
+googleAnalytics = "UA-138609797-2"
+
 relativeURLs = true
 
 theme = [
