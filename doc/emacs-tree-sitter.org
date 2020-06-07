@@ -45,13 +45,28 @@ The methods below only work for macOS, Windows, Linux on x86_64, since they down
     #+end_src
 - Run ~M-x package-refresh-contents~.
 - Install ~tree-sitter~ and ~tree-sitter-langs~ packages.
-- Add this to your config:
+- Load the language bundle:
     #+begin_src emacs-lisp
       (require 'tree-sitter-langs)
     #+end_src
 
 ** Installing with straight.el
-TODO
+- Install ~tree-sitter~ and ~tree-sitter-langs~ with custom recipes:
+    #+begin_src emacs-lisp
+      (straight-use-package
+       '(tree-sitter :host github
+                     :repo "ubolonton/emacs-tree-sitter"
+                     :files ("lisp/*.el" "src" "Cargo.toml" "Cargo.lock")))
+
+      (straight-use-package
+       '(tree-sitter-langs :host github
+                           :repo "ubolonton/emacs-tree-sitter"
+                           :files ("langs/*.el" "langs/queries")))
+    #+end_src
+- Load the language bundle:
+    #+begin_src emacs-lisp
+      (require 'tree-sitter-langs)
+    #+end_src
 
 ** Installing from Source
 - Clone the source repo:
