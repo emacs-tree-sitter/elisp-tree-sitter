@@ -14,16 +14,7 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 
 ## Installation
 
-At this stage of the project, there are few end-user-visible features, but you can already install it to play around with the APIs.
-
-- Check that Emacs was built with module support: `(functionp 'module-load)`.
-- Add the tree-sitter ELPA to `package-archives` (remember to run `package-refresh-contents` afterwards):
-    ```emacs-lisp
-    (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
-    ```
-- Install `tree-sitter` and `tree-sitter-langs` like other normal packages.
-
-The package is not yet on MELPA, because it currently doesn't have a convenient way to distribute packages with pre-compiled binaries.
+See the [documentation](https://ubolonton.github.io/emacs-tree-sitter/installation/).
 
 If you want to hack on `emacs-tree-sitter` itself, see the section [Setup for Development](#setup-for-development) instead.
 
