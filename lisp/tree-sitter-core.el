@@ -16,12 +16,9 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  ;; XXX: We want a universal package containing binaries for all platforms, so we use a unique
-  ;; extension for each. On macOS, we use`.dylib', which is more sensible than `.so' anyway.
-  (when (eq system-type 'darwin)
-    (load "tree-sitter--mac-load.el")))
+  (require 'tree-sitter-dyn-get)
+  (tree-sitter-dyn-get-ensure))
 
-;; We still call this on macOS, as it's useful for other things as well.
 (require 'tree-sitter-dyn)
 
 (eval-when-compile

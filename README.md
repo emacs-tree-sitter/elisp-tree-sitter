@@ -138,12 +138,6 @@ Clone this repo and add its `lisp` and `langs` directories to `load-path`.
 Install [cask](https://cask.readthedocs.io) and run `cask install` to install dev dependencies.
 
 If you want to hack on the high-level features (in Lisp) only:
-- Evaluate this (once) to download the necessary binaries:
-    ```emacs-lisp
-    (require 'tree-sitter-langs-build)
-    ;; Download pre-compiled `tree-sitter-dyn'.
-    (tree-sitter-download-dyn-module)
-    ```
 - Make changes to the `.el` files.
 - Add tests to `tree-sitter-tests.el` and run them with `./bin/test` (`.\bin\test` on Windows).
 

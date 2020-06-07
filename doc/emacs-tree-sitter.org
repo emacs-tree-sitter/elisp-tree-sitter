@@ -65,13 +65,6 @@ TODO
       (add-to-list 'load-path "/path-to/emacs-tree-sitter/langs")
     #+end_src
 
-- Evaluate this to download the necessary binaries, /once/:
-    #+begin_src emacs-lisp
-      (require 'tree-sitter-langs-build)
-      ;; Download pre-compiled `tree-sitter-dyn'.
-      (tree-sitter-download-dyn-module)
-    #+end_src
-
 - Load the libraries in your config:
     #+begin_src emacs-lisp
       (require 'tree-sitter)
