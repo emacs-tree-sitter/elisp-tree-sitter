@@ -1,10 +1,11 @@
-# baseURL = "http://ubolonton.github.io/emacs-tree-sitter/"
+# XXX: Hugo, or its themes/plugins don't work well with relativeURLs
+baseURL = "https://ubolonton.github.io/emacs-tree-sitter"
+# relativeURLs = true
+
 languageCode = "en-us"
 title = "Emacs Tree-sitter"
 
 googleAnalytics = "UA-138609797-2"
-
-relativeURLs = true
 
 theme = [
   "docdock",
