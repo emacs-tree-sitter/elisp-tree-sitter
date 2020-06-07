@@ -12,46 +12,37 @@
 ;;; Code:
 
 (require 'dired-aux)
-(require 'tar-mode)
-
-(defconst tree-sitter-dyn-get--version "0.7.0"
-  "The expected version of `tree-sitter-dyn'.")
 
 (defun tree-sitter-dyn-get--download ()
   "Download the pre-compiled `tree-sitter-dyn' module."
   (let* ((main-file (locate-library "tree-sitter.el"))
          (_ (unless main-file
               (error "Could not find tree-sitter.el")))
+         ;; TODO: Version `tree-sitter-dyn' separately from `tree-sitter'.
+         (version (with-temp-buffer
+                    (insert-file-contents main-file)
+                    (unless (re-search-forward ";; Version: \\(.+\\)")
+                      (error "Could not determine tree-sitter version"))
+                    (match-string 1)))
          (ext (pcase system-type
                 ('windows-nt "dll")
                 ('darwin "dylib")
                 ('gnu/linux "so")
                 (_ (error "Unsupported system-type %s" system-type))))
          (dyn-file (format "tree-sitter-dyn.%s" ext))
-         ;; FIX: We have to download the whole tar archive, instead of one
-         ;; single binary, because uncompressing with `dired-compress-file'
-         ;; doesn't work on Windows.
-         (archive-file (format "tree-sitter-%s.tar.gz" tree-sitter-dyn-get--version))
+         (gz-file (format "%s.gz" dyn-file))
+         (uncompressed? (version< "0.7.0" version))
          (url (format "https://github.com/ubolonton/emacs-tree-sitter/releases/download/%s/%s"
-                      tree-sitter-dyn-get--version archive-file))
-         (main-dir (file-name-directory main-file))
-         (default-directory main-dir)
-         (archive-dir (file-name-as-directory
-                       (expand-file-name
-                        (format "tree-sitter-%s" tree-sitter-dyn-get--version)))))
+                      version (if uncompressed? dyn-file gz-file)))
+         (default-directory (file-name-directory main-file)))
     (message "Downloading %s" url)
-    (unless (file-exists-p archive-file)
-      (url-copy-file url archive-file))
-    (with-temp-buffer
-      (insert-file-contents archive-file)
-      (tar-mode)
-      (tar-untar-buffer))
-    (when (file-exists-p dyn-file)
-      (delete-file dyn-file))
-    (let ((default-directory archive-dir))
-      (copy-file dyn-file main-dir))
-    (delete-directory archive-dir :recursive)
-    (delete-file archive-file)))
+    (if uncompressed?
+        (url-copy-file url dyn-file :ok-if-already-exists)
+      (url-copy-file url gz-file)
+      (when (file-exists-p dyn-file)
+        (delete-file dyn-file))
+      ;; XXX: Uncompressing with `dired-compress-file' doesn't work on Windows.
+      (dired-compress-file gz-file))))
 
 (defun tree-sitter-dyn-get-ensure ()
   ;; XXX: We want a universal package containing binaries for all platforms, so
