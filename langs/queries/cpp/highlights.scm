@@ -1,62 +1,79 @@
-; Functions
+"break" @keyword
+"case" @keyword
+"const" @keyword
+"continue" @keyword
+"default" @keyword
+"do" @keyword
+"else" @keyword
+"enum" @keyword
+"extern" @keyword
+"for" @keyword
+"if" @keyword
+"inline" @keyword
+"return" @keyword
+"sizeof" @keyword
+"static" @keyword
+"struct" @keyword
+"switch" @keyword
+"typedef" @keyword
+"union" @keyword
+"volatile" @keyword
+"while" @keyword
+
+"#define" @keyword
+"#else" @keyword
+"#endif" @keyword
+"#if" @keyword
+"#ifdef" @keyword
+"#ifndef" @keyword
+"#include" @keyword
+(preproc_directive) @keyword
+
+"--" @operator
+"-" @operator
+"-=" @operator
+"->" @operator
+"!=" @operator
+"*" @operator
+"&" @operator
+"&&" @operator
+"+" @operator
+"++" @operator
+"+=" @operator
+"<" @operator
+"==" @operator
+">" @operator
+"||" @operator
+
+"." @delimiter
+";" @delimiter
+
+(string_literal) @string
+(system_lib_string) @string
+
+(null) @constant
+(number_literal) @number
+(char_literal) @number
 
 (call_expression
-  function: (scoped_identifier
-    name: (identifier) @function))
-
-(template_function
-  name: (identifier) @function)
-
-(template_method
-  name: (field_identifier) @function)
-
-(template_function
-  name: (scoped_identifier
-    name: (identifier) @function))
-
+  function: (identifier) @function)
+(call_expression
+  function: (field_expression
+    field: (field_identifier) @function))
 (function_declarator
-  declarator: (scoped_identifier
-    name: (identifier) @function))
+  declarator: (identifier) @function)
+(preproc_function_def
+  name: (identifier) @function.special)
 
-(function_declarator
-  declarator: (scoped_identifier
-    name: (identifier) @function))
+(field_identifier) @property
+(statement_identifier) @label
+(type_identifier) @type
+(primitive_type) @type
+(sized_type_specifier) @type
 
-(function_declarator
-  declarator: (field_identifier) @function)
+((identifier) @constant
+ (#match? @constant "^[A-Z][A-Z\\d_]*$"))
 
-; Types
+(identifier) @variable
 
-((namespace_identifier) @type
- (#match? @type "^[A-Z]"))
-
-(auto) @type
-
-; Constants
-
-(this) @variable.builtin
-(nullptr) @constant
-
-; Keywords
-
-"catch" @keyword
-"class" @keyword
-"constexpr" @keyword
-"delete" @keyword
-"explicit" @keyword
-"final" @keyword
-"friend" @keyword
-"mutable" @keyword
-"namespace" @keyword
-"noexcept" @keyword
-"new" @keyword
-"override" @keyword
-"private" @keyword
-"protected" @keyword
-"public" @keyword
-"template" @keyword
-"throw" @keyword
-"try" @keyword
-"typename" @keyword
-"using" @keyword
-"virtual" @keyword
+(comment) @comment
