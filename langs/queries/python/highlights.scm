@@ -56,11 +56,11 @@
 
 ;; Identifier naming conventions.
 
-((identifier) @constructor
- (#match? @constructor "^[A-Z]"))
-
 ((identifier) @constant
  (#match? @constant "^[A-Z][A-Z_]*$"))
+
+((identifier) @constructor
+ (#match? @constructor "^[A-Z]"))
 
 ;; Function calls.
 
