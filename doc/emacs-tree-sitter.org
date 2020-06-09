@@ -56,7 +56,7 @@ The methods below only work for macOS, Windows, Linux on x86_64, since they down
       (straight-use-package
        '(tree-sitter :host github
                      :repo "ubolonton/emacs-tree-sitter"
-                     :files ("lisp/*.el" "src" "Cargo.toml" "Cargo.lock")))
+                     :files ("lisp/*.el")))
 
       (straight-use-package
        '(tree-sitter-langs :host github
