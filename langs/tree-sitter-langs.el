@@ -92,6 +92,7 @@ See `tree-sitter-langs-repos'."
                 (python-mode     . python)
                 (ruby-mode       . ruby)
                 (rust-mode       . rust)
+                (rustic-mode     . rust)
                 (scala-mode      . scala)
                 (swift-mode      . swift)
                 (typescript-mode . typescript))))
