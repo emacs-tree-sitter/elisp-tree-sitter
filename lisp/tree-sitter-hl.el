@@ -342,7 +342,7 @@ also expects VALUE to be a single value, not a list."
        (byte-to-position end-byte) 'face face))))
 
 ;;; TODO: Handle embedded DSLs (injections).
-(defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
+(defun tree-sitter-hl--highlight-region (beg end &optional loudly)
   "Highlight the region (BEG . END).
 This is intended to be used as a buffer-local override of
 `font-lock-fontify-region-function'."
@@ -371,7 +371,8 @@ This is intended to be used as a buffer-local override of
           ;; a node that matches both "constructor" and "variable" to be
           ;; different from the union of "constructor fontification" and
           ;; "variable fontification".
-          (mapc #'tree-sitter-hl--highlight-capture captures)))
+          (mapc #'tree-sitter-hl--highlight-capture captures)
+          (font-lock-fontify-keywords-region beg end loudly)))
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))
 
@@ -395,6 +396,27 @@ OLD-TREE is the tree before the edit."
 ;;; ----------------------------------------------------------------------------
 ;;; Setup and teardown.
 
+(defvar-local tree-sitter-hl--extra-font-lock-keywords nil)
+
+(defun tree-sitter-hl--minimize-font-lock-keywords ()
+  "Remove keywords set by `font-lock-defaults' from `font-lock-keywords'."
+  (when font-lock-set-defaults
+    (let ((bare-keywords (car font-lock-defaults)))
+      (font-lock-remove-keywords nil (font-lock-eval-keywords bare-keywords))
+      (setq tree-sitter-hl--extra-font-lock-keywords
+            (if (eq (car font-lock-keywords) t)
+                (nth 1 font-lock-keywords)
+              (car font-lock-keywords))))))
+
+(defun tree-sitter-hl--restore-font-lock-keywords ()
+  "Undo the hack done by `tree-sitter-hl--minimize-font-lock-keywords'."
+  (when font-lock-set-defaults
+    (kill-local-variable 'font-lock-set-defaults)
+    (font-lock-set-defaults)
+    (when tree-sitter-hl--extra-font-lock-keywords
+      (font-lock-add-keywords nil tree-sitter-hl--extra-font-lock-keywords)))
+  (setq tree-sitter-hl--extra-font-lock-keywords nil))
+
 ;;; TODO: We want to work even without `font-lock-mode', right?
 (defun tree-sitter-hl--setup ()
   "Set up `tree-sitter-hl' in the current buffer.
@@ -405,10 +427,6 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (unless tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
     ;; Invalidate the buffer, only if we were actually disabled previously.
-    ;; TODO: Find a way to disable `font-lock-defaults', while keeping
-    ;; modifications added locally through `font-lock-add-keywords'. The problem
-    ;; is, `font-lock-mode' itself doesn't seem to be able to do that. (See
-    ;; `font-lock-refresh-defaults'.)
     (tree-sitter-hl--invalidate))
   ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
   ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
@@ -420,6 +438,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   ;; XXX
   (add-function :override (local 'font-lock-fontify-region-function)
                 #'tree-sitter-hl--highlight-region)
+  (tree-sitter-hl--minimize-font-lock-keywords)
   ;; When `font-lock-defaults' is not set up, `font-lock-mode' only does a
   ;; partial initialization. In that case, we initialize it directly. This
   ;; allows turning on tree-based syntax highlighting by temporarily binding
@@ -446,6 +465,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     (setq tree-sitter-hl--query-cursor nil)
     ;; Invalidate the buffer, only if we were actually enabled previously.
     (font-lock-flush))
+  (tree-sitter-hl--restore-font-lock-keywords)
   ;; If we did a hackish initialization of `font-lock-mode', de-initialize it.
   (unless font-lock-set-defaults
     (font-lock-unfontify-buffer)
