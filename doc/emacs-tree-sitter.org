@@ -236,7 +236,7 @@ A string literal denotes an *anonymous node*.
   "=="
 #+end_src
 
-*** Captures and Field Names
+*** Captures and Fields
 # Captures.
 Captures allow associating names with specific nodes in a pattern. A symbol starting with the character ~@~ denotes a *capture name*. It is written after the pattern it refers to. When used for syntax highlighting, capture names are then mapped to display faces, which determine the appearance of the corresponding nodes.
 #+begin_src scheme
@@ -276,7 +276,20 @@ A *predicate* form can appear anywhere in a group form. It is a list form whose 
 
 For syntax highlighting, the supported predicates are currently ~#match?~ and ~#eq?~.
 
-*** Misc
+*** Alternations
+An *alternation* form is a vector of patterns. It denotes a pattern that matches a node when any of the alternative patterns matches.
+#+begin_src scheme
+  [(self) (super) (crate)
+   (mutable_specifier)] @keyword
+
+  ["==" "!=" "<" "<=" ">" ">="] @operator
+
+  (call_expression
+   function: [(identifier) @function.call
+              (field_expression field: (field_identifier) @method.call)])
+#+end_src
+
+*** Repetitions and Wildcards
 # Quantification Operators.
 A form can be suffixed by one of the *quantification operators*: at-most-once ~?~, at-least-once ~+~, zero-or-more ~*~.
 #+begin_src scheme
