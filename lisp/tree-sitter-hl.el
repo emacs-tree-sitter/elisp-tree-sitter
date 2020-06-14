@@ -177,6 +177,17 @@
 ;;; ----------------------------------------------------------------------------
 ;;; Interfaces for modes and end users.
 
+(defcustom tree-sitter-hl-use-font-lock-keywords :except-font-lock-defaults
+  "Whether to keep using the highlighting provided by `font-lock-keywords'.
+If `:except-font-lock-defaults', then keywords specified by `font-lock-defaults'
+are ignored, while keywords added through `font-lock-add-keywords' are used. The
+former is typically set by major modes, while the latter is usually set by minor
+modes and end users."
+  :group 'tree-sitter-hl
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)
+                 (const :tag "Except `font-lock-defaults'" :except-font-lock-defaults)))
+
 (defcustom tree-sitter-hl-face-mapping-function
   #'tree-sitter-hl-face-from-common-scope
   "Function used to map capture names in query patterns to highlighting faces.
@@ -372,7 +383,11 @@ This is intended to be used as a buffer-local override of
           ;; different from the union of "constructor fontification" and
           ;; "variable fontification".
           (mapc #'tree-sitter-hl--highlight-capture captures)
-          (font-lock-fontify-keywords-region beg end loudly)))
+          ;; This should primarily be for keywords added through
+          ;; `font-lock-add-keywords' (minor modes and end users).
+          (when (and tree-sitter-hl-use-font-lock-keywords
+                     font-lock-set-defaults)
+            (font-lock-fontify-keywords-region beg end loudly))))
       ;; TODO: Return the actual region being fontified.
       `(jit-lock-bounds ,beg . ,end))))
 
@@ -396,26 +411,33 @@ OLD-TREE is the tree before the edit."
 ;;; ----------------------------------------------------------------------------
 ;;; Setup and teardown.
 
-(defvar-local tree-sitter-hl--extra-font-lock-keywords nil)
+(defvar-local tree-sitter-hl--font-lock-keywords nil)
 
 (defun tree-sitter-hl--minimize-font-lock-keywords ()
   "Remove keywords set by `font-lock-defaults' from `font-lock-keywords'."
   (when font-lock-set-defaults
-    (let ((bare-keywords (car font-lock-defaults)))
-      (font-lock-remove-keywords nil (font-lock-eval-keywords bare-keywords))
-      (setq tree-sitter-hl--extra-font-lock-keywords
-            (if (eq (car font-lock-keywords) t)
-                (nth 1 font-lock-keywords)
-              (car font-lock-keywords))))))
+    (unless tree-sitter-hl--font-lock-keywords
+      (setq tree-sitter-hl--font-lock-keywords font-lock-keywords)
+      (when (eq tree-sitter-hl-use-font-lock-keywords :except-font-lock-defaults)
+        ;; XXX: Check whether this covers all the edge cases of the interaction
+        ;; between `font-lock-eval-keywords' and `font-lock-remove-keywords'.
+        (let* ((keywords-spec (car font-lock-defaults))
+               ;; The spec can be a list, corresponding to multiple levels of
+               ;; fontification. We want to disable all of them.
+               (keywords-list (if (and (listp keywords-spec)
+                                       (symbolp (car keywords-spec)))
+                                  keywords-spec
+                                (list keywords-spec))))
+          (dolist (keywords keywords-list)
+            (font-lock-remove-keywords
+             nil (font-lock-eval-keywords keywords))))))))
 
 (defun tree-sitter-hl--restore-font-lock-keywords ()
   "Undo the hack done by `tree-sitter-hl--minimize-font-lock-keywords'."
   (when font-lock-set-defaults
-    (kill-local-variable 'font-lock-set-defaults)
-    (font-lock-set-defaults)
-    (when tree-sitter-hl--extra-font-lock-keywords
-      (font-lock-add-keywords nil tree-sitter-hl--extra-font-lock-keywords)))
-  (setq tree-sitter-hl--extra-font-lock-keywords nil))
+    (when tree-sitter-hl--font-lock-keywords
+      (setq font-lock-keywords tree-sitter-hl--font-lock-keywords
+            tree-sitter-hl--font-lock-keywords nil))))
 
 ;;; TODO: We want to work even without `font-lock-mode', right?
 (defun tree-sitter-hl--setup ()
