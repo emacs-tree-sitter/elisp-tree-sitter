@@ -165,12 +165,16 @@
  (inner_attribute_item)] @attribute
 
 ["as"
- "&&" "||" "&" "|"
+ "&&" "||" "&"
  "^"
- "==" "!=" "<" "<=" ">" ">="
+ "==" "!=" "<=" ">="
  "<<" ">>"
  "+" "-" "*" "/" "%"
  "'" "?" ] @operator
+
+;; These are not always operators (e.g. can be type/closure param brackets).
+(binary_expression
+ operator: ["|" "<" ">"] @operator)
 
 ;;; Paths' prefixes. TODO: Use a different scope.
 
