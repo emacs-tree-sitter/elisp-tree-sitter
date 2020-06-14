@@ -356,7 +356,13 @@ You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlightin
   (add-hook 'rust-mode-hook #'my/customize-tree-sitter-hl-rust)
 #+end_src
 
-# TODO: Describe face priority.
+When a node matches multiple patterns in a highlighting query, face attributes corresponding to the earlier patterns are prioritized.
+#+begin_src scheme
+  ;; More specific patterns should be written earlier.
+  ((lifetime (identifier) @type.builtin)
+   (#eq? @type.builtin "static"))
+  (lifetime (identifier) @label)
+#+end_src
 
 # TODO: Describe how to find and make changes to highlighting queries defined by tree-sitter-langs.
 
