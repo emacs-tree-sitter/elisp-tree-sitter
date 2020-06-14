@@ -335,14 +335,11 @@ also expects VALUE to be a single value, not a list."
 
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
-  (pcase-let* ((`(,face . (,beg-byte . ,end-byte)) capture)
-               (beg (byte-to-position beg-byte))
-               (end (byte-to-position end-byte)))
-    ;; TODO: Make more specific face override more generic face. For example,
-    ;; `tree-sitter-hl-face:function.call' should override
-    ;; `tree-sitter-hl-face:function'.
+  (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
     (when (facep face)
-      (tree-sitter-hl--append-text-property beg end 'face face))))
+      (tree-sitter-hl--append-text-property
+       (byte-to-position beg-byte)
+       (byte-to-position end-byte) 'face face))))
 
 ;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional _loudly)
