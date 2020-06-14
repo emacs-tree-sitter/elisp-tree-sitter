@@ -110,7 +110,9 @@
 
 ;;; Keywords.
 
-["break"
+["async"
+ "await"
+ "break"
  "const"
  "continue"
  "default"
@@ -123,7 +125,6 @@
  "if"
  "impl"
  "in"
- "let"
  "let"
  "loop"
  "macro_rules!"
@@ -164,11 +165,12 @@
  (inner_attribute_item)] @attribute
 
 ["as"
- "*"
- "&"
- "'"
- "=="
- "?"] @operator
+ "&&" "||" "&" "|"
+ "^"
+ "==" "!=" "<" "<=" ">" ">="
+ "<<" ">>"
+ "+" "-" "*" "/" "%"
+ "'" "?" ] @operator
 
 ;;; Paths' prefixes. TODO: Use a different scope.
 
