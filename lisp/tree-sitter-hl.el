@@ -51,8 +51,8 @@
   "Face used for function"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.method '((default :inherit tree-sitter-hl-face:function))
-  "Face used for function.method"
+(defface tree-sitter-hl-face:function.call '((default :inherit (link font-lock-function-name-face) :underline nil))
+  "Face used for function.call"
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:function.builtin '((default :inherit font-lock-builtin-face))
@@ -67,19 +67,19 @@
   "Face used for function.special"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.call '((default :inherit (link font-lock-function-name-face) :underline nil))
-  "Face used for function.call"
+(defface tree-sitter-hl-face:method '((default :inherit tree-sitter-hl-face:function))
+  "Face used for method"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:function.method.call
-  '((default :inherit (tree-sitter-hl-face:function.call
-                       tree-sitter-hl-face:function.method) :underline nil))
-  "Face used for function.method.call"
+(defface tree-sitter-hl-face:method.call '((default :inherit tree-sitter-hl-face:function.call))
+  "Face used for method.call"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:identifier '((default :inherit font-lock-function-name-face))
-  "Face used for identifier"
-  :group 'tree-sitter-hl-faces)
+(define-obsolete-face-alias 'tree-sitter-hl-face:function.method
+  'tree-sitter-hl-face:method "0.9.0")
+
+(define-obsolete-face-alias 'tree-sitter-hl-face:function.method.call
+  'tree-sitter-hl-face:method.call "0.9.0")
 
 (defface tree-sitter-hl-face:keyword '((default :inherit font-lock-keyword-face))
   "Face used for keyword"
@@ -97,7 +97,7 @@
   "Face used for property"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:property.definition '((default :inherit tree-sitter-hl-face:property))
+(defface tree-sitter-hl-face:property.definition '((default :inherit tree-sitter-hl-face:variable.parameter))
   "Face used for property.definition"
   :group 'tree-sitter-hl-faces)
 
