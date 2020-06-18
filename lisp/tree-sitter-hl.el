@@ -141,7 +141,7 @@
   "Face used for type.builtin"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:type.super '((default :inherit tree-sitter-hl-face:type :slant italic))
+(defface tree-sitter-hl-face:type.super '((default :inherit tree-sitter-hl-face:type))
   "Face used for type.super"
   :group 'tree-sitter-hl-faces)
 

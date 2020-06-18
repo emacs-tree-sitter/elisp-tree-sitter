@@ -23,6 +23,10 @@
         subscript: (identifier) @type.argument)
        (identifier) @type])
 
+(class_definition
+ name: (identifier) @type
+ superclasses: (argument_list (identifier) @type.super))
+
 ;; Variables.
 
 ;; TODO: Add @variable.use
