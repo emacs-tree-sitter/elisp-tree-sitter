@@ -13,17 +13,19 @@
 
 (require 'dired-aux)
 
-(defun tree-sitter-dyn-get--download ()
-  "Download the pre-compiled `tree-sitter-dyn' module."
-  (let* ((main-file (locate-library "tree-sitter.el"))
+(defconst tree-sitter-dyn-get--version-file "DYN-VERSION")
+
+(defun tree-sitter-dyn-get--dir ()
+  "Return the directory to put `tree-sitter-dyn' module in."
+  (let* ((main-file (locate-library "tree-sitter-core"))
          (_ (unless main-file
-              (error "Could not find tree-sitter.el")))
-         ;; TODO: Version `tree-sitter-dyn' separately from `tree-sitter'.
-         (version (with-temp-buffer
-                    (insert-file-contents main-file)
-                    (unless (re-search-forward ";; Version: \\(.+\\)")
-                      (error "Could not determine tree-sitter version"))
-                    (match-string 1)))
+              (error "Could not find tree-sitter-core"))))
+    (file-name-directory main-file)))
+
+(defun tree-sitter-dyn-get--download (version)
+  "Download the pre-compiled VERSION of `tree-sitter-dyn' module."
+  (let* ((default-directory (tree-sitter-dyn-get--dir))
+         ;; TODO: Handle systems with no pre-built binaries better.
          (ext (pcase system-type
                 ('windows-nt "dll")
                 ('darwin "dylib")
@@ -33,8 +35,7 @@
          (gz-file (format "%s.gz" dyn-file))
          (uncompressed? (version< "0.7.0" version))
          (url (format "https://github.com/ubolonton/emacs-tree-sitter/releases/download/%s/%s"
-                      version (if uncompressed? dyn-file gz-file)))
-         (default-directory (file-name-directory main-file)))
+                      version (if uncompressed? dyn-file gz-file))))
     (message "Downloading %s" url)
     (if uncompressed?
         (url-copy-file url dyn-file :ok-if-already-exists)
@@ -42,9 +43,33 @@
       (when (file-exists-p dyn-file)
         (delete-file dyn-file))
       ;; XXX: Uncompressing with `dired-compress-file' doesn't work on Windows.
-      (dired-compress-file gz-file))))
+      (dired-compress-file gz-file))
+    (with-temp-file tree-sitter-dyn-get--version-file
+      (let ((coding-system-for-write 'utf-8))
+        (insert version)))))
 
-(defun tree-sitter-dyn-get-ensure ()
+(defun tree-sitter-dyn-get-ensure (version)
+  "Try to load a specific VERSION of  `tree-sitter-dyn'.
+If it's not found, try to download it."
+  ;; On Windows, we cannot overwrite the old dll file while it's opened
+  ;; (loaded), so we'll have to do the version check before loading the module,
+  ;; through a version file.
+  (let* ((default-directory (tree-sitter-dyn-get--dir))
+         (current-version (when (file-exists-p
+                                 tree-sitter-dyn-get--version-file)
+                            (with-temp-buffer
+                              (let ((coding-system-for-read 'utf-8))
+                                (insert-file-contents
+                                 tree-sitter-dyn-get--version-file)
+                                (buffer-string))))))
+    ;; TODO: What if the module was compiled locally?
+    (when (or (not current-version)
+              (version< current-version version))
+      (tree-sitter-dyn-get--download version)))
+
+  ;; TODO: If the currently loaded version of `tree-sitter-dyn' is too old,
+  ;; restart Emacs (or ask user to do so).
+
   ;; XXX: We want a universal package containing binaries for all platforms, so
   ;; we use a unique extension for each. On macOS, we use`.dylib', which is more
   ;; sensible than `.so' anyway.
@@ -52,13 +77,10 @@
     (when (eq system-type 'darwin)
       (load "tree-sitter--mac-load.el")))
 
-  ;; TODO: If the currently loaded version of `tree-sitter-dyn' is too old,
-  ;; delete it, then restart Emacs (or ask user to do so).
-
-  ;; If we could not load it, try downloading.
+  ;; If we could not load it (e.g. when the dynamic module was deleted, but the
+  ;; version file was not), try downloading again.
   (unless (require 'tree-sitter-dyn nil :noerror)
-    ;; TODO: Handle systems with no pre-built binaries.
-    (tree-sitter-dyn-get--download))
+    (tree-sitter-dyn-get--download version))
 
   ;; We should have the binary by now. Try to load for real.
   (unless (featurep 'tree-sitter-dyn)
@@ -67,3 +89,4 @@
     (require 'tree-sitter-dyn)))
 
 (provide 'tree-sitter-dyn-get)
+;;; tree-sitter-dyn-get.el ends here
