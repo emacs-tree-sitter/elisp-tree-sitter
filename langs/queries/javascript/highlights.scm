@@ -1,5 +1,4 @@
-; Special identifiers
-;--------------------
+;; Special identifiers
 
 ((identifier) @constant
  (#match? @constant "^[A-Z][A-Z_]+$"))
@@ -18,158 +17,143 @@
  (#eq? @function.builtin "require")
  (#is-not? local))
 
-; Function and method definitions
-;--------------------------------
+;; Function and method definitions
 
 (function
-  name: (identifier) @function)
+ name: (identifier) @function)
 (function_declaration
-  name: (identifier) @function)
+ name: (identifier) @function)
 (method_definition
-  name: (property_identifier) @function.method)
-
-(pair
-  key: (property_identifier) @function.method
-  value: (function))
-(pair
-  key: (property_identifier) @function.method
-  value: (arrow_function))
-
-(assignment_expression
-  left: (member_expression
-    property: (property_identifier) @function.method)
-  right: (arrow_function))
-(assignment_expression
-  left: (member_expression
-    property: (property_identifier) @function.method)
-  right: (function))
+ name: (property_identifier) @method)
 
 (variable_declarator
-  name: (identifier) @function
-  value: (arrow_function))
+ name: (identifier) @function
+ value: [(function) (arrow_function)])
+
+(assignment_expression
+ left: [(identifier) @function
+        (member_expression property: (property_identifier) @method)]
+ right: [(function) (arrow_function)])
+
+(pair key: (property_identifier) @method
+      value: [(function) (arrow_function)])
+
+;; Function and method calls
+
+(call_expression
+ function: [(identifier) @function.call
+            (member_expression
+             property: (property_identifier) @method.call)])
+
+;; Variables
+
 (variable_declarator
-  name: (identifier) @function
-  value: (function))
-
+ name: (identifier) @variable)
 (assignment_expression
-  left: (identifier) @function
-  right: (arrow_function))
-(assignment_expression
-  left: (identifier) @function
-  right: (function))
+ left: [(identifier) @variable
+        (member_expression property: (property_identifier) @variable)])
+(augmented_assignment_expression
+ left: [(identifier) @variable
+        (member_expression property: (property_identifier) @variable)])
+(for_in_statement
+ left: (identifier) @variable)
 
-; Function and method calls
-;--------------------------
+(formal_parameters
+ (identifier) @variable.parameter)
+(arrow_function
+ parameter: (identifier) @variable.parameter)
 
-(call_expression
-  function: (identifier) @function)
+;; Properties
 
-(call_expression
-  function: (member_expression
-    property: (property_identifier) @function.method))
+(pair key: (property_identifier) @property.definition)
+(member_expression
+ property: (property_identifier) @property)
 
-; Variables
-;----------
+;; Literals
 
-(formal_parameters (identifier) @variable.parameter)
+[(this) (super) (true) (false)] @variable.builtin
 
-(identifier) @variable
-
-; Properties
-;-----------
-
-(property_identifier) @property
-
-; Literals
-;---------
-
-(this) @variable.builtin
-(super) @variable.builtin
-
-(true) @constant.builtin
-(false) @constant.builtin
-(comment) @comment
-(string) @string
 (regex) @string.special
-(template_string) @string
 (number) @number
 
-; Punctuation
-;------------
+[(string) (template_string)] @string
+(comment) @comment
+
+;; Punctuation
 
 (template_substitution
-  "${" @punctuation.special
-  "}" @punctuation.special) @embedded
+ "${" @punctuation.special
+ (_) @embedded
+ "}" @punctuation.special)
 
-";" @punctuation.delimiter
-"." @punctuation.delimiter
-"," @punctuation.delimiter
+[";"
+ "."
+ ","] @punctuation.delimiter
 
-"--" @operator
-"-" @operator
-"-=" @operator
-"&&" @operator
-"+" @operator
-"++" @operator
-"+=" @operator
-"<" @operator
-"<<" @operator
-"=" @operator
-"==" @operator
-"===" @operator
-"=>" @operator
-">" @operator
-">>" @operator
-"||" @operator
+["--"
+ "-"
+ "-="
+ "&&"
+ "+"
+ "++"
+ "+="
+ "<"
+ "<<"
+ "="
+ "=="
+ "==="
+ "=>"
+ ">"
+ ">>"
+ "||"] @operator
 
-"(" @punctuation.bracket
-")" @punctuation.bracket
-"[" @punctuation.bracket
-"]" @punctuation.bracket
-"{" @punctuation.bracket
-"}" @punctuation.bracket
+["("
+ ")"
+ "["
+ "]"
+ "{"
+ "}"] @punctuation.bracket
 
-; Keywords
-;----------
+;; Keywords
 
-"as" @keyword
-"async" @keyword
-"await" @keyword
-"break" @keyword
-"case" @keyword
-"catch" @keyword
-"class" @keyword
-"const" @keyword
-"continue" @keyword
-"debugger" @keyword
-"default" @keyword
-"delete" @keyword
-"do" @keyword
-"else" @keyword
-"export" @keyword
-"extends" @keyword
-"finally" @keyword
-"for" @keyword
-"from" @keyword
-"function" @keyword
-"get" @keyword
-"if" @keyword
-"import" @keyword
-"in" @keyword
-"instanceof" @keyword
-"let" @keyword
-"new" @keyword
-"of" @keyword
-"return" @keyword
-"set" @keyword
-"static" @keyword
-"switch" @keyword
-"target" @keyword
-"throw" @keyword
-"try" @keyword
-"typeof" @keyword
-"var" @keyword
-"void" @keyword
-"while" @keyword
-"with" @keyword
-"yield" @keyword
+["as"
+ "async"
+ "await"
+ "break"
+ "case"
+ "catch"
+ "class"
+ "const"
+ "continue"
+ "debugger"
+ "default"
+ "delete"
+ "do"
+ "else"
+ "export"
+ "extends"
+ "finally"
+ "for"
+ "from"
+ "function"
+ "get"
+ "if"
+ "import"
+ "in"
+ "instanceof"
+ "let"
+ "new"
+ "of"
+ "return"
+ "set"
+ "static"
+ "switch"
+ "target"
+ "throw"
+ "try"
+ "typeof"
+ "var"
+ "void"
+ "while"
+ "with"
+ "yield"] @keyword

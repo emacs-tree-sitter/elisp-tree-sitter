@@ -117,6 +117,10 @@
   "Face used for string"
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:string.special '((default :inherit tree-sitter-hl-face:string :weight bold))
+  "Face used for string.special"
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:doc '((default :inherit font-lock-doc-face))
   "Face used for doc"
   :group 'tree-sitter-hl-faces)
@@ -347,6 +351,7 @@ also expects VALUE to be a single value, not a list."
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
   (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
+    ;; TODO: If it's a function, call it with (BEG END).
     (when (facep face)
       (tree-sitter-hl--append-text-property
        (byte-to-position beg-byte)
