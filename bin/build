@@ -20,6 +20,7 @@ source "$here/env.bash"
 
     MODULE_DIR="$PROJECT_ROOT/target/$TARGET"
     cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./lisp/$MODULE_RENAMED"
+    echo 'LOCAL' > lisp/DYN-VERSION
 
     cask build
 )

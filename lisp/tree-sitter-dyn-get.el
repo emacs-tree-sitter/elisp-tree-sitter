@@ -62,10 +62,11 @@ If it's not found, try to download it."
                                 (insert-file-contents
                                  tree-sitter-dyn-get--version-file)
                                 (buffer-string))))))
-    ;; TODO: What if the module was compiled locally?
-    (when (or (not current-version)
-              (version< current-version version))
-      (tree-sitter-dyn-get--download version)))
+    ;; TODO: Write the correct version as part of the build process.
+    (unless (string= current-version "LOCAL")
+      (when (or (not current-version)
+                (version< current-version version))
+        (tree-sitter-dyn-get--download version))))
 
   ;; TODO: If the currently loaded version of `tree-sitter-dyn' is too old,
   ;; restart Emacs (or ask user to do so).

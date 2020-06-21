@@ -19,6 +19,8 @@ cargo build --all $extra
 
 Copy-Item $module_dir\$module_name.dll $project_root\lisp\$module_renamed.dll
 
+Set-Content -Path "$project_root\lisp\DYN-VERSION" -Value "LOCAL" -Force
+
 cask build
 
 Pop-Location
