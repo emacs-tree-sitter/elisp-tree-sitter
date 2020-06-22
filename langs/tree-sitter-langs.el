@@ -99,15 +99,23 @@ See `tree-sitter-langs-repos'."
   (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
         lang-symbol))
 
+(defun tree-sitter-langs--hl-query-path (lang-symbol)
+  (concat (file-name-as-directory
+           (concat tree-sitter-langs--queries-dir
+                   (symbol-name lang-symbol)))
+          "highlights.scm"))
+
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return default syntax highlighting patterns for LANG-SYMBOL."
-  (let ((query-path (concat (file-name-as-directory
-                             (concat tree-sitter-langs--queries-dir
-                                     (symbol-name lang-symbol)))
-                            "highlights.scm")))
-    (with-temp-buffer
-      (insert-file-contents query-path)
-      (buffer-string))))
+  (with-temp-buffer
+    ;; TODO: Make this less ad-hoc.
+    (dolist (sym (pcase lang-symbol
+                   ('cpp '(cpp c))
+                   ('typescript '(typescript javascript))
+                   (_ (list lang-symbol))))
+      (insert-file-contents (tree-sitter-langs--hl-query-path sym))
+      (insert "\n"))
+    (buffer-string)))
 
 (defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
   "Use syntax highlighting patterns provided by `tree-sitter-langs'."
