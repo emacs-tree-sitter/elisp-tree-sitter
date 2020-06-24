@@ -109,11 +109,13 @@ See `tree-sitter-langs-repos'."
   "Return default syntax highlighting patterns for LANG-SYMBOL."
   (with-temp-buffer
     ;; TODO: Make this less ad-hoc.
-    (dolist (sym (pcase lang-symbol
-                   ('cpp '(cpp c))
-                   ('typescript '(typescript javascript))
-                   (_ (list lang-symbol))))
+    (dolist (sym (cons lang-symbol
+                       (pcase lang-symbol
+                         ('cpp '(c))
+                         ('typescript '(javascript))
+                         (_ nil))))
       (insert-file-contents (tree-sitter-langs--hl-query-path sym))
+      (goto-char (point-max))
       (insert "\n"))
     (buffer-string)))
 
