@@ -1,31 +1,63 @@
-; Types
+
+
+(module
+ "module" @keyword
+ name: (_) @constant)
+(internal_module
+ "namespace"
+ name: (_) @constant)
+
+;; Function bindings.
+
+(method_signature
+ name: (property_identifier) @method)
+(function_signature
+ name: (identifier) @function)
+
+;; Types.
+
+(type_arguments
+  "<" @punctuation.bracket
+  ">" @punctuation.bracket)
+(type_parameters
+ "<" @punctuation.bracket
+ ">" @punctuation.bracket)
+
+(type_parameter (type_identifier) @type.parameter)
 
 (type_identifier) @type
 (predefined_type) @type.builtin
 ((identifier) @type
  (match? @type "^[A-Z]"))
 
-(type_arguments
-  "<" @punctuation.bracket
-  ">" @punctuation.bracket)
+(union_type "|" @keyword)
+(optional_parameter "?" @keyword)
 
-; Variables
+;; Variable bindings.
 
 (required_parameter (identifier) @variable.parameter)
 (optional_parameter (identifier) @variable.parameter)
 
-; Keywords
+(property_signature
+ name: (property_identifier) @property.definition)
+(enum_body
+ [(property_identifier) @property.definition
+  (enum_assignment
+   (property_identifier) @property.definition)])
 
-"abstract" @keyword
-"declare" @keyword
-"enum" @keyword
-"export" @keyword
-"implements" @keyword
-"interface" @keyword
-"keyof" @keyword
-"namespace" @keyword
-"private" @keyword
-"protected" @keyword
-"public" @keyword
-"type" @keyword
-(readonly) @keyword
+;; Keywords.
+
+["abstract"
+ "declare"
+ "enum"
+ "export"
+ "implements"
+ "interface"
+ "keyof"
+ "namespace"
+ "private"
+ "protected"
+ "public"
+ "type"
+ "!"
+ (readonly)] @keyword
