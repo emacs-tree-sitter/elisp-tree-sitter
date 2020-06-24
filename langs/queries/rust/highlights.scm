@@ -50,19 +50,18 @@
 
 (function_item (identifier) @function)
 (function_signature_item (identifier) @function)
+(macro_definition (identifier) @function)
 
 ;;; Types.
 
 (type_arguments "<" @punctuation.bracket
+                (type_identifier)? @type.argument
                 ">" @punctuation.bracket)
 (type_parameters "<" @punctuation.bracket
+                (type_identifier)? @type.parameter
                  ">" @punctuation.bracket)
 (where_predicate
  left: (type_identifier) @type.parameter)
-(type_parameters
- (type_identifier) @type.parameter)
-(type_arguments
- (type_identifier) @type.argument)
 
 (type_identifier) @type
 (primitive_type) @type.builtin
@@ -101,6 +100,11 @@
 (for_expression pattern: (_ (identifier) @variable))
 
 (parameter (identifier) @variable.parameter)
+
+(token_binding_pattern
+ name: (metavariable) @variable.parameter
+ type: (fragment_specifier) @type)
+(metavariable) @label
 
 ;;; Lifetime.
 

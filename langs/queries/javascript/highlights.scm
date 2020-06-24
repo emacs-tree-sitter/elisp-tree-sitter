@@ -50,11 +50,13 @@
 (variable_declarator
  name: (identifier) @variable)
 (assignment_expression
- left: [(identifier) @variable
-        (member_expression property: (property_identifier) @variable)])
+ left: (identifier) @variable)
+(assignment_expression
+ left: (member_expression property: (property_identifier) @variable))
 (augmented_assignment_expression
- left: [(identifier) @variable
-        (member_expression property: (property_identifier) @variable)])
+ left: (identifier) @variable)
+(augmented_assignment_expression
+ left: (member_expression property: (property_identifier) @variable))
 (for_in_statement
  left: (identifier) @variable)
 
@@ -98,12 +100,15 @@
  "++"
  "+="
  "<"
+ "<="
  "<<"
  "="
  "=="
  "==="
+ "!=="
  "=>"
  ">"
+ ">="
  ">>"
  "||"] @operator
 
@@ -157,3 +162,7 @@
  "while"
  "with"
  "yield"] @keyword
+
+
+;; Misc.
+(statement_identifier) @label
