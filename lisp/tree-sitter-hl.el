@@ -101,7 +101,7 @@
   "Face used for property.definition"
   :group 'tree-sitter-hl-faces)
 
-(defface tree-sitter-hl-face:punctuation '(())
+(defface tree-sitter-hl-face:punctuation '((default :inherit default))
   "Face used for punctuation"
   :group 'tree-sitter-hl-faces)
 
