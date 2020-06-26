@@ -65,7 +65,7 @@
  (#match? @constant.builtin "^__(FILE|LINE|ENCODING)__$"))
 
 ((constant) @constant
- (#match? @constant "^[A-Z\\d_]+$"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 (constant) @constructor
 

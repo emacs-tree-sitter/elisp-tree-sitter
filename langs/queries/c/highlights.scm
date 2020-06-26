@@ -72,7 +72,7 @@
 (sized_type_specifier) @type
 
 ((identifier) @constant
- (#match? @constant "^[A-Z][A-Z\\d_]*$"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 (identifier) @variable
 

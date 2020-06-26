@@ -41,7 +41,7 @@
 ; Variables
 
 ((identifier) @constant
- (#match? @constant "^_*[A-Z][A-Z\d_]+"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 (this) @variable.builtin
 

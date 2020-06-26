@@ -1,10 +1,10 @@
 ;; Special identifiers
 
 ((identifier) @constant
- (#match? @constant "^[A-Z][A-Z_]+$"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((shorthand_property_identifier) @constant
- (#match? @constant "^[A-Z][A-Z_]+$"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((identifier) @constructor
  (#match? @constructor "^[A-Z]"))
