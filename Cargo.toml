@@ -1,6 +1,6 @@
 [package]
 name = "emacs-tree-sitter"
-version = "0.8.0"
+version = "0.8.2"
 authors = ["Tuấn-Anh Nguyễn <ubolonton@gmail.com>"]
 edition = "2018"
 publish = false
@@ -14,6 +14,9 @@ crate-type = ["cdylib"]
 emacs = "0.14.0"
 libloading = "0.6.2"
 tree-sitter = "0.16.1"
+
+[patch.crates-io.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
 
 [profile.release]
 opt-level = 3

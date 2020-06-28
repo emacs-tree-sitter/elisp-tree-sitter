@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/661) handling of alternations under field names.
 
 ## [0.8.1] - 2020-06-28
 - Added customization option `tree-sitter-hl-use-font-lock-keywords`, allowing `tree-sitter-hl-mode` to work with minor modes that use `font-lock-add-keywords`.
