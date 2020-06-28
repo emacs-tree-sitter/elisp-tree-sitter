@@ -43,8 +43,10 @@
             field: (field_identifier) @function.call))
 
 (macro_invocation
-  macro: (identifier) @function.macro
-  "!" @function.macro)
+ macro: [(identifier) @function.macro
+         (scoped_identifier
+          name: (identifier) @function.macro)]
+ "!" @function.macro)
 
 ;;; Function definitions.
 
