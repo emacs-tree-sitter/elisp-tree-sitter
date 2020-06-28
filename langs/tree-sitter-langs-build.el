@@ -28,7 +28,7 @@
   "List of suffixes for shared libraries that define tree-sitter languages.")
 
 (defconst tree-sitter-langs--dir
-  (file-name-directory (locate-library "tree-sitter-langs")))
+  (file-name-directory (locate-library "tree-sitter-langs.el")))
 
 (defconst tree-sitter-langs--bin-dir
   (file-name-as-directory
@@ -100,8 +100,7 @@ as references, instead of using them directly for syntax highlighting.")
 
 (defconst tree-sitter-langs--repos-dir
   (file-name-as-directory
-   (concat (file-name-directory (locate-library "tree-sitter-langs"))
-           "repos"))
+   (concat tree-sitter-langs--dir "repos"))
   "Directory to store grammar repos, for compilation.")
 
 (defun tree-sitter-langs--source (lang-symbol)

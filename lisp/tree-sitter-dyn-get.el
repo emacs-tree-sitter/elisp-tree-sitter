@@ -17,9 +17,9 @@
 
 (defun tree-sitter-dyn-get--dir ()
   "Return the directory to put `tree-sitter-dyn' module in."
-  (let* ((main-file (locate-library "tree-sitter-core"))
+  (let* ((main-file (locate-library "tree-sitter-core.el"))
          (_ (unless main-file
-              (error "Could not find tree-sitter-core"))))
+              (error "Could not find tree-sitter-core.el"))))
     (file-name-directory main-file)))
 
 (defun tree-sitter-dyn-get--download (version)

@@ -34,7 +34,7 @@
   "Return full path from project RELATIVE-PATH."
   (concat (file-name-directory
            (directory-file-name
-            (file-name-directory (locate-library "tree-sitter")))) relative-path))
+            (file-name-directory (locate-library "tree-sitter.el")))) relative-path))
 
 (defun ts-test-tree-sexp (sexp &optional reset)
   "Check that the current syntax tree's sexp representation is SEXP.
