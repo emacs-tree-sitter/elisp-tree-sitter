@@ -7,6 +7,7 @@ steps:
   inputs:
     gitHubConnection: ${{ parameters.endpoint }}
     repositoryName: ubolonton/emacs-tree-sitter
+    isDraft: true
     assetUploadMode: replace
     assets: |
       $(System.DefaultWorkingDirectory)/dist/*.tar.gz

@@ -16,8 +16,10 @@ $module_dir = "$project_root\target\$target"
 Push-Location $project_root
 
 cargo build --all $extra
-
 Copy-Item $module_dir\$module_name.dll $project_root\lisp\$module_renamed.dll
+
+$version = ((cargo pkgid) | Out-String).Trim().Split('#')[-1].Split(':')[-1]
+Set-Content -Path "$project_root\lisp\DYN-VERSION" -Value $version -NoNewLine -Force
 
 cask build
 
