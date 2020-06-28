@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2020-06-28
+- Added customization option `tree-sitter-hl-use-font-lock-keywords`, allowing `tree-sitter-hl-mode` to work with minor modes that use `font-lock-add-keywords`.
+
 ## [0.8.0] - 2020-06-07
 - Upgraded `tree-sitter` to 0.16.1. This significantly improved the expressiveness and power of tree queries.
 - Made `tree-sitter-hl-mode` work without a major mode.
@@ -48,7 +51,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.1...HEAD
+[0.8.1]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.5.0...0.6.0
