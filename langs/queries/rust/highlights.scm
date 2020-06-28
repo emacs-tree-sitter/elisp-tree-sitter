@@ -11,11 +11,9 @@
 
 ;; Assume that uppercase names in paths are types.
 ((scoped_identifier
-  path: (identifier) @type)
- (#match? @type "^[A-Z]"))
-((scoped_identifier
-  path: (scoped_identifier
-         name: (identifier) @type))
+  path: [(identifier) @type
+         (scoped_identifier
+          name: (identifier) @type)])
  (#match? @type "^[A-Z]"))
 
 ;; Assume other uppercase names are enum constructors
@@ -25,22 +23,18 @@
 ;;; Function calls.
 
 (call_expression
- function: (identifier) @function.call)
-(call_expression
- function: (field_expression
-            field: (field_identifier) @function.call))
-(call_expression
- function: (scoped_identifier
-            name: (identifier) @function.call))
+ function: [(identifier) @function.call
+            (field_expression
+             field: (field_identifier) @function.call)
+            (scoped_identifier
+             name: (identifier) @function.call)])
 
 (generic_function
- function: (identifier) @function)
-(generic_function
- function: (scoped_identifier
-            name: (identifier) @function))
-(generic_function
- function: (field_expression
-            field: (field_identifier) @function.call))
+ function: [(identifier) @function.call
+            (field_expression
+             field: (field_identifier) @function.call)
+            (scoped_identifier
+             name: (identifier) @function.call)])
 
 (macro_invocation
  macro: [(identifier) @function.macro
@@ -94,12 +88,12 @@
 
 ;;; Variable bindings
 
-(let_declaration pattern: (identifier) @variable)
-(let_declaration pattern: (_ (identifier) @variable))
-(if_let_expression pattern: (identifier) @variable)
-(if_let_expression pattern: (_ (identifier) @variable))
-(for_expression pattern: (identifier) @variable)
-(for_expression pattern: (_ (identifier) @variable))
+(let_declaration pattern: [(identifier) @variable
+                           (_ (identifier) @variable)])
+(if_let_expression pattern: [(identifier) @variable
+                             (_ (identifier) @variable)])
+(for_expression pattern: [(identifier) @variable
+                          (_ (identifier) @variable)])
 
 (parameter (identifier) @variable.parameter)
 
