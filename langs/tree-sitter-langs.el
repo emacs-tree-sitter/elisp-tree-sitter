@@ -44,7 +44,7 @@
   (require 'pcase))
 
 (defvar tree-sitter-langs--testing)
-(eval-when-compile
+(eval-and-compile
   (unless (bound-and-true-p tree-sitter-langs--testing)
     (tree-sitter-langs-install-grammars :skip-if-installed)))
 
