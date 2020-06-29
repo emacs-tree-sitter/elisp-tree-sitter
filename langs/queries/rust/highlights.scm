@@ -25,14 +25,14 @@
 (call_expression
  function: [(identifier) @function.call
             (field_expression
-             field: (field_identifier) @function.call)
+             field: (field_identifier) @method.call)
             (scoped_identifier
              name: (identifier) @function.call)])
 
 (generic_function
  function: [(identifier) @function.call
             (field_expression
-             field: (field_identifier) @function.call)
+             field: (field_identifier) @method.call)
             (scoped_identifier
              name: (identifier) @function.call)])
 
@@ -44,7 +44,15 @@
 
 ;;; Function definitions.
 
+(function_item
+ name: (identifier) @method
+ parameters: (parameters [(self_parameter)
+                          (parameter (self))]))
 (function_item (identifier) @function)
+(function_signature_item
+ name: (identifier) @method
+ parameters: (parameters [(self_parameter)
+                          (parameter (self))]))
 (function_signature_item (identifier) @function)
 (macro_definition (identifier) @function)
 
@@ -54,7 +62,7 @@
                 (type_identifier)? @type.argument
                 ">" @punctuation.bracket)
 (type_parameters "<" @punctuation.bracket
-                (type_identifier)? @type.parameter
+                 (type_identifier)? @type.parameter
                  ">" @punctuation.bracket)
 (where_predicate
  left: (type_identifier) @type.parameter)
