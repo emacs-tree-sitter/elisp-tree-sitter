@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.2] - 2020-06-30
 - Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/661) handling of alternations under field names.
 
 ## [0.8.1] - 2020-06-28
@@ -52,7 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.1...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.2...HEAD
+[0.8.2]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.1...0.8.2
 [0.8.1]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...0.7.0
