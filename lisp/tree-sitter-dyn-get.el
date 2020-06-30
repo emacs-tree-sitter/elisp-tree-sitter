@@ -62,7 +62,9 @@ If it's not found, try to download it."
                                 (insert-file-contents
                                  tree-sitter-dyn-get--version-file)
                                 (buffer-string))))))
-    ;; TODO: Write the correct version as part of the build process.
+    ;; This is also run on CI, after we've built the binaries, but before
+    ;; publishing them. Downloading at that time doesn't make sense, so we
+    ;; disable it with a special version string.
     (unless (string= current-version "LOCAL")
       (when (or (not current-version)
                 (version< current-version version))

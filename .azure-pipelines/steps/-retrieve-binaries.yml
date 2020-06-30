@@ -8,3 +8,5 @@ steps:
     inputs:
       artifact: tree-sitter-dyn.${{ ext }}
       path: lisp
+
+- bash: echo LOCAL > lisp/DYN-VERSION
