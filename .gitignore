@@ -4,6 +4,7 @@
 **/.cask
 grammars/
 lisp/tree-sitter-dyn.*
+lisp/DYN-VERSION
 
 langs/bin/
 langs/repos/
