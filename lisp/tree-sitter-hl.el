@@ -390,8 +390,8 @@ also expects VALUE to be a single value, not a list."
 
 (defun tree-sitter-hl--prepend-text-property (start end prop value &optional object)
   "Prepend VALUE to PROP of the text from START to END.
-This is similar to `font-lock-prepend-text-property', but deduplicates values. It
-also expects VALUE to be a single value, not a list."
+This is similar to `font-lock-prepend-text-property', but deduplicates values.
+It also expects VALUE to be a single value, not a list."
   (let (next prev)
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
@@ -423,7 +423,9 @@ also expects VALUE to be a single value, not a list."
 (defun tree-sitter-hl--highlight-region (beg end &optional loudly)
   "Highlight the region (BEG . END).
 This is intended to be used as a buffer-local override of
-`font-lock-fontify-region-function'."
+`font-lock-fontify-region-function'.
+
+If LOUDLY is non-nil, print debug messages."
   (ts--save-context
     ;; Extend the region to be highlighted, based on some heuristics, so that
     ;; querying works in certain pathological cases. This is analogous to the

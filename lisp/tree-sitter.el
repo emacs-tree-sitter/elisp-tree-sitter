@@ -218,7 +218,7 @@ If FUNC is a quoted symbol, skip the `funcall' indirection."
     `(funcall ,func)))
 
 (defmacro tree-sitter--handle-dependent (mode setup-function teardown-function)
-  "Build the block of code that handles the enabling/disabling of a dependent mode.
+  "Build the block of code that handles enabling/disabling of a dependent mode.
 Use this as the body of the `define-minor-mode' block that defines MODE.
 
 When MODE is enabled, it automatically enables `tree-sitter-mode'. When MODE is
