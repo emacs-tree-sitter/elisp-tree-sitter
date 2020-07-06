@@ -85,6 +85,7 @@
 
 ;;; Punctuations.
 
+;;; TODO: This should be lower than attributes?
 ["("
  ")"
  "["
@@ -170,7 +171,7 @@
 (escape_sequence) @escape
 
 [(attribute_item)
- (inner_attribute_item)] @attribute
+ (inner_attribute_item)] @function.special
 
 ["as"
  "&&" "||" "&"
