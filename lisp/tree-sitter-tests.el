@@ -291,6 +291,24 @@ tree is held (since nodes internally reference the tree)."
         (should (memq 'tree-sitter-hl-face:function.macro
                       (get-text-property beg 'face)))))))
 
+(ert-deftest hl::hl-region-vs-query-region ()
+  (ts-test-lang-with-file 'javascript "lisp/test-files/hl-region-vs-query-region.js"
+    (tree-sitter-hl-mode)
+    (let ((tree-sitter-hl--extend-region-limit 16)
+          id-end id-beg)
+      (save-excursion
+        (search-forward "compound_assignment_expr:")
+        (backward-char)
+        (setq id-end (point))
+        (search-backward "compound_assignment_expr")
+        (setq id-beg (point)))
+      (tree-sitter-hl--highlight-region 1 id-end)
+      (ert-info ("Highlighting a region that cuts a pattern in halves")
+        (should (memq 'tree-sitter-hl-face:property.definition
+                      (get-text-property id-beg 'face)))
+        (should (eq (next-single-property-change id-beg 'face)
+                    id-end))))))
+
 (ert-deftest hl::face-mapping ()
   (ert-info ("Keywords should not be highlighted if their capture name is disabled")
     (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
