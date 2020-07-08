@@ -282,7 +282,7 @@ tree is held (since nodes internally reference the tree)."
   (ts-test-lang-with-file 'rust "lisp/test-files/extend-region.rs"
     (tree-sitter-hl-mode)
     (let* ((beg (save-excursion
-                  (search-forward "abc")
+                  (re-search-forward "^abc")
                   (backward-char)
                   (point)))
            (end (1+ beg)))
