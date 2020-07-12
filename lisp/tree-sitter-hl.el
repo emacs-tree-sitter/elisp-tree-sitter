@@ -227,6 +227,11 @@
   "Face for delimiters."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:punctuation.special
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for special punctuations."
+  :group 'tree-sitter-hl-faces)
+
 ;;; ------------------------------------
 ;;; Markups.
 
