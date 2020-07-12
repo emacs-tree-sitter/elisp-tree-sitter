@@ -48,8 +48,8 @@
 (defun ts-point-from-position (position)
   "Convert POSITION to a valid tree-sitter point.
 
-A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See `ts-parse-chunks'
-for a more detailed explanation."
+A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
+`ts-parse-chunks' for a more detailed explanation."
   (ts--save-context
     (ts--point-from-position position)))
 
@@ -121,14 +121,14 @@ This function must be called with narrowing disabled, e.g. within a
 ;;; Convenient versions of some functions.
 
 (defun ts-get-descendant-for-position-range (node beg end)
-  "Return the smallest node within NODE that spans the position range [BEG END]."
+  "Return the smallest node within NODE that spans the range (BEG . END)."
   (ts-get-descendant-for-byte-range
    node
    (position-bytes beg)
    (position-bytes end)))
 
 (defun ts-get-named-descendant-for-position-range (node beg end)
-  "Return the smallest named node within NODE that spans the position range [BEG END]."
+  "Return the smallest named node within NODE that spans the range (BEG . END)."
   (ts-get-named-descendant-for-byte-range
    node
    (position-bytes beg)
