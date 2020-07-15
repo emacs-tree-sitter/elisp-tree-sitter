@@ -15,7 +15,7 @@ pub fn shared<T>(t: T) -> Shared<T> {
     Rc::new(RefCell::new(t))
 }
 
-unsafe fn erase_lifetime<'t, T>(x: &'t T) -> &'static T {
+pub unsafe fn erase_lifetime<'t, T>(x: &'t T) -> &'static T {
     mem::transmute(x)
 }
 
@@ -171,6 +171,12 @@ impl FromLisp<'_> for Language {
             }
             _ => Err(ErrorKind::WrongTypeUserPtr { expected: "TreeSitterLanguage" }.into())
         }
+    }
+}
+
+impl Language {
+    pub fn id(self) -> usize {
+        unsafe { mem::transmute(self) }
     }
 }
 

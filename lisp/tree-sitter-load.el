@@ -58,7 +58,7 @@ to be LANG-SYMBOL's name, prefixed with \"tree_sitter_\"."
     (unless full-path
       ;; TODO: Define custom error class.
       (error "Cannot find shared library for language: %S" lang-symbol))
-    (let ((language (ts--load-language full-path native-symbol-name)))
+    (let ((language (ts--load-language full-path native-symbol-name lang-symbol)))
       (setf (map-elt tree-sitter-languages lang-symbol) language)
       language)))
 

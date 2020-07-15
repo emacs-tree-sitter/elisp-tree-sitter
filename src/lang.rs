@@ -1,22 +1,55 @@
-use std::mem;
-
-use emacs::{defun, Result};
+use emacs::{defun, Result, GlobalRef, Value, Env};
 
 use libloading::{Library, Symbol};
+use once_cell::sync::Lazy;
 
 use crate::types::*;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+struct LangInfo {
+    load_file: String,
+    lang_symbol: GlobalRef,
+    _lib: Library,
+}
+
+// TODO: Consider optimizing for accessing language's metadata, i.e. making Language a big wrapper
+// around tree_sitter::Language, so that hash lookup happens only when returning the language of a
+// parser/tree/node/query.
+static LANG_INFOS: Lazy<Mutex<HashMap<usize, LangInfo>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Load the shared lib FILE and return the language under SYMBOL-NAME.
+/// The language's name symbol is set to LANG-SYMBOL.
 #[defun]
-fn _load_language(file: String, symbol_name: String) -> Result<Language> {
-    let lib = Library::new(file)?;
+fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Result<Language> {
+    let lib = Library::new(&file)?;
     let tree_sitter_lang: Symbol<'_, unsafe extern "C" fn() -> _> =
         unsafe { lib.get(symbol_name.as_bytes())? };
     let language: Language = unsafe { tree_sitter_lang() };
-    // Avoid segmentation fault by not unloading the lib, as language is a static piece of data.
-    // TODO: Attach an Rc<Library> to Language instead.
-    mem::forget(lib);
+    LANG_INFOS.lock().expect("Failed to access language info registry").insert(language.id(), LangInfo {
+        load_file: file,
+        lang_symbol: lang_symbol.make_global_ref(),
+        _lib: lib,
+    });
     Ok(language)
+}
+
+fn _info(language: Language) -> Option<&'static LangInfo> {
+    // TODO: Explain the safety.
+    LANG_INFOS.lock().expect("Failed to access language info registry").get(&language.id())
+        .map(|info| unsafe { erase_lifetime(info) })
+}
+
+/// Return LANGUAGE's name, as a symbol.
+#[defun]
+fn _lang_symbol(env: &Env, language: Language) -> Result<Option<Value>> {
+    Ok(_info(language).map(|info| info.lang_symbol.bind(env)))
+}
+
+/// Return the shared lib file that LANGUAGE was loaded from.
+#[defun]
+fn _lang_load_file(language: Language) -> Result<Option<&'static String>> {
+    Ok(_info(language).map(|info| &info.load_file))
 }
 
 macro_rules! defun_lang_methods {
