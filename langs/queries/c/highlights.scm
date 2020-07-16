@@ -1,79 +1,137 @@
-"break" @keyword
-"case" @keyword
-"const" @keyword
-"continue" @keyword
-"default" @keyword
-"do" @keyword
-"else" @keyword
-"enum" @keyword
-"extern" @keyword
-"for" @keyword
-"if" @keyword
-"inline" @keyword
-"return" @keyword
-"sizeof" @keyword
-"static" @keyword
-"struct" @keyword
-"switch" @keyword
-"typedef" @keyword
-"union" @keyword
-"volatile" @keyword
-"while" @keyword
+["break"
+ "case"
+ "const"
+ "continue"
+ "default"
+ "do"
+ "else"
+ "enum"
+ "extern"
+ "for"
+ "if"
+ "inline"
+ "return"
+ "sizeof"
+ "static"
+ "struct"
+ "switch"
+ "typedef"
+ "union"
+ "volatile"
+ "while"
+ "..."] @keyword
 
-"#define" @keyword
-"#else" @keyword
-"#endif" @keyword
-"#if" @keyword
-"#ifdef" @keyword
-"#ifndef" @keyword
-"#include" @keyword
-(preproc_directive) @keyword
+[(storage_class_specifier)
+ (type_qualifier)] @keyword
 
-"--" @operator
-"-" @operator
-"-=" @operator
-"->" @operator
-"!=" @operator
-"*" @operator
-"&" @operator
-"&&" @operator
-"+" @operator
-"++" @operator
-"+=" @operator
-"<" @operator
-"==" @operator
-">" @operator
-"||" @operator
+["#define"
+ "#else"
+ "#endif"
+ "#if"
+ "#ifdef"
+ "#ifndef"
+ "#include"
+ (preproc_directive)] @function.macro
 
-"." @delimiter
-";" @delimiter
+((["#ifdef" "#ifndef"] (identifier) @constant))
 
-(string_literal) @string
-(system_lib_string) @string
+;; (preproc_directive("#define" (identifier) @variable.special))
 
-(null) @constant
-(number_literal) @number
-(char_literal) @number
+["--"
+ "-"
+ "-="
+ "->"
+ "!="
+ "*"
+ "&"
+ "&&"
+ "+"
+ "++"
+ "+="
+ "<"
+ "=="
+ ">"
+ "||"
+ "="] @operator
 
-(call_expression
-  function: (identifier) @function)
-(call_expression
-  function: (field_expression
-    field: (field_identifier) @function))
+["."
+ ";"] @delimiter
+
+;;; ----------------------------------------------------------------------------
+;;; Functions.
+
 (function_declarator
-  declarator: (identifier) @function)
+ declarator: (identifier) @function)
 (preproc_function_def
-  name: (identifier) @function.special)
+ name: (identifier) @function)
+
+(function_declarator
+ (parenthesized_declarator
+  (pointer_declarator (field_identifier) @function)))
+
+(call_expression
+ function: [(identifier) @function.call
+            (field_expression
+             field: (field_identifier) @method.call)])
+
+;;; ----------------------------------------------------------------------------
+;;; Types.
+
+[(primitive_type)
+ (sized_type_specifier)] @type.builtin
+
+(type_identifier) @type
+
+;;; ----------------------------------------------------------------------------
+;;; Variables.
+
+(declaration declarator: [(identifier) @variable
+                          (_ (identifier) @variable)])
+
+(parameter_declaration declarator: [(identifier) @variable.parameter
+                                    (_ (identifier) @variable.parameter)])
+
+(init_declarator declarator: [(identifier) @variable
+                              (_ (identifier) @variable)])
+
+(assignment_expression
+ left: [(identifier) @variable
+        (field_expression field: (field_identifier) @variable)
+        (pointer_expression (identifier) @variable)])
+
+(preproc_def name: (identifier) @variable.special)
+
+(preproc_params
+ (identifier) @variable.parameter)
+
+;;; ----------------------------------------------------------------------------
+;;; Properties.
+
+(field_declaration
+ declarator: [(field_identifier) @property.definition
+              (pointer_declarator (field_identifier) @property.definition)
+              (pointer_declarator (pointer_declarator (field_identifier) @property.definition))])
+
+(enumerator name: (identifier) @property.definition)
 
 (field_identifier) @property
-(statement_identifier) @label
-(type_identifier) @type
-(primitive_type) @type
-(sized_type_specifier) @type
+
+;;; ----------------------------------------------------------------------------
 
 ((identifier) @constant
  (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
-(identifier) @variable
+[(null) (true) (false)] @constant
+[(number_literal)
+ (char_literal)] @number
 
+(statement_identifier) @label
+
+;;; ----------------------------------------------------------------------------
+
+;; ((comment) @doc (preproc_def))
+;; ((comment) @doc (declaration))
 (comment) @comment
+
+[(string_literal)
+ (system_lib_string)] @string
