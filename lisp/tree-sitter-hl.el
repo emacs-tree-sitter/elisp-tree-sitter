@@ -375,10 +375,10 @@ lie deeper than this.")
 (defun tree-sitter-hl--extend-regions (hl-region query-region)
   "Extend HL-REGION and QUERY-REGION before highlighting, mutably.
 For performance reason, we execute the highlighting query on a region, instead
-of on the whole buffer. When range restriction is used, a match is returned only
-when all nodes in a pattern intersect the query cursor's range. Therefore,
+of on the whole buffer. When such range restriction is used, a match is returned
+only when all nodes in a pattern intersect the query range. Therefore,
 QUERY-REGION should intersect all relevant nodes, not just nodes to be
-highlighted.
+highlighted. This function attempts to ensure that.
 
 One case that illustrates the need for QUERY-REGION to be larger than HL-REGION
 is when `evil-adjust-cursor' triggers a `vertical-motion' (outside of a
@@ -388,7 +388,7 @@ boundaries.
 
 Note that the main performance bottleneck with querying the whole buffer is in
 accessing nodes' texts, which involves allocating temporary strings, copying
-them to the dynamic modules, then garbage-collecting them. When dynamic modules
+them to the dynamic module, then garbage-collecting them. When dynamic modules
 have direct access to buffer text, this function may become obsolete.
 
 See https://github.com/tree-sitter/tree-sitter/issues/598."
