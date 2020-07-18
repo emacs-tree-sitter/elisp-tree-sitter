@@ -325,6 +325,8 @@ If you want to leverage the full power of Tree-sitter's syntax highlighting appr
 
 *** Face Mappings
 By default, when the highlighting query associates a node with ~CAPTURE-NAME~, it will be highlighted with the face ~tree-sitter-hl-face:CAPTURE-NAME~. This behavior can be changed by customizing the variable ~tree-sitter-hl-face-mapping-function~.
+
+# TODO: Screenshots.
 #+begin_src emacs-lisp
   ;; Don't highlight strings, in any language.
   (add-function :before-while 'tree-sitter-hl-face-mapping-function
@@ -351,7 +353,9 @@ By default, when the highlighting query associates a node with ~CAPTURE-NAME~, i
             ("doc" 'font-lock-comment-face))))))
 #+end_src
 *** Highlighting Patterns
-You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns for a specific language, or in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~).
+You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns for a specific language, or in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~). Below are some examples:
+
+# TODO: Screenshots.
 
 Adding language-specific patterns:
 #+begin_src emacs-lisp
@@ -375,6 +379,18 @@ Adding buffer-local patterns:
       (tree-sitter-hl-add-patterns nil
         [(unsafe_block) @rust.unsafe.use
          (impl_item "unsafe") @rust.unsafe.use])))
+#+end_src
+
+Adding project-specific patterns through ~.dir-locals.el~:
+#+begin_src emacs-lisp
+  ;; Highlight DEFUN macros (in Emacs's C source).
+  ((c-mode . ((tree-sitter-hl--extra-patterns-list
+               .
+               ("((call_expression
+                   function: (identifier) @keyword
+                   arguments: (argument_list
+                               (string_literal) @function))
+                  (#eq? @keyword \"DEFUN\"))")))))
 #+end_src
 
 When writing custom highlighting patterns, keep in mind that if a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
