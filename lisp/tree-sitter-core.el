@@ -16,7 +16,7 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tree-sitter--dyn-version "0.8.2"
+  (defconst tree-sitter--dyn-version "0.9.0"
     "Required version of the dynamic module `tree-sitter-dyn'.")
   (require 'tree-sitter-dyn-get)
   (tree-sitter-dyn-get-ensure tree-sitter--dyn-version))
