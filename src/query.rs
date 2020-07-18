@@ -1,10 +1,13 @@
 use std::cell::RefCell;
 
-use emacs::{defun, Result, Value, Vector, Error, Env, IntoLisp};
+use emacs::{defun, Env, Error, GlobalRef, IntoLisp, Result, Value, Vector};
+use tree_sitter::{Node, QueryCursor};
 
-use tree_sitter::{QueryCursor, Node};
-
-use crate::types::*;
+use crate::{
+    types::{BytePos, Point},
+    lang::Language,
+    node::RNode,
+};
 
 fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vector<'e>> {
     let vector = env.make_vector(vec.len(), ())?;
@@ -16,6 +19,13 @@ fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vecto
 
 // -------------------------------------------------------------------------------------------------
 // Query
+
+struct Query {
+    pub(crate) raw: tree_sitter::Query,
+    pub(crate) capture_tags: Vec<GlobalRef>,
+}
+
+impl_pred!(query_p, &RefCell<Query>);
 
 /// Create a new query from a SOURCE containing one or more S-expression patterns.
 ///
@@ -98,6 +108,8 @@ fn _disable_capture(query: &mut Query, name: String) -> Result<()> {
 
 // -------------------------------------------------------------------------------------------------
 // QueryCursor
+
+impl_pred!(query_cursor_p, &RefCell<QueryCursor>);
 
 /// Create a new cursor for executing a given query.
 ///

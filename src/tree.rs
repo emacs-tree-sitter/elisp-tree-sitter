@@ -2,7 +2,17 @@ use emacs::{defun, Value, Result, Vector};
 
 use tree_sitter::{InputEdit, Tree};
 
-use crate::types::*;
+use crate::{
+    types::{Shared, BytePos, Point, Range},
+    lang::Language,
+    node::RNode,
+};
+
+// XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
+// .into_rust() boilerplate. This is a trick to avoid both.
+type Borrowed<'e, T> = &'e Shared<T>;
+
+impl_pred!(tree_p, &Shared<Tree>);
 
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]

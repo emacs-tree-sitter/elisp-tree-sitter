@@ -1,11 +1,51 @@
-use emacs::{defun, Result, GlobalRef, Value, Env};
+use std::{mem, os, collections::HashMap, sync::Mutex};
+
+use emacs::{defun, Result, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
 
 use libloading::{Library, Symbol};
 use once_cell::sync::Lazy;
 
-use crate::types::*;
-use std::collections::HashMap;
-use std::sync::Mutex;
+use crate::types;
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct Language(pub(crate) tree_sitter::Language);
+
+impl IntoLisp<'_> for Language {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        // Safety: Language has the same representation as the opaque pointer type.
+        let ptr: *mut os::raw::c_void = unsafe { mem::transmute(self) };
+        // Safety: The finalizer does nothing.
+        unsafe { env.make_user_ptr(Some(no_op::<Language>), ptr) }
+    }
+}
+
+impl FromLisp<'_> for Language {
+    fn from_lisp(value: Value) -> Result<Language> {
+        match value.get_user_finalizer()? {
+            Some(fin) if fin == no_op::<Language> => {
+                let ptr = value.get_user_ptr()?;
+                // Safety: Language has the same representation as the opaque pointer type.
+                Ok(unsafe { mem::transmute(ptr) })
+            }
+            _ => Err(ErrorKind::WrongTypeUserPtr { expected: "TreeSitterLanguage" }.into())
+        }
+    }
+}
+
+impl_newtype_traits!(Language);
+
+impl_pred!(language_p, Language);
+
+impl Language {
+    pub fn id(self) -> usize {
+        unsafe { mem::transmute(self) }
+    }
+}
+
+unsafe extern "C" fn no_op<T>(_: *mut os::raw::c_void) {}
+
+// -------------------------------------------------------------------------------------------------
 
 struct LangInfo {
     load_file: String,
@@ -37,7 +77,7 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
 fn _info(language: Language) -> Option<&'static LangInfo> {
     // TODO: Explain the safety.
     LANG_INFOS.lock().expect("Failed to access language info registry").get(&language.id())
-        .map(|info| unsafe { erase_lifetime(info) })
+        .map(|info| unsafe { types::erase_lifetime(info) })
 }
 
 /// Return LANGUAGE's name, as a symbol.

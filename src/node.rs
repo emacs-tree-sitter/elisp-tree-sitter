@@ -1,8 +1,108 @@
-use emacs::{defun, Value, Result, Env};
+use std::{
+    cell::{Ref, RefCell, RefMut},
+    mem,
+    ops::{Deref, DerefMut},
+};
 
-use tree_sitter::InputEdit;
+use emacs::{defun, Env, IntoLisp, Result, Value};
+use tree_sitter::{InputEdit, Node, Tree};
 
-use crate::types::*;
+use crate::{
+    types::{self, BytePos, Point, Shared, Range},
+};
+
+// -------------------------------------------------------------------------------------------------
+
+/// Wrapper around `tree_sitter::Node` that can have 'static lifetime, by keeping a ref-counted
+/// reference to the underlying tree.
+#[derive(Clone)]
+pub struct RNode {
+    tree: Shared<Tree>,
+    inner: Node<'static>,
+}
+
+impl_pred!(node_p, &RefCell<RNode>);
+
+pub struct RNodeBorrow<'e> {
+    #[allow(unused)]
+    reft: Ref<'e, Tree>,
+    node: &'e Node<'e>,
+}
+
+impl<'e> Deref for RNodeBorrow<'e> {
+    type Target = Node<'e>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.node
+    }
+}
+
+pub struct RNodeBorrowMut<'e> {
+    #[allow(unused)]
+    reft: RefMut<'e, Tree>,
+    node: Node<'e>,
+}
+
+impl<'e> Deref for RNodeBorrowMut<'e> {
+    type Target = Node<'e>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.node
+    }
+}
+
+impl<'e> DerefMut for RNodeBorrowMut<'e> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node
+    }
+}
+
+impl PartialEq for RNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl IntoLisp<'_> for RNode {
+    fn into_lisp(self, env: &Env) -> Result<Value> {
+        RefCell::new(self).into_lisp(env)
+    }
+}
+
+impl RNode {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> Node<'e>>(tree: Shared<Tree>, f: F) -> Self {
+        let rtree = unsafe { types::erase_lifetime(&*tree.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree)) };
+        Self { tree, inner }
+    }
+
+    pub fn clone_tree(&self) -> Shared<Tree> {
+        self.tree.clone()
+    }
+
+    pub fn map<'e, F: FnOnce(&Node<'e>) -> Node<'e>>(&self, f: F) -> Self {
+        Self::new(self.clone_tree(), |_| f(&self.inner))
+    }
+
+    #[inline]
+    pub fn borrow(&self) -> RNodeBorrow {
+        let reft = self.tree.borrow();
+        let node = &self.inner;
+        RNodeBorrow { reft, node }
+    }
+
+    #[inline]
+    pub fn borrow_mut(&mut self) -> RNodeBorrowMut {
+        let reft = self.tree.borrow_mut();
+        let node = self.inner;
+        RNodeBorrowMut { reft, node }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
 
 /// Exposes methods that return a node's property.
 macro_rules! defun_node_props {

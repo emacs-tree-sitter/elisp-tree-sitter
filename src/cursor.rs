@@ -1,10 +1,93 @@
-use std::cell::RefCell;
+use std::{
+    cell::{Ref, RefCell},
+    mem,
+    ops::{Deref, DerefMut},
+};
 
-use emacs::{defun, Result};
+use emacs::{defun, Result, Value};
+use tree_sitter::{Tree, TreeCursor};
 
-use tree_sitter::Tree;
+use crate::{
+    types::{self, Shared, Either, BytePos},
+    node::RNode,
+};
 
-use crate::types::*;
+// -------------------------------------------------------------------------------------------------
+
+/// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
+/// ref-counted reference to the underlying tree.
+pub struct RCursor {
+    tree: Shared<Tree>,
+    inner: TreeCursor<'static>,
+}
+
+impl_pred!(cursor_p, &RefCell<RCursor>);
+
+pub struct RCursorBorrow<'e> {
+    #[allow(unused)]
+    reft: Ref<'e, Tree>,
+    cursor: &'e TreeCursor<'e>,
+}
+
+impl<'e> Deref for RCursorBorrow<'e> {
+    type Target = TreeCursor<'e>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.cursor
+    }
+}
+
+pub struct RCursorBorrowMut<'e> {
+    #[allow(unused)]
+    reft: Ref<'e, Tree>,
+    cursor: &'e mut TreeCursor<'e>,
+}
+
+impl<'e> Deref for RCursorBorrowMut<'e> {
+    type Target = TreeCursor<'e>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.cursor
+    }
+}
+
+impl<'e> DerefMut for RCursorBorrowMut<'e> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.cursor
+    }
+}
+
+impl RCursor {
+    pub fn new<'e, F: FnOnce(&'e Tree) -> TreeCursor<'e>>(tree: Shared<Tree>, f: F) -> Self {
+        let rtree = unsafe { types::erase_lifetime(&*tree.borrow()) };
+        let inner = unsafe { mem::transmute(f(rtree)) };
+        Self { tree, inner }
+    }
+
+    pub fn clone_tree(&self) -> Shared<Tree> {
+        self.tree.clone()
+    }
+
+    #[inline]
+    pub fn borrow(&self) -> RCursorBorrow {
+        let reft = self.tree.borrow();
+        let cursor = &self.inner;
+        RCursorBorrow { reft, cursor }
+    }
+
+    #[inline]
+    pub fn borrow_mut<'e>(&'e mut self) -> RCursorBorrowMut {
+        let reft: Ref<'e, Tree> = self.tree.borrow();
+        // XXX: Explain the safety here.
+        let cursor: &'e mut _ = unsafe { mem::transmute(&mut self.inner) };
+        RCursorBorrowMut { reft, cursor }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
 
 /// Create a new cursor starting from the given TREE-OR-NODE.
 ///
