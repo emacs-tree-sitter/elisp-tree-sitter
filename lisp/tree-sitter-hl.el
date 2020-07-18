@@ -280,6 +280,7 @@ It plays a similar role to `font-lock-defaults'.")
   "Additional language-specific syntax highlighting patterns.
 It plays a similar role to `font-lock-keywords-alist', except that its keys are
 language symbols, not major mode symbols.")
+(put 'tree-sitter-hl--patterns-alist 'risky-local-variable t)
 
 (defvar-local tree-sitter-hl--extra-patterns-list nil
   "Additional buffer-local syntax highlighting patterns.")
@@ -295,6 +296,8 @@ language symbols, not major mode symbols.")
            tree-sitter-language
            (mapconcat #'ts--stringify-patterns
                       (append tree-sitter-hl--extra-patterns-list
+                              (alist-get (ts--lang-symbol tree-sitter-language)
+                                         tree-sitter-hl--patterns-alist)
                               (list tree-sitter-hl-default-patterns))
                       "\n")
            tree-sitter-hl-face-mapping-function)))
@@ -305,8 +308,22 @@ language symbols, not major mode symbols.")
   ;; TODO: If a scope does not have a corresponding face, check its ancestors.
   (intern (format "tree-sitter-hl-face:%s" capture-name)))
 
-;;; TODO: Support adding/removing language-specific patterns.
-(defun tree-sitter-hl-add-patterns (patterns)
+;;;###autoload
+(defun tree-sitter-hl-add-patterns (lang-symbol patterns)
+  "Add custom syntax highlighting PATTERNS.
+If LANG-SYMBOL is non-nil, it identifies the language that PATTERNS should be
+applied to. If LANG-SYMBOL is nil, PATTERNS are applied to the current buffer,
+and are prioritized over language-specific patterns. Either way, PATTERNS are
+prioritized over `tree-sitter-hl-default-patterns'.
+
+This function should be used by minor modes and configuration code. Major modes
+should set `tree-sitter-hl-default-patterns' instead."
+  (declare (indent 1))
+  (if lang-symbol
+      (tree-sitter-hl--add-patterns-for-language lang-symbol patterns)
+    (tree-sitter-hl--add-patterns-locally patterns)))
+
+(defun tree-sitter-hl--add-patterns-locally (patterns)
   "Add buffer-local syntax highlighting PATTERNS.
 These will take precedence over `tree-sitter-hl-default-patterns', as well as
 previously added patterns."
@@ -329,6 +346,18 @@ previously added patterns."
         ;; Everything is in place. Request a re-render.
         (when (bound-and-true-p tree-sitter-hl-mode)
           (tree-sitter-hl--invalidate))))))
+
+(defun tree-sitter-hl--add-patterns-for-language (lang-symbol patterns)
+  "Add syntax highlighting PATTERNS for the language identified by LANG-SYMBOL.
+See `tree-sitter-hl-add-patterns'."
+  (let ((old-list (alist-get lang-symbol tree-sitter-hl--patterns-alist)))
+    ;; Do nothing if the patterns are already on top.
+    (unless (equal patterns (cl-first old-list))
+      ;; Check whether the patterns are valid. TODO: Should we delay the check
+      ;; if language is not yet loaded, instead of trying to load it?
+      (ts-make-query (tree-sitter-require lang-symbol) patterns)
+      (setf (map-elt tree-sitter-hl--patterns-alist lang-symbol)
+            (append (list patterns) (remove patterns old-list))))))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Internal workings.
