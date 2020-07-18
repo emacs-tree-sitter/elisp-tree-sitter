@@ -187,19 +187,19 @@ It can also be enabled without installing the corresponding language major modes
 The package ~tree-sitter-langs~ is a language bundle that provides syntax highlighting queries for some languages:
 - C
 - C++
-- CSS
+- *CSS*
 - Go
 - HTML
 - Java
-- JavaScript
+- *JavaScript*
 - PHP
-- Python
+- *Python*
 - Ruby
-- Rust
-- TypeScript
+- *Rust*
+- *TypeScript*
 
 {{% notice info %}}
-Most of the queries in the bundle are very basic, as they are copies of those included in the grammar repos. Only the queries for Rust, Python and CSS have received additional work to leverage more of the querying system's expressiveness.
+Most of the highlighting queries in the bundle are very basic, as they are copies of those included in the grammar repos. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
 
 Contribution to highlighting queries is welcome.
 {{% /notice %}}
@@ -317,59 +317,67 @@ For more details, see Tree-sitter's documentation:
 :PROPERTIES:
 :EXPORT_FILE_NAME: customization
 :END:
-*** Faces
+*** Theming
 ~tree-sitter-hl-mode~ provides a richer set of faces than ~font-lock-mode~. For example, function definitions are highlighted with ~tree-sitter-hl-face:function~, while function calls are highlighted with ~tree-sitter-hl-face:function.call~. However, for compatibility with existing themes, the default values for most of these faces inherit from built-in font-lock faces.
 
 If you want to leverage the full power of Tree-sitter's syntax highlighting approach, you should customize these faces.
 # TODO: Example
 
-*** Capture Mappings
+*** Face Mappings
 By default, when the highlighting query associates a node with ~CAPTURE-NAME~, it will be highlighted with the face ~tree-sitter-hl-face:CAPTURE-NAME~. This behavior can be changed by customizing the variable ~tree-sitter-hl-face-mapping-function~.
 #+begin_src emacs-lisp
-  ;; Don't highlight strings.
-  (add-function :before-while
-                'tree-sitter-hl-face-mapping-function
-                (lambda (capture-name)
-                  (not (string= capture-name "string"))))
+  ;; Don't highlight strings, in any language.
+  (add-function :before-while 'tree-sitter-hl-face-mapping-function
+    (lambda (capture-name)
+      (not (string= capture-name "string"))))
 #+end_src
 
 #+begin_src emacs-lisp
   ;; Highlight only keywords in Python.
   (add-hook 'python-mode-hook
-            (lambda ()
-              (add-function :before-while
-                            (local 'tree-sitter-hl-face-mapping-function)
-                            (lambda (capture-name)
-                              (string= capture-name "keyword")))))
+    (lambda ()
+      (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
+        (lambda (capture-name)
+          (string= capture-name "keyword")))))
 #+end_src
 
 #+begin_src emacs-lisp
   ;; Highlight Python docstrings with a different face.
   (add-hook 'python-mode-hook
-            (lambda ()
-              (add-function :before-until
-                            (local 'tree-sitter-hl-face-mapping-function)
-                            (lambda (capture-name)
-                              (pcase capture-name
-                                ("doc" 'font-lock-comment-face))))))
+    (lambda ()
+      (add-function :before-until (local 'tree-sitter-hl-face-mapping-function)
+        (lambda (capture-name)
+          (pcase capture-name
+            ("doc" 'font-lock-comment-face))))))
 #+end_src
+*** Highlighting Patterns
+You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns for a specific language, or in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~).
 
-*** Patterns
-You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~). For example, to highlight uses of "unsafe code" in Rust with a custom face:
+Adding language-specific patterns:
 #+begin_src emacs-lisp
-  (defun my/customize-tree-sitter-hl-rust ()
-    (tree-sitter-hl-add-patterns [(unsafe_block) @rust.unsafe.use
-                                  (impl_item "unsafe") @rust.unsafe.use])
-    (add-function :before-until
-                  (local 'tree-sitter-hl-face-mapping-function)
-                  (lambda (capture-name)
-                    (pcase capture-name
-                      ("rust.unsafe.use" 'my-dangerous-code-pattern-face)))))
-
-  (add-hook 'rust-mode-hook #'my/customize-tree-sitter-hl-rust)
+  ;; Highlight Python's single-quoted strings as constants.
+  (tree-sitter-hl-add-patterns 'python
+    "((string) @constant
+      (#match? @constant \"^'\"))")
 #+end_src
 
-When a node matches multiple patterns in a highlighting query, face attributes corresponding to the earlier patterns are prioritized.
+Adding buffer-local patterns:
+#+begin_src emacs-lisp
+  ;; Map @rust.unsafe.use capture to a custom face.
+  (add-function :before-until 'tree-sitter-hl-face-mapping-function
+    (lambda (capture-name)
+      (pcase capture-name
+        ("rust.unsafe.use" 'my-dangerous-code-pattern-face))))
+
+  ;; Add highlighting patterns for @rust.unsafe.use.
+  (add-hook 'rust-mode-hook
+    (lambda ()
+      (tree-sitter-hl-add-patterns nil
+        [(unsafe_block) @rust.unsafe.use
+         (impl_item "unsafe") @rust.unsafe.use])))
+#+end_src
+
+When writing custom highlighting patterns, keep in mind that if a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
 #+begin_src scheme
   ;; More specific patterns should be written earlier.
   ((lifetime (identifier) @type.builtin)

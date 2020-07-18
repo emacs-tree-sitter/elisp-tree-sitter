@@ -1,9 +1,19 @@
+use std::{cell::RefCell, rc::Rc};
+
 use emacs::{defun, Result, Value, Vector};
 use emacs::failure;
-
 use tree_sitter::{Parser, Tree};
 
-use crate::types::*;
+use crate::{
+    types::{BytePos, Point, Range, Shared},
+    lang::Language,
+};
+
+fn shared<T>(t: T) -> Shared<T> {
+    Rc::new(RefCell::new(t))
+}
+
+impl_pred!(parser_p, &RefCell<Parser>);
 
 /// Create a new parser.
 #[defun(user_ptr)]

@@ -1,6 +1,7 @@
 
 use emacs::{Env, Result};
 
+#[macro_use]
 mod types;
 mod lang;
 mod parser;

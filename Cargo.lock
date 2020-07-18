@@ -192,6 +192,7 @@ version = "0.8.2"
 dependencies = [
  "emacs 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tree-sitter 0.16.1 (git+https://github.com/tree-sitter/tree-sitter)",
 ]
 
