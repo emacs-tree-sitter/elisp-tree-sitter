@@ -18,7 +18,7 @@
 (let ((tree-sitter-langs--testing t))
   (require 'tree-sitter-langs))
 ;;; Build the grammars, if necessary.
-(dolist (lang-symbol '(rust bash javascript))
+(dolist (lang-symbol '(rust bash javascript c))
   (tree-sitter-langs-ensure lang-symbol))
 
 (require 'ert)
@@ -273,6 +273,33 @@ tree is held (since nodes internally reference the tree)."
         (should (not (member "capture_names" node-texts))))
       (ert-info ("Should capture some macros")
         (should (member 'macro capture-tags))))))
+
+(ert-deftest query::range-restriction ()
+  ;; https://github.com/tree-sitter/tree-sitter/issues/685
+  (ts-test-lang-with-file 'c "lisp/test-files/range-restriction-and-early-termination.c"
+    (let ((cursor (ts-make-query-cursor))
+          (query (ts-make-query tree-sitter-language
+                                [(call_expression
+                                  function: (identifier) @function
+                                  arguments: (argument_list (string_literal) @string.arg))
+                                 (string_literal) @string]))
+          (root-node (ts-root-node tree-sitter-tree))
+          (capture-names '(function string.arg string)))
+      (ert-info ("Querying without range restriction")
+        (should (equal (mapcar #'car (ts-query-captures
+                                      query root-node #'ts-node-text cursor))
+                       capture-names))
+        (should (equal (mapcar #'car (ts--query-cursor-captures-1
+                                      cursor query root-node #'ts-node-text))
+                       capture-names)))
+      (ert-info ("Querying with range restriction")
+        (ts--query-cursor-set-byte-range cursor 1 28)
+        (should (equal (mapcar #'car (ts-query-captures
+                                      query root-node #'ts-node-text cursor))
+                       capture-names))
+        (should (equal (mapcar #'car (ts--query-cursor-captures-1
+                                      cursor query root-node #'ts-node-text))
+                       capture-names))))))
 
 (ert-deftest load ()
   (should-error (tree-sitter-require 'abc-xyz))

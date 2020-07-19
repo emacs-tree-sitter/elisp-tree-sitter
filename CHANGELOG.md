@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Upgraded `tree-sitter` crate to fix [incorrect capture handling](https://github.com/tree-sitter/tree-sitter/issues/685) when querying with range restriction.
 
 ## [0.9.0] - 2020-07-18
 - Changed `tree-sitter-hl-add-patterns` to support language-specific patterns, in addition to buffer-local patterns.
