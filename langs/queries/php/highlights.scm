@@ -42,13 +42,13 @@
 (relative_scope) @variable.builtin
 
 ((name) @constant
- (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
+ (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((name) @constructor
- (#match? @constructor "^[A-Z]"))
+ (.match? @constructor "^[A-Z]"))
 
 ((name) @variable.builtin
- (#eq? @variable.builtin "this"))
+ (.eq? @variable.builtin "this"))
 
 (variable_name) @variable
 

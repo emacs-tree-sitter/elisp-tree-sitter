@@ -28,7 +28,7 @@
 ; Types
 
 ((namespace_identifier) @type
- (#match? @type "^[A-Z]"))
+ (.match? @type "^[A-Z]"))
 
 (auto) @type
 

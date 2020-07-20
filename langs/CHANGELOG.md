@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Replaced `#` with `.` in bundled highlighting queries' predicates origin/query-dot-predicate.
 
 ## 0.6.0
 - Fixed the issue of `tree-sitter-langs` not being able to find grammars in gccemacs.

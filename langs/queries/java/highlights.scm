@@ -26,7 +26,7 @@
 
 ((scoped_identifier
   scope: (identifier) @type)
- (#match? @type "^[A-Z]"))
+ (.match? @type "^[A-Z]"))
 
 (constructor_declaration
   name: (identifier) @type)
@@ -41,7 +41,7 @@
 ; Variables
 
 ((identifier) @constant
- (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
+ (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 (this) @variable.builtin
 
