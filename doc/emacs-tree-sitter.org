@@ -267,14 +267,14 @@ A *group* form is a list form whose first element is a node form. It is used to 
 #+end_src
 
 # Predicates ("predicate forms").
-A *predicate* form can appear anywhere in a group form. It is a list form whose first element is a symbol starting with the character ~#~. Each remaining element is either a capture name, or a string literal.
+A *predicate* form can appear anywhere in a group form. It is a list form whose first element is a symbol starting with the character ~.~. Each remaining element is either a capture name, or a string literal.
 #+begin_src scheme
   ;; Match identifiers written in SCREAMING_SNAKE_CASE.
   ((identifier) @constant
-   (#match? @constant "^[A-Z][A-Z_\\d]+"))
+   (.match? @constant "^[A-Z][A-Z_\\d]+"))
 #+end_src
 
-For syntax highlighting, the supported predicates are currently ~#match?~ and ~#eq?~.
+Currently, the supported predicates for syntax highlighting are ~.match?~, ~.eq?~ and ~.not-eq?~.
 
 *** Alternations
 An *alternation* form is a vector of patterns. It denotes a pattern that matches a node when any of the alternative patterns matches.
@@ -361,8 +361,8 @@ Adding language-specific patterns:
 #+begin_src emacs-lisp
   ;; Highlight Python's single-quoted strings as constants.
   (tree-sitter-hl-add-patterns 'python
-    "((string) @constant
-      (#match? @constant \"^'\"))")
+    ((string) @constant
+     (.match? @constant "^'")))
 #+end_src
 
 Adding buffer-local patterns:
@@ -386,18 +386,18 @@ Adding project-specific patterns through ~.dir-locals.el~:
   ;; Highlight DEFUN macros (in Emacs's C source).
   ((c-mode . ((tree-sitter-hl--extra-patterns-list
                .
-               ("((call_expression
-                   function: (identifier) @keyword
-                   arguments: (argument_list
-                               (string_literal) @function))
-                  (#eq? @keyword \"DEFUN\"))")))))
+               [((call_expression
+                  function: (identifier) @keyword
+                  arguments: (argument_list
+                              (string_literal) @function))
+                 (.eq? @keyword "DEFUN"))]))))
 #+end_src
 
 When writing custom highlighting patterns, keep in mind that if a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
 #+begin_src scheme
   ;; More specific patterns should be written earlier.
   ((lifetime (identifier) @type.builtin)
-   (#eq? @type.builtin "static"))
+   (.eq? @type.builtin "static"))
   (lifetime (identifier) @label)
 #+end_src
 
