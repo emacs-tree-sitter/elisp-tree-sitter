@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.7.0
 - Replaced `#` with `.` in bundled highlighting queries' predicates origin/query-dot-predicate.
 
 ## 0.6.0
