@@ -329,7 +329,7 @@ By default, when the highlighting query associates a node with ~CAPTURE-NAME~, i
 # TODO: Screenshots.
 #+begin_src emacs-lisp
   ;; Don't highlight strings, in any language.
-  (add-function :before-while 'tree-sitter-hl-face-mapping-function
+  (add-function :before-while tree-sitter-hl-face-mapping-function
     (lambda (capture-name)
       (not (string= capture-name "string"))))
 #+end_src
@@ -368,7 +368,7 @@ Adding language-specific patterns:
 Adding buffer-local patterns:
 #+begin_src emacs-lisp
   ;; Map @rust.unsafe.use capture to a custom face.
-  (add-function :before-until 'tree-sitter-hl-face-mapping-function
+  (add-function :before-until tree-sitter-hl-face-mapping-function
     (lambda (capture-name)
       (pcase capture-name
         ("rust.unsafe.use" 'my-dangerous-code-pattern-face))))
@@ -385,7 +385,6 @@ Adding project-specific patterns through ~.dir-locals.el~:
 #+begin_src emacs-lisp
   ;; Highlight DEFUN macros (in Emacs's C source).
   ((c-mode . ((tree-sitter-hl--extra-patterns-list
-               .
                [((call_expression
                   function: (identifier) @keyword
                   arguments: (argument_list
