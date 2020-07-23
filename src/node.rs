@@ -4,11 +4,12 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use emacs::{defun, Env, IntoLisp, Result, Value};
+use emacs::{defun, Env, IntoLisp, Result, Value, GlobalRef};
 use tree_sitter::{InputEdit, Node, Tree};
 
 use crate::{
     types::{self, BytePos, Point, Shared, Range},
+    lang::Language,
 };
 
 // -------------------------------------------------------------------------------------------------
@@ -132,12 +133,20 @@ macro_rules! defun_node_navs {
     };
 }
 
-defun_node_props! {
-    /// Return NODE's type-id.
-    "node-type-id" fn kind_id -> u16
+/// Return NODE's type, as a symbol (named node), or a string (anonymous node).
+///
+/// If NODE is a named node, its type is a symbol. For example: 'identifier, 'block.
+/// If NODE is an anonymous node, its type is a string. For example: "if", "else".
+#[defun]
+fn node_type(node: &RNode) -> Result<&'static GlobalRef> {
+    let node = node.borrow();
+    let language: Language = node.language().into();
+    Ok(&language.info().node_type(node.kind_id()).expect("Failed to get node type from id"))
+}
 
-    /// Return NODE's type.
-    "node-type" fn kind -> &'static str
+defun_node_props! {
+    /// Return NODE's numeric type-id.
+    "node-type-id" fn kind_id -> u16
 
     // Predicates ----------------------------------------------------------------------------------
 
@@ -237,8 +246,8 @@ defun_node_navs! {
     /// Return NODE's named child at the given 0-based index.
     "get-nth-named-child" fn named_child(i: usize)
 
-    /// Return NODE's child with the given FIELD-NAME.
-    "get-child-by-field-name" fn child_by_field_name(field_name: String)
+    /// Return NODE's child with the given FIELD-NAME string.
+    "-get-child-by-field-name" fn child_by_field_name(field_name: String)
 
     /// Return NODE's child with the given numerical FIELD-ID.
     "get-child-by-field-id" fn child_by_field_id(field_id: u16)

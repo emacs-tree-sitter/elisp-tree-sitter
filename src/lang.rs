@@ -41,16 +41,38 @@ impl Language {
     pub fn id(self) -> usize {
         unsafe { mem::transmute(self) }
     }
+
+    pub fn info(self) -> &'static LangInfo {
+        // TODO: Explain the safety.
+        LANG_INFOS.try_lock().expect("Failed to access language info registry")
+            .get(&self.id())
+            .map(|info| unsafe { types::erase_lifetime(info) })
+            .expect("Failed to get language info from the registry")
+    }
 }
 
 unsafe extern "C" fn no_op<T>(_: *mut os::raw::c_void) {}
 
 // -------------------------------------------------------------------------------------------------
 
-struct LangInfo {
+pub struct LangInfo {
     load_file: String,
     lang_symbol: GlobalRef,
     _lib: Library,
+    node_types: Vec<GlobalRef>,
+    field_names: Vec<GlobalRef>,
+}
+
+impl LangInfo {
+    #[inline]
+    pub(crate) fn node_type(&self, id: u16) -> Option<&GlobalRef> {
+        self.node_types.get(id as usize)
+    }
+
+    #[inline]
+    pub(crate) fn field_name(&self, id: u16) -> Option<&GlobalRef> {
+        self.field_names.get(id as usize - 1)
+    }
 }
 
 // TODO: Consider optimizing for accessing language's metadata, i.e. making Language a big wrapper
@@ -62,34 +84,68 @@ static LANG_INFOS: Lazy<Mutex<HashMap<usize, LangInfo>>> = Lazy::new(|| Mutex::n
 /// The language's name symbol is set to LANG-SYMBOL.
 #[defun]
 fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Result<Language> {
+    let env = lang_symbol.env;
     let lib = Library::new(&file)?;
     let tree_sitter_lang: Symbol<'_, unsafe extern "C" fn() -> _> =
         unsafe { lib.get(symbol_name.as_bytes())? };
-    let language: Language = unsafe { tree_sitter_lang() };
-    LANG_INFOS.lock().expect("Failed to access language info registry").insert(language.id(), LangInfo {
-        load_file: file,
-        lang_symbol: lang_symbol.make_global_ref(),
-        _lib: lib,
-    });
+    let language: tree_sitter::Language = unsafe { tree_sitter_lang() };
+    let node_types = (0..language.node_kind_count() as u16).map(|id| {
+        let type_str = language.node_kind_for_id(id).expect("Failed to get node type for id");
+        let value = if language.node_kind_is_named(id) {
+            env.intern(type_str).expect("Failed to intern symbol for node type")
+        } else {
+            type_str.into_lisp(env).expect("Failed to make string for node type")
+        };
+        value.make_global_ref()
+    }).collect();
+    let field_names = (1..=language.field_count() as u16).map(|id| {
+        let field_str = language.field_name_for_id(id).expect("Failed to get field name for id");
+        env.intern(&format!(":{}", field_str)).expect("Failed to intern keyword for field name")
+            .make_global_ref()
+    }).collect();
+    let language: Language = language.into();
+    LANG_INFOS.try_lock().expect("Failed to access language info registry")
+        .insert(language.id(), LangInfo {
+            load_file: file,
+            lang_symbol: lang_symbol.make_global_ref(),
+            _lib: lib,
+            node_types,
+            field_names,
+        });
     Ok(language)
-}
-
-fn _info(language: Language) -> Option<&'static LangInfo> {
-    // TODO: Explain the safety.
-    LANG_INFOS.lock().expect("Failed to access language info registry").get(&language.id())
-        .map(|info| unsafe { types::erase_lifetime(info) })
 }
 
 /// Return LANGUAGE's name, as a symbol.
 #[defun]
-fn _lang_symbol(env: &Env, language: Language) -> Result<Option<Value>> {
-    Ok(_info(language).map(|info| info.lang_symbol.bind(env)))
+fn _lang_symbol(language: Language) -> Result<&'static GlobalRef> {
+    Ok(&language.info().lang_symbol)
 }
 
 /// Return the shared lib file that LANGUAGE was loaded from.
 #[defun]
-fn _lang_load_file(language: Language) -> Result<Option<&'static String>> {
-    Ok(_info(language).map(|info| &info.load_file))
+fn _lang_load_file(language: Language) -> Result<&'static String> {
+    Ok(&language.info().load_file)
+}
+
+/// Return the node type associated with the numeric TYPE-ID in LANGUAGE.
+///
+/// For named nodes, the node type is a symbol. For example: 'identifier, 'block.
+/// For anonymous nodes, the node type is a string. For example: "if", "else".
+#[defun]
+fn lang_node_type(language: Language, type_id: u16) -> Result<Option<&'static GlobalRef>> {
+    Ok(language.info().node_type(type_id))
+}
+
+/// Return a field's name keyword, given its numeric FIELD-ID in LANGUAGE.
+#[defun]
+fn lang_field(language: Language, field_id: u16) -> Result<Option<&'static GlobalRef>> {
+    Ok(language.info().field_name(field_id))
+}
+
+/// Return the numeric id of TYPE-NAME in LANGUAGE.
+#[defun]
+fn _lang_type_id_for_name(language: Language, type_name: String, named: Option<Value>) -> Result<u16> {
+    Ok(language.0.id_for_node_kind(&type_name, named.is_some()))
 }
 
 macro_rules! defun_lang_methods {
@@ -118,15 +174,9 @@ defun_lang_methods! {
     /// Return the number of distinct field names defined in LANGUAGE.
     "lang-count-fields" fn field_count -> usize
 
-    /// Return the name of a node type, given its numerical TYPE-ID in LANGUAGE.
-    "type-name-for-id" fn node_kind_for_id(type_id: u16) -> Option<&'static str>
+    /// Return t if the numeric TYPE-ID identifies a named node type in LANGUAGE.
+    "lang-node-type-named-p" fn node_kind_is_named(type_id: u16) -> bool
 
-    /// Return t if the numerical TYPE-ID identifies a named node type in LANGUAGE.
-    "type-named-p" fn node_kind_is_named(type_id: u16) -> bool
-
-    /// Return the numerical id of FIELD-NAME in LANGUAGE.
-    "field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
-
-    /// Return the field name for the given numerical FIELD-ID defined in LANGUAGE.
-    "field-name-for-id" fn field_name_for_id(field_id: u16) -> Option<&'static str>
+    /// Return the numeric id of FIELD-NAME in LANGUAGE.
+    "-lang-field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
 }
