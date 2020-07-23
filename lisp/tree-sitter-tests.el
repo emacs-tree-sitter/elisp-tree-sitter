@@ -80,6 +80,11 @@ If RESET is non-nil, also do another full parse and check again."
 (ert-deftest creating-parser ()
   (should (ts-parser-p (ts-test-make-parser 'rust))))
 
+(ert-deftest language::info ()
+  (dolist (lang-symbol '(rust bash javascript c))
+    (let ((language (tree-sitter-require lang-symbol)))
+      (should (eq lang-symbol (ts--lang-symbol language))))))
+
 (ert-deftest language::equality ()
   (ts-test-with 'rust parser
     ;; XXX: `equal' seems to return nil even if 2 `user-ptr' objects have the same pointer and
