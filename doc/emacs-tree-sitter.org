@@ -12,7 +12,7 @@
 :EXPORT_HUGO_TYPE: homepage
 :END:
 
-~emacs-tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][tree-sitter]], an incremental parsing system.
+~emacs-tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][Tree-sitter]], an incremental parsing system.
 
 It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
 - Faster, fine-grained code highlighting.
@@ -20,7 +20,7 @@ It aims to be the foundation for a new breed of Emacs packages that understand c
 - Structural editing (like Paredit, or even better) for non-Lisp code.
 - More informative indexing for imenu.
 
-The author of tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
+The author of Tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
 
 * Installation
 :PROPERTIES:
@@ -39,7 +39,7 @@ The methods below only work for macOS, Windows, Linux on x86_64, since they down
 {{% /notice %}}
 
 ** Installing from an ELPA
-- Add tree-sitter's ELPA to ~package-archives~:
+- Add ~tree-sitter~'s ELPA to ~package-archives~:
     #+begin_src emacs-lisp
       (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
     #+end_src
@@ -155,6 +155,48 @@ For more details on tree queries, see [[*Queries]].
 
 # TODO: Example screenshots.
 
+* Languages
+:PROPERTIES:
+:EXPORT_FILE_NAME: languages
+:END:
+A language object defines how to parse a particular programming language. It is usually dynamically loaded from a *shared library* (~.dylib~, ~.so~, ~.dll~).
+
+The variable ~tree-sitter-load-path~ is a list of directories that the function ~tree-sitter-require~ uses to search for these shared libraries. This is similar to how the built-in function ~require~ searches for Emacs libraries on ~load-path~. The default value contains the directory used by the ~tree-sitter~ CLI tool.
+
+#+begin_src emacs-lisp
+  ;; Load the language definition for Rust, if it hasn't been loaded.
+  ;; Return the language object.
+  (tree-sitter-require 'rust)
+#+end_src
+
+The package ~tree-sitter-langs~ is a language bundle that contains shared libraries for some languages (as well as syntax highlighting queries). When it is loaded, its shared libraries are prioritized over the CLI's directory.
+
+Currently, there are *no language major modes* built on top of ~tree-sitter~. Instead, syntax-aware functionalities are provided by ~tree-sitter-mode~ and its dependent minor modes. They determine the language object to use by consulting the variable ~tree-sitter-major-mode-language-alist~. This list is empty by default, and gets populated by ~tree-sitter-langs~ when it is loaded.
+
+#+begin_src emacs-lisp
+  '((agda-mode       . agda)
+    (sh-mode         . bash)
+    (c-mode          . c)
+    (c++-mode        . cpp)
+    (css-mode        . css)
+    (go-mode         . go)
+    (haskell-mode    . haskell)
+    (html-mode       . html)
+    (java-mode       . java)
+    (js-mode         . javascript)
+    (js2-mode        . javascript)
+    (json-mode       . json)
+    (julia-mode      . julia)
+    (ocaml-mode      . ocaml)
+    (php-mode        . php)
+    (python-mode     . python)
+    (ruby-mode       . ruby)
+    (rust-mode       . rust)
+    (rustic-mode     . rust)
+    (scala-mode      . scala)
+    (swift-mode      . swift)
+    (typescript-mode . typescript))
+#+end_src
 * Syntax Highlighting
 :PROPERTIES:
 :EXPORT_HUGO_SECTION: syntax-highlighting
@@ -184,7 +226,7 @@ It can also be enabled without installing the corresponding language major modes
     (tree-sitter-hl-mode))
 #+end_src
 
-The package ~tree-sitter-langs~ is a language bundle that provides syntax highlighting queries for some languages:
+The package ~tree-sitter-langs~ provides syntax highlighting queries for some languages:
 - C
 - C++
 - *CSS*
@@ -231,6 +273,7 @@ A node form is a list form whose first element is a symbol (except for the speci
 
 # Anonymous Nodes. TODO: Link to an internal section.
 A string literal denotes an *anonymous node*.
+# For an explanation of named nodes vs. anonymous nodes, see [[*Node Properties]].
 #+begin_src scheme
   ;; Match the operator `==' .
   "=="
@@ -307,6 +350,8 @@ The special *wildcard* symbol ~_~ matches any node (except for anonymous nodes).
    function: (_) @function.call
    arguments: (_) @function.args)
 #+end_src
+
+# TODO: Link to Querying API section.
 
 For more details, see Tree-sitter's documentation:
 - https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries
@@ -413,26 +458,199 @@ When writing custom highlighting patterns, keep in mind that if a node matches m
 
 The language-bundle package ~tree-sitter-langs~ provides highlighting queries for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
 
-* Languages
-** Loading Mechanism
-** Language Mappings
-** tree-sitter-langs
-** Grammar Definitions
-* APIs
-** API Overview
-*** Naming Conventions
+* Core APIs
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: api
+:END:
+** _
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_TITLE: Core APIs
+:END:
+Functions and variables in this package have 2 prefixes:
+- =tree-sitter-=: High-level features, i.e. the *apps*. For example, [[*Syntax Highlighting]].
+- =ts-=: Core functionalities, i.e. the *lib*, which is the focus of this section.
+
+[[https://tree-sitter.github.io/tree-sitter/using-parsers][Tree-sitter's own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
+
+In order to follow Emacs Lisp's conventions, functions and data types in this package may differ from those in Tree-sitter's C/Rust APIs. These differences are discussed in their corresponding sections.
+
 *** Data Types
+- ~language~, ~parser~, ~tree~, ~node~, ~cursor~, ~query~, ~query-cursor~: corresponding Tree-sitter's data types, embedded in ~user-ptr~ objects.
+- ~point~: a pair of /~(line-number . byte-column)~/.
+  + /~line-number~/ is the absolute line number returned by ~line-number-at-pos~, counting from 1.
+  + /~byte-column~/ counts from 0, like ~current-column~. However, unlike that function, it counts bytes, instead of displayed glyphs.
+- ~range~: a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
+
+{{% notice info %}}
+These types are understood only by this package and its type-checking predicates, which are useful for debugging: ~ts-language-p~, ~ts-tree-p~, ~ts-node-p~... They are not recognized by ~type-of~.
+{{% /notice %}}
+
+For consistency with Emacs's conventions, there are some differences compared to Tree-Sitter's C/Rust APIs:
+- *1-based* byte positions are used, instead of 0-based byte offsets.
+- *1-based* line numbers are used, instead of 0-based row coordinates.
+- Node types are *symbols* (named nodes) and *strings* (anonymous nodes), instead of always being strings.
+- Field names are *keywords*, instead of strings.
+
+# |             | Emacs Lisp                           | C/Rust                  |
+# | Bytes       | 1-based byte positions               | 0-based byte offsets    |
+# | Lines       | 1-based line numbers                 | 0-based row coordinates |
+# | Node Types  | symbols (named), strings (anonymous) | strings                 |
+# | Node Fields | keywords                             | strings                 |
+
 ** Parsing
-*** Parsing a String
-*** Parsing with an Input Function
-*** Incremental Parsing
+:PROPERTIES:
+:EXPORT_FILE_NAME: parsing
+:END:
+{{% notice info %}}
+The minor mode ~tree-sitter-mode~ provides the high-level interface for working with an up-to-date buffer-local syntax tree. [[*Writing a Dependent Minor Mode]] is recommended over directly using the low level parsing APIs below.
+{{% /notice %}}
+
+Parsing is done through stateful parser objects.
+
+- ~ts-make-parser~ :: Create a new parser without setting a language.
+- ~ts-set-language~ /~parser language~/ :: Set a parser's active language.
+- ~ts-parse-string~ /~parser string~/ :: Parse a single string of source code. This is useful for quick, *one-off* parsing needs.
+    #+begin_src emacs-lisp
+      (let ((parser (ts-make-parser)))
+        (ts-set-language parser (tree-sitter-require 'rust))
+        (ts-parse-string parser "fn foo() {}"))
+    #+end_src
+- ~ts-parse-chunks~ /~parser input-function old-tree~/ :: Parse chunks of source code generated by an input function. /~input-function~/ should take 3 parameters: /~(bytepos line-number byte-column)~/, and return a fragment of the source code, starting from the position identified by either /~bytepos~/ or /~(line-number . byte-column)~/. It should return an empty string to signal the end of the source code.
+
+    *Incremental parsing*: If you have already parsed an earlier version of this document, and it has since been edited, pass the previously parsed /~old-tree~/ so that its unchanged parts can be reused. This will save time and memory. For this to work correctly, you must have already edited it using ~ts-edit-tree~ function in a way that exactly matches the source code changes.
+- ~ts-edit-tree~ /~tree ...~/ :: Prepare a tree for incremental parsing, by editing it to keep it in sync with source code that has been edited. You must describe the edit both in terms of byte positions and in terms of /~(line-number . byte-column)~/ coordinates.
+
+For more details, see Tree-sitter's documentation:
+- https://tree-sitter.github.io/tree-sitter/using-parsers#basic-parsing
+- https://tree-sitter.github.io/tree-sitter/using-parsers#advanced-parsing
+
 ** Inspecting
-{{% alert theme="danger" %}}TODO: Explain node comparison and ts-node-eq{{% /alert %}}
-*** Named vs. Anonymous Nodes
-*** Node's Fields
+:PROPERTIES:
+:EXPORT_FILE_NAME: inspecting
+:END:
+
+The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and [[*Walking][traverse]] this structure, but does not support modifying it directly (for source code transformation/generation purposes).
+
+- ~ts-root-node~ /~tree~/ :: Get the root node of a syntax tree.
+- ~ts-changed-ranges~ /~old-tree new-tree~/ :: Compare an edited old syntax tree to a newly parsed one. It is typically used in ~tree-sitter-after-change-functions~ hook. This function returns a sequence of ranges whose syntactic structure has changed. Each range is a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
+
+    # FIX: ox-hugo cannot properly export [[*Data Types]] here.
+    {{% notice info %}}In ~tree-sitter~'s context, ~point~ typically means a pair of /~(line-number . byte-column)~/, instead of its usual meaning of /current position/. See [[../#data-types][Data Types]].{{% /notice %}}
+- ~ts-tree-to-sexp~ :: <br>
+- ~ts-node-to-sexp~ :: Debug utilities that return the sexp representation of a syntax tree/node, as a string.
+
+*** Node Properties
+Functions that return a node's property have the prefix =ts-node-=:
+- ~ts-node-type~ :: <br>
+- ~ts-node-named-p~ :: Tree-sitter's parse tree is a [[https://en.wikipedia.org/wiki/Parse_tree][concrete syntax tree]], which contains nodes for every single token in the source code, including things which are typically omitted in a simpler [[https://en.wikipedia.org/wiki/Abstract_syntax_tree][abstract syntax tree]], like commas, parentheses, punctuations, keywords.
+
+    These less important nodes are called *anonymous nodes*. Their node types are strings. For example: ~"if"~, ~"else"~. The more important nodes are call *named nodes*. Their node types are symbols, corresponding to the named rules that define them in the language's grammar. For example: ~identifier~, ~block~, ~if_expression~.
+
+    {{% notice info %}}In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types][documentation]], due to the low-level nature of C and JSON, node types are always represented as strings. Representing named node types as symbols makes it more Lisp-idiomatic, and is more consistent with [[*Patterns][tree queries]].{{% /notice %}}
+
+- ~ts-node-extra-p~ :: Whether a node is an *extra node*, which is not required by the grammar, but can appear anywhere in the source code, like comments.
+- ~ts-node-error-p~ :: Whether the node /represents/ a syntax error. The node type of an *error node* is the special symbol ~ERROR~.
+- ~ts-node-has-error-p~ :: Whether the node /contains/ a syntax error.
+- ~ts-node-missing-p~ :: Whether a node is a *missing node*, i.e. inserted by the parser in order to recover from certain kinds of syntax errors, like a missing semicolon.
+- ~ts-node-start-byte~ :: <br>
+- ~ts-node-end-byte~ :: The start/end byte position of a node.
+- ~ts-node-start-position~ :: <br>
+- ~ts-node-end-position~ :: The start/end position of a node.
+- ~ts-node-range~ :: A node's /~[start-bytepos end-bytepos start-point end-point]~/.
+
+*** Related Nodes
+As described in the previous section, the ~-named-~  variants of the functions in this section allow working on the parse tree as an abstract syntax tree.
+
+- ~ts-get-parent~ /~node~/ :: Get a node's parent node.
+- ~ts-count-children~ /~node~/ :: <br>
+- ~ts-count-named-children~ /~node~/ :: Count the number of child nodes (all, or named only).
+- ~ts-get-nth-child~ /~node nth~/ :: <br>
+- ~ts-get-nth-named-child~ /~node nth~/ :: Get a child node by its 0-based index (any, or named only).
+    #+begin_src emacs-lisp
+      (let ((func (tree-sitter-node-at-point 'function_item)))
+        (ts-get-nth-child func 0)        ; An "fn" node
+        (ts-get-nth-named-child func 0)) ; An 'identifier node
+    #+end_src
+- ~ts-get-child-by-field~ /~node field~/ :: Certain node types assign unique field names to specific child nodes. This function allows retrieving child nodes by their field names, instead of by their indexes. The field name should be specified as a keyword.
+    #+begin_src emacs-lisp
+      ;; Get name of the current function definition.
+      (let ((func (tree-sitter-node-at-point 'function_item)))
+        (ts-node-text (ts-get-child-by-field func :name)))
+    #+end_src
+    {{% notice info %}}In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#node-field-names][documentation]], due to the low-level nature of C and JSON, field names are specified as strings. Representing field names as keywords makes it more Lisp-idiomatic.{{% /notice %}}
+- ~ts-get-next-sibling~ /~node~/ :: <br>
+- ~ts-get-prev-sibling~ /~node~/ :: <br>
+- ~ts-get-next-named-sibling~ /~node~/ :: <br>
+- ~ts-get-prev-named-sibling~ /~node~/ :: Get next/previous sibling node (any, or named only).
+- ~ts-get-descendant-for-position-range~ /~node beg end~/ :: <br>
+- ~ts-get-named-descendant-for-position-range~ /~node beg end~/ :: Get smallest descendant node that spans the given range.
+    #+begin_src emacs-lisp
+      ;; Get the syntax node the cursor is on.
+      (let ((p (point)))
+        (ts-get-descendant-for-position-range
+         (ts-root-node tree-sitter-tree) p p))
+    #+end_src
+
+# TODO: Explain node comparison and ts-node-eq
 ** Walking
+:PROPERTIES:
+:EXPORT_FILE_NAME: walking
+:END:
+Tree-walking functions enable efficient traversal of the syntax tree with the help of a stateful ~cursor~ object.
+
+- ~ts-make-cursor~ /~node-or-tree~/ :: Create a new cursor on a node. The cursor /cannot move out/ of this node. If called on a tree, the cursor is created on the tree's root node.
+- ~ts-goto-parent~ /~cursor~/ :: <br>
+- ~ts-goto-first-child~ /~cursor~/ :: <br>
+- ~ts-goto-next-sibling~ /~cursor~/ :: Attempt to move the cursor to the parent node, the first child node, or the next sibling node. This function returns t if the move was successful, nil if the move is invalid.
+- ~ts-goto-first-child-for-position~ /~cursor pos~/ :: Attempt to move the cursor to the first child node that extends beyond the given position. This function returns the index of the child node found, nil otherwise.
+- ~ts-reset-cursor~ /~cursor node~/ :: Re-initialize the cursor to start on a different node.
+- ~ts-current-node~ /~cursor~/ :: Get the node that the cursor is currently on.
+- ~ts-current-field~ /~cursor~/ :: Get the field name (as a keyword) associated with the current node.
+
 ** Querying
-** Writing a Dependent Mode
+:PROPERTIES:
+:EXPORT_FILE_NAME: querying
+:END:
+Tree-sitter provides a Lisp-like [[*Queries][query language]] to search for patterns in the syntax tree.
+
+- ~ts-make-query~ /~language patterns [tag-assigner]~/ :: Create a new query for the given language. This query cannot be run on syntax nodes of other languages.
+
+    *Patterns* can be specified as either a sequence (usually a vector, for convenience) of S-expressions, or their textual representations, concatenated into a string.
+
+    When the query is executed, each captured node is *tagged* with a symbol, whose name is the corresponding capture name defined in /~patterns~/. For example, nodes that are captured as ~@function.builtin~ will be tagged with the symbol ~function.builtin~. This behavior can be customized by the optional function /~tag-assigner~/, which should return a tag value when given a capture name (without the prefix ~@~). If it returns nil, the associated capture name is /disabled/.
+- ~ts-make-query-cursor~ :: Create a new *query cursor* to execute queries. It stores the state that is needed to iteratively search for matches.
+- ~ts-query-captures~ /~query node text-function [query-cursor]~/ :: <br>
+- ~ts-query-matches~ /~query node text-function [query-cursor]~/ :: Execute a query on the given syntax node. ~ts-query-captures~ returns a sequence of captures, sorted in the order they appear in the source code. ~ts-query-matches~ returns a sequence of matches, sorted in the order they were found.
+
+    Each *capture* has the form /~(capture-tag . captured-node)~/, where /~capture-tag~/ is a symbol, whose name is the corresponding capture name defined in /~query~/ (without the prefix ~@~). If /~query~/ was created with a custom *tag assigner*, /~capture-tag~/ is instead the value returned by that function.
+
+    Each *match* has the form /~(pattern-index . match-captures)~/, where /~pattern-index~/ is the 0-based position of the matched pattern within /~query~/, and /~match-captures~/ is a sequence of captures associated with the match.
+
+    Since the syntax tree doesn't store the source code's text, /~text-function~/ is called to get nodes' texts (for text-based predicates). It should take 2 parameters: /~(beg-byte end-byte)~/, and return the corresponding chunk of text in the source code. Usually this should be ~#'ts--buffer-substring-no-properties~.
+
+    For performance reason, /~query-cursor~/ should typically be created once, and reused between query executions. It should be omitted only for one-off experimentation.
+
+* Tree-sitter Minor Mode
+:PROPERTIES:
+:EXPORT_FILE_NAME: tree-sitter-mode
+:END:
+
+~tree-sitter-mode~ is a minor mode that provides a buffer-local up-to-date syntax tree.
+
+TODO: Write this.
+
+- Hook: ~tree-sitter-after-on-hook~ :: <br>
+- Hook: ~tree-sitter-after-first-parse-hook~ :: <br>
+- Hook: ~tree-sitter-after-change-functions~ :: <br>
+- Variable: ~tree-sitter-major-mode-language-alist~ :: <br>
+- Variable: ~tree-sitter-language~ :: <br>
+- Variable: ~tree-sitter-tree~ :: <br>
+- Function: ~tree-sitter-node-at-point~ /~[node-type]~/ :: <br>
+
+** Writing a Dependent Minor Mode
+See the docstring of ~tree-sitter--handle-dependent~.
+
 * Advanced Topics
 ** Multi-language Buffers
 ** Compiling Binaries from Source
