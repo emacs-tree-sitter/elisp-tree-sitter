@@ -23,6 +23,9 @@
 
 (require 'ert)
 
+(eval-when-compile
+  (require 'subr-x))
+
 (defun ts-test-make-parser (lang-symbol)
   "Return a new parser for LANG-SYMBOL."
   (let ((parser (ts-make-parser))
@@ -204,6 +207,30 @@ tree is held (since nodes internally reference the tree)."
       (garbage-collect)
       (should (eql 1 (ts-count-children node))))
     (garbage-collect)))
+
+(ert-deftest node::types ()
+  (ts-test-with 'rust parser
+    (ert-info ("Error nodes")
+      (let* ((root (ts-root-node (ts-parse-string parser "fn")))
+             (err (ts-get-nth-child root 0)))
+        (should (ts-node-has-error-p root))
+        (should-not (ts-node-error-p root))
+        (should (eq (ts-node-type root) 'source_file))
+        (ert-info ("Should have a special type")
+          (should (eq (ts-node-type err) 'ERROR)))
+        (should (ts-node-error-p err))
+        (should (ts-node-has-error-p err))))
+    (ert-info ("Missing nodes")
+      (let* ((root (ts-root-node (ts-parse-string parser "let x = 1")))
+             (decl (ts-get-nth-child root 0))
+             (n (ts-count-children decl))
+             (semi (ts-get-nth-child decl (- n 1))))
+        (should (ts-node-has-error-p root))
+        (should-not (ts-node-error-p root))
+        (should (eq (ts-node-type root) 'source_file))
+        (ert-info ("Should have a normal type")
+          (should (equal (ts-node-type semi) ";")))
+        (should (ts-node-missing-p semi))))))
 
 (ert-deftest cursor::walk ()
   (ts-test-with 'rust parser
