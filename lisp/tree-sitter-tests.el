@@ -190,6 +190,20 @@ If RESET is non-nil, also do another full parse and check again."
       (delete-region beg end)
       (ts-test-tree-sexp orig-sexp :reset))))
 
+(ert-deftest minor-mode::node-at-point ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (should (eq 'source_file (ts-node-type (tree-sitter-node-at-point 'source_file))))
+    (search-forward "erase_")
+    (should (eq 'identifier (ts-node-type (tree-sitter-node-at-point))))
+    (should (eq 'function_item (ts-node-type (tree-sitter-node-at-point 'function_item))))
+    (should (null (tree-sitter-node-at-point "function_item")))
+    (should (null (tree-sitter-node-at-point 'impl_item)))
+    ;; FIX: Signal an error for non-existing node types.
+    (should (null (tree-sitter-node-at-point 'non-existing-node-type)))
+    (search-forward "struc")
+    (should (equal "struct" (ts-node-type (tree-sitter-node-at-point))))
+    (should (eq 'struct_item (ts-node-type (tree-sitter-node-at-point 'struct_item))))))
+
 (ert-deftest node::eq ()
   (ts-test-with 'rust parser
     (let* ((tree (ts-parse-string parser "fn foo() {}"))

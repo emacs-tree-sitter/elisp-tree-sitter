@@ -262,11 +262,21 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
        ,teardown)))
 
 ;;;###autoload
-(defun tree-sitter-node-at-point ()
-  "Return the syntax node at point."
-  (let ((root (ts-root-node tree-sitter-tree))
-        (p (point)))
-    (ts-get-descendant-for-position-range root p p)))
+(defun tree-sitter-node-at-point (&optional node-type)
+  "Return the smallest syntax node at point whose type is NODE-TYPE.
+If NODE-TYPE is nil, return the smallest syntax node at point."
+  (let* ((root (ts-root-node tree-sitter-tree))
+         (p (point))
+         (node (ts-get-descendant-for-position-range root p p)))
+    (if node-type
+        (let ((this node) result)
+          (while this
+            (if (equal node-type (ts-node-type this))
+                (setq result this
+                      this nil)
+              (setq this (ts-get-parent this))))
+          result)
+      node)))
 
 (provide 'tree-sitter)
 ;;; tree-sitter.el ends here

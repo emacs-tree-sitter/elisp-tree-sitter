@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   + Added `ts-lang-node-type-id`.
   + Changed the return type of `ts-node-type`.
 - Renamed `ts-type-named-p` to `ts-lang-node-type-named-p`.
+- Added optional param `NODE-TYPE` to `tree-sitter-node-at-point`.
 
 ## [0.9.2] - 2020-07-20
 - Upgraded `tree-sitter` crate to add `.` as a valid start of predicates, in addition to `#`.
