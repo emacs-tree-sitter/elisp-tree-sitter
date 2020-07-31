@@ -27,6 +27,15 @@
   "Faces for highlighting code."
   :group 'tree-sitter-hl)
 
+;; TODO: Inherit a common face, for compatibility with existing themes?
+(defface tree-sitter-hl-face:ERROR
+  '((((supports :underline (:style wave)))
+     :underline (:style wave :color "Red1"))
+    (t
+     :inherit error))
+  "Face for nodes that represent syntax errors."
+  :group 'tree-sitter-hl)
+
 ;;; ------------------------------------
 ;;; Functions.
 
@@ -248,6 +257,11 @@
 ;;; ----------------------------------------------------------------------------
 ;;; Interfaces for modes and end users.
 
+(defcustom tree-sitter-hl-should-highlight-errors t
+  "Whether to highlight syntax errors with `tree-sitter-hl-face:ERROR'."
+  :group 'tree-sitter-hl
+  :type 'boolean)
+
 (defcustom tree-sitter-hl-use-font-lock-keywords :except-font-lock-defaults
   "Whether to keep using the highlighting provided by `font-lock-keywords'.
 If `:except-font-lock-defaults', then keywords specified by `font-lock-defaults'
@@ -298,7 +312,9 @@ language symbols, not major mode symbols.")
                       (append tree-sitter-hl--extra-patterns-list
                               (alist-get (ts--lang-symbol tree-sitter-language)
                                          tree-sitter-hl--patterns-alist)
-                              (list tree-sitter-hl-default-patterns))
+                              (list tree-sitter-hl-default-patterns)
+                              (when tree-sitter-hl-should-highlight-errors
+                                '("(ERROR) @ERROR")))
                       "\n")
            tree-sitter-hl-face-mapping-function)))
   tree-sitter-hl--query)
@@ -322,6 +338,9 @@ should set `tree-sitter-hl-default-patterns' instead."
   (if lang-symbol
       (tree-sitter-hl--add-patterns-for-language lang-symbol patterns)
     (tree-sitter-hl--add-patterns-locally patterns)))
+
+(defun tree-sitter-hl-remove-extra-patterns (lang-symbol)
+  (cl-callf2 assoc-delete-all lang-symbol tree-sitter-hl--patterns-alist))
 
 (defun tree-sitter-hl--add-patterns-locally (patterns)
   "Add buffer-local syntax highlighting PATTERNS.
