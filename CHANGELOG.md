@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Used keywords instead of strings for field names.
+  + Replaced `ts-field-name-for-id`, `ts-field-id-for-name` with `ts-lang-field`, `ts-lang-field-id`.
+  + Replaced `ts-current-field-name` with `ts-current-field`.
+  + Replaced `ts-get-child-by-field-name` with `ts-get-child-by-field`.
+- Used symbols for named node types.
+  + Replaced `ts-type-name-for-id` with `ts-lang-node-type`.
+  + Added `ts-lang-node-type-id`.
+  + Changed the return type of `ts-node-type`.
+- Renamed `ts-type-named-p` to `ts-lang-node-type-named-p`.
+- Added optional param `NODE-TYPE` to `tree-sitter-node-at-point`.
 
 ## [0.9.2] - 2020-07-20
 - Upgraded `tree-sitter` crate to add `.` as a valid start of predicates, in addition to `#`.

@@ -134,6 +134,12 @@ This function must be called with narrowing disabled, e.g. within a
    (position-bytes beg)
    (position-bytes end)))
 
+(defun ts-get-child-by-field (node field)
+  "Return NODE's child associated with FIELD, which should be a keyword."
+  (unless (keywordp field)
+    (signal 'wrong-type-argument (list 'keywordp field)))
+  (ts--get-child-by-field-name node (substring (symbol-name field) 1)))
+
 (defun ts-node-start-position (node)
   "Return NODE's start position."
   (byte-to-position (ts-node-start-byte node)))
@@ -153,6 +159,21 @@ This function must be called with narrowing disabled, e.g. within a
   "Move CURSOR to the first child that extends beyond the given POSITION.
 Return the index of the child node if one was found, nil otherwise."
   (ts-goto-first-child-for-byte cursor (position-bytes position)))
+
+(defun ts-lang-field-id (language field)
+  "Return the numeric id of FIELD in LANGUAGE. FIELD should be a keyword."
+  (unless (keywordp field)
+    (signal 'wrong-type-argument (list 'keywordp field)))
+  (ts--lang-field-id-for-name language (substring (symbol-name field) 1)))
+
+(defun ts-lang-node-type-id (language node-type)
+  "Return the numeric id of NODE-TYPE in LANGUAGE.
+NODE-TYPE should be a symbol (named nodes) or a string (anonymous nodes)."
+  (cond
+   ((symbolp node-type)
+    (ts--lang-type-id-for-name language (symbol-name node-type) :named))
+   (t
+    (ts--lang-type-id-for-name language node-type nil))))
 
 
 ;;; Querying.

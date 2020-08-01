@@ -23,6 +23,9 @@
 
 (require 'ert)
 
+(eval-when-compile
+  (require 'subr-x))
+
 (defun ts-test-make-parser (lang-symbol)
   "Return a new parser for LANG-SYMBOL."
   (let ((parser (ts-make-parser))
@@ -80,6 +83,11 @@ If RESET is non-nil, also do another full parse and check again."
 (ert-deftest creating-parser ()
   (should (ts-parser-p (ts-test-make-parser 'rust))))
 
+(ert-deftest language::info ()
+  (dolist (lang-symbol '(rust bash javascript c))
+    (let ((language (tree-sitter-require lang-symbol)))
+      (should (eq lang-symbol (ts--lang-symbol language))))))
+
 (ert-deftest language::equality ()
   (ts-test-with 'rust parser
     ;; XXX: `equal' seems to return nil even if 2 `user-ptr' objects have the same pointer and
@@ -90,21 +98,33 @@ If RESET is non-nil, also do another full parse and check again."
 (ert-deftest language::node-types ()
   (let* ((language (tree-sitter-require 'rust))
          (type-count (ts-lang-count-types language)))
+    (ert-info ("Round tripping node-type node-type-id")
+      (dolist (node-type '(identifier function_item "if" "else"))
+        (should (equal (thread-last node-type
+                         (ts-lang-node-type-id language)
+                         (ts-lang-node-type language))
+                       node-type))))
     (ert-info ("0 should be the special node type \"end\"")
-      (should (equal "end" (ts-type-name-for-id language 0))))
+      (should (equal 'end (ts-lang-node-type language 0))))
     (ert-info ("Node type IDs should be from 0 to type count minus 1")
-      (should-not (null (ts-type-name-for-id language 1)))
-      (should-not (null (ts-type-name-for-id language (- type-count 1))))
-      (should (null (ts-type-name-for-id language type-count))))))
+      (should-not (null (ts-lang-node-type language 1)))
+      (should-not (null (ts-lang-node-type language (- type-count 1))))
+      (should (null (ts-lang-node-type language type-count))))))
 
 (ert-deftest language::fields ()
   (let* ((language (tree-sitter-require 'rust))
          (field-count (ts-lang-count-fields language)))
+    (ert-info ("Round tripping field field-id")
+      (dolist (field '(:name :left :right :value))
+        (should (eq (thread-last field
+                      (ts-lang-field-id language)
+                      (ts-lang-field language))
+                    field))))
     (ert-info ("Field IDs should be from 1 to field count")
-      (should (null (ts-field-name-for-id language 0)))
-      (should-not (null (ts-field-name-for-id language 1)))
-      (should-not (null (ts-field-name-for-id language field-count)))
-      (should (null (ts-field-name-for-id language (1+ field-count)))))))
+      (should (null (ts-lang-field language 0)))
+      (should (keywordp (ts-lang-field language 1)))
+      (should (keywordp (ts-lang-field language field-count)))
+      (should (null (ts-lang-field language (1+ field-count)))))))
 
 (ert-deftest parsing::rust-string ()
   (ts-test-with 'rust parser
@@ -170,6 +190,20 @@ If RESET is non-nil, also do another full parse and check again."
       (delete-region beg end)
       (ts-test-tree-sexp orig-sexp :reset))))
 
+(ert-deftest minor-mode::node-at-point ()
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (should (eq 'source_file (ts-node-type (tree-sitter-node-at-point 'source_file))))
+    (search-forward "erase_")
+    (should (eq 'identifier (ts-node-type (tree-sitter-node-at-point))))
+    (should (eq 'function_item (ts-node-type (tree-sitter-node-at-point 'function_item))))
+    (should (null (tree-sitter-node-at-point "function_item")))
+    (should (null (tree-sitter-node-at-point 'impl_item)))
+    ;; FIX: Signal an error for non-existing node types.
+    (should (null (tree-sitter-node-at-point 'non-existing-node-type)))
+    (search-forward "struc")
+    (should (equal "struct" (ts-node-type (tree-sitter-node-at-point))))
+    (should (eq 'struct_item (ts-node-type (tree-sitter-node-at-point 'struct_item))))))
+
 (ert-deftest node::eq ()
   (ts-test-with 'rust parser
     (let* ((tree (ts-parse-string parser "fn foo() {}"))
@@ -188,6 +222,30 @@ tree is held (since nodes internally reference the tree)."
       (should (eql 1 (ts-count-children node))))
     (garbage-collect)))
 
+(ert-deftest node::types ()
+  (ts-test-with 'rust parser
+    (ert-info ("Error nodes")
+      (let* ((root (ts-root-node (ts-parse-string parser "fn")))
+             (err (ts-get-nth-child root 0)))
+        (should (ts-node-has-error-p root))
+        (should-not (ts-node-error-p root))
+        (should (eq (ts-node-type root) 'source_file))
+        (ert-info ("Should have a special type")
+          (should (eq (ts-node-type err) 'ERROR)))
+        (should (ts-node-error-p err))
+        (should (ts-node-has-error-p err))))
+    (ert-info ("Missing nodes")
+      (let* ((root (ts-root-node (ts-parse-string parser "let x = 1")))
+             (decl (ts-get-nth-child root 0))
+             (n (ts-count-children decl))
+             (semi (ts-get-nth-child decl (- n 1))))
+        (should (ts-node-has-error-p root))
+        (should-not (ts-node-error-p root))
+        (should (eq (ts-node-type root) 'source_file))
+        (ert-info ("Should have a normal type")
+          (should (equal (ts-node-type semi) ";")))
+        (should (ts-node-missing-p semi))))))
+
 (ert-deftest cursor::walk ()
   (ts-test-with 'rust parser
     (let* ((tree (ts-parse-string parser "fn foo() {}"))
@@ -201,9 +259,9 @@ tree is held (since nodes internally reference the tree)."
     (let* ((node (ts-root-node tree-sitter-tree))
            (cursor (ts-make-cursor node)))
       (ts-goto-first-child cursor)
-      (should-not (equal (ts-node-type (ts-current-node cursor)) "source_file"))
+      (should-not (equal (ts-node-type (ts-current-node cursor)) 'source_file))
       (ts-reset-cursor cursor node)
-      (should (equal (ts-node-type (ts-current-node cursor)) "source_file")))))
+      (should (equal (ts-node-type (ts-current-node cursor)) 'source_file)))))
 
 (ert-deftest cursor::using-without-tree ()
   (ts-test-with 'rust parser

@@ -4,12 +4,13 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use emacs::{defun, Result, Value};
+use emacs::{defun, Result, Value, GlobalRef};
 use tree_sitter::{Tree, TreeCursor};
 
 use crate::{
     types::{self, Shared, Either, BytePos},
     node::RNode,
+    lang::Language,
 };
 
 // -------------------------------------------------------------------------------------------------
@@ -124,11 +125,13 @@ fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
     Ok(cursor.borrow().field_id())
 }
 
-/// Return the field name of CURSOR's current node.
-/// Return nil if the current node doesn't have a field.
+/// Return the field associated with CURSOR's current node, as a keyword.
+/// Return nil if the current node is not associated with a field.
 #[defun]
-fn current_field_name(cursor: &RCursor) -> Result<Option<&'static str>> {
-    Ok(cursor.borrow().field_name())
+fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
+    let cursor = cursor.borrow();
+    let language: Language = cursor.reft.language().into();
+    Ok(cursor.field_id().and_then(|id| language.info().field_name(id)))
 }
 
 macro_rules! defun_cursor_walks {
