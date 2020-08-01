@@ -79,18 +79,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.10.0...HEAD
-[0.10.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.2...0.10.0
-[0.9.2]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.1...0.9.2
-[0.9.1]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.0...0.9.1
-[0.9.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.3...0.9.0
-[0.8.3]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.2...0.8.3
-[0.8.2]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.1...0.8.2
-[0.8.1]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.0...0.8.1
-[0.8.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.7.0...0.8.0
-[0.7.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.6.0...0.7.0
-[0.6.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.5.0...0.6.0
-[0.5.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.4.0...0.5.0
-[0.4.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.3.0...0.4.0
-[0.3.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.2.0...0.3.0
-[0.2.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.1.0...0.2.0
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.2...0.10.0
+[0.9.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.1...0.9.2
+[0.9.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.0...0.9.1
+[0.9.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.3...0.9.0
+[0.8.3]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.2...0.8.3
+[0.8.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.1...0.8.2
+[0.8.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.0...0.8.1
+[0.8.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.6.0...0.7.0
+[0.6.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.2.0...0.3.0
+[0.2.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.1.0...0.2.0
