@@ -5,7 +5,7 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers dynamic-modules tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.9.2
+;; Version: 0.10.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; License: MIT
 

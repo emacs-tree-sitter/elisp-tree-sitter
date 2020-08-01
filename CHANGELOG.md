@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.10.0] - 2020-08-01
 - Used keywords instead of strings for field names.
   + Replaced `ts-field-name-for-id`, `ts-field-id-for-name` with `ts-lang-field`, `ts-lang-field-id`.
   + Replaced `ts-current-field-name` with `ts-current-field`.
@@ -77,7 +79,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/ubolonton/emacs-tree-sitte/compare/0.8.3...0.9.0
