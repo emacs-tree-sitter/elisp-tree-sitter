@@ -274,7 +274,7 @@ A *predicate* form can appear anywhere in a group form. It is a list form whose 
    (.match? @constant "^[A-Z][A-Z_\\d]+"))
 #+end_src
 
-Currently, the supported predicates for syntax highlighting are ~.match?~, ~.eq?~ and ~.not-eq?~.
+Currently, the supported predicates for syntax highlighting are ~.match?~, ~.not-match?~, ~.eq?~ and ~.not-eq?~.
 
 *** Alternations
 An *alternation* form is a vector of patterns. It denotes a pattern that matches a node when any of the alternative patterns matches.
@@ -361,8 +361,8 @@ Adding language-specific patterns:
 #+begin_src emacs-lisp
   ;; Highlight Python's single-quoted strings as constants.
   (tree-sitter-hl-add-patterns 'python
-    ((string) @constant
-     (.match? @constant "^'")))
+    [((string) @constant
+      (.match? @constant "^'"))])
 #+end_src
 
 Adding buffer-local patterns:
