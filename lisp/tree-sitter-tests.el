@@ -345,18 +345,18 @@ tree is held (since nodes internally reference the tree)."
           (capture-names '(function string.arg string)))
       (ert-info ("Querying without range restriction")
         (should (equal (mapcar #'car (ts-query-captures
-                                      query root-node #'ts-node-text cursor))
+                                      query root-node #'ts--buffer-substring-no-properties cursor))
                        capture-names))
         (should (equal (mapcar #'car (ts--query-cursor-captures-1
-                                      cursor query root-node #'ts-node-text))
+                                      cursor query root-node #'ts--buffer-substring-no-properties))
                        capture-names)))
       (ert-info ("Querying with range restriction")
         (ts--query-cursor-set-byte-range cursor 1 28)
         (should (equal (mapcar #'car (ts-query-captures
-                                      query root-node #'ts-node-text cursor))
+                                      query root-node #'ts--buffer-substring-no-properties cursor))
                        capture-names))
         (should (equal (mapcar #'car (ts--query-cursor-captures-1
-                                      cursor query root-node #'ts-node-text))
+                                      cursor query root-node #'ts--buffer-substring-no-properties))
                        capture-names))))))
 
 (ert-deftest load ()

@@ -9,13 +9,19 @@
 
 /* /\* TODO: Pink *\/ */
 /* code { */
-/*   border: 1px solid #DDD; */
-/*   background-color: #EEE; */
+/*   /\* border: 1px solid #DDD; *\/ */
+/*   border-radius: 4px; */
+/*   background-color: #EEE !important; */
 /* } */
 
 /* body { */
 /*   text-align: justify; */
 /* } */
+
+em > code {
+  background-color: inherit;
+  border: none;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Spacing */
@@ -102,27 +108,38 @@ code + .copy-to-clipboard {
 
 /* -------------------------------------------------------------------------- */
 
-#sidebar ul li > div > a {
-  width: 100%;
-  padding-left: 0.5rem !important;
+#sidebar ul.topics > li.parent, #sidebar ul.topics > li.active {
+  background: inherit;
 }
 
-#sidebar ul li.active {
-  background: inherit !important;
+/* #sidebar ul.topics > li.parent li { */
+/*   background: green; */
+/* } */
+
+/* #sidebar ul.topics > li.parent.active li { */
+/*   background: inherit; */
+/* } */
+
+#sidebar ul > li {
+  text-indent: 0.15rem;
 }
 
-#sidebar ul.topics ul {
-  padding-bottom: 0.4rem;
-}
+/* #sidebar ul > li > a { */
+/*   width: 100%; */
+/* } */
 
-#sidebar ul li.active > div > a {
-  /* padding-left: 0.5rem; */
-  /* color: #555 !important; */
-  /* background-color: #fdf6e3; */
+#sidebar ul > li.active > a {
+  /* background-color: #fdf6e3 !important; */
+  background-color: white !important;
+  color: black !important;
 }
 
 #sidebar li.alwaysopen i.fa {
   display: none;
+}
+
+#sidebar ul.topics ul {
+  padding-bottom: 0;
 }
 
 /* -------------------------------------------------------------------------- */
