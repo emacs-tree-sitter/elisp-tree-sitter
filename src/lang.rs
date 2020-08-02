@@ -71,7 +71,11 @@ impl LangInfo {
 
     #[inline]
     pub(crate) fn field_name(&self, id: u16) -> Option<&GlobalRef> {
-        self.field_names.get(id as usize - 1)
+        if id == 0 {
+            None
+        } else {
+            self.field_names.get(id as usize - 1)
+        }
     }
 }
 
