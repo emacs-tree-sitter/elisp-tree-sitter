@@ -18,6 +18,11 @@
 /*   text-align: justify; */
 /* } */
 
+em > code {
+  background-color: inherit;
+  border: none;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Spacing */
 /* The general idea is that padding should decrease with nesting. */
