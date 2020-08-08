@@ -1,30 +1,15 @@
 /* -------------------------------------------------------------------------- */
 
-
-/* -------------------------------------------------------------------------- */
-
 /* body { */
 /*   background-color: #fdf6e3; */
-/* } */
-
-/* /\* TODO: Pink *\/ */
-/* code { */
-/*   /\* border: 1px solid #DDD; *\/ */
-/*   border-radius: 4px; */
-/*   background-color: #EEE !important; */
 /* } */
 
 /* body { */
 /*   text-align: justify; */
 /* } */
 
-em > code {
-  background-color: inherit;
-  border: none;
-}
-
 /* -------------------------------------------------------------------------- */
-/* Spacing */
+/* Spacing. */
 /* The general idea is that padding should decrease with nesting. */
 
 #body-inner .chroma, #body-inner ul, #body-inner .notices, #body-inner .panel {
@@ -38,13 +23,29 @@ em > code {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Fix wrong vertical alignment of inline code (was `bottom`). */
+/* Inline code. */
 
+/* /\* TODO: Pink *\/ */
+/* code { */
+/*   border: 1px solid #DDD; */
+/*   border-radius: 4px; */
+/*   /\* background-color: rgba(27,31,35,.05); *\/ */
+/*   background-color: #EEE; */
+/* } */
+
+/* Fix wrong vertical alignment of inline code (was `bottom`). */
 #body-inner code {
   vertical-align: baseline;
 }
 
+/* Italicized inline code. */
+em > code {
+  background-color: inherit;
+  border: none;
+}
+
 /* -------------------------------------------------------------------------- */
+/* Headings. */
 
 h1, h2 {
   /* font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; */
@@ -63,7 +64,7 @@ h2 {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Make code highlighting work */
+/* Make code highlighting work. */
 
 /* https://discourse.gohugo.io/t/solved-syntax-highlighting-changed-with-hugo-0-29-from-0-27/8678 */
 /* https://github.com/alecthomas/chroma/issues/41 */
@@ -107,6 +108,23 @@ code + .copy-to-clipboard {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Smaller navigation sidebars. */
+
+#body > .padding {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+#navigation .nav {
+  width: 2rem;
+}
+
+#navigation .nav > i.fa {
+  font-size: 28px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Menu sidebar. */
 
 #sidebar ul.topics > li.parent, #sidebar ul.topics > li.active {
   background: inherit;
