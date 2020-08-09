@@ -17,7 +17,7 @@
   margin-bottom: 1rem;
 }
 
-#body-inner ul li p, #body-inner ul li .chroma {
+#body-inner ul li p, #body-inner ul li .chroma, #body-inner .notices .chroma {
   margin-top: 0.6rem;
   margin-bottom: 0.6rem;
 }
@@ -165,11 +165,12 @@ code + .copy-to-clipboard {
 
 div.notices {
   padding-bottom: 1px;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
 }
 
 div.notices p {
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0.7rem;
-  margin-bottom: 0.7rem;
+  padding: 0;
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
 }
