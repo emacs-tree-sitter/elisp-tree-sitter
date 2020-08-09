@@ -1,5 +1,5 @@
 # emacs-tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
-[![Documentation](https://img.shields.io/badge/documentation-0.10.0-blue)](https://ubolonton.github.io/emacs-tree-sitter/)
+[![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://ubolonton.github.io/emacs-tree-sitter/)
 [![Build Status](https://travis-ci.org/ubolonton/emacs-tree-sitter.svg?branch=master)](https://travis-ci.org/ubolonton/emacs-tree-sitter)
 [![Build Status](https://dev.azure.com/ubolonton/emacs-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/ubolonton/emacs-tree-sitter/_build/latest?definitionId=2&branchName=master)
 

@@ -1,157 +1,187 @@
 /* -------------------------------------------------------------------------- */
 
-
-/* -------------------------------------------------------------------------- */
-
 /* body { */
 /*   background-color: #fdf6e3; */
-/* } */
-
-/* /\* TODO: Pink *\/ */
-/* code { */
-/*   /\* border: 1px solid #DDD; *\/ */
-/*   border-radius: 4px; */
-/*   background-color: #EEE !important; */
 /* } */
 
 /* body { */
 /*   text-align: justify; */
 /* } */
 
-em > code {
-  background-color: inherit;
-  border: none;
-}
-
 /* -------------------------------------------------------------------------- */
-/* Spacing */
+/* Spacing. */
 /* The general idea is that padding should decrease with nesting. */
 
-#body-inner .chroma, #body-inner ul, #body-inner .notices, #body-inner .panel {
+#body-inner .chroma,
+#body-inner ul,
+#body-inner .notices,
+#body-inner .panel {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
 
-#body-inner ul li p, #body-inner ul li .chroma {
-  margin-top: 0.6rem;
-  margin-bottom: 0.6rem;
+#body-inner li p,
+#body-inner li ul,
+#body-inner li .notices,
+#body-inner li .chroma,
+#body-inner dd p,
+#body-inner dd ul,
+#body-inner dd .notices,
+#body-inner dd .chroma,
+#body-inner .notices .chroma {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Fix wrong vertical alignment of inline code (was `bottom`). */
+/* Inline code. */
 
-#body-inner code {
-  vertical-align: baseline;
-}
+/* /\* TODO: Pink *\/ */
+/* code { */
+/*   border: 1px solid #DDD; */
+/*   border-radius: 4px; */
+/*   /\* background-color: rgba(27,31,35,.05); *\/ */
+ /*   background-color: #EEE; */
+ /* } */
 
-/* -------------------------------------------------------------------------- */
+ /* Fix wrong vertical alignment of inline code (was `bottom`). */
+ #body-inner code {
+   vertical-align: baseline;
+ }
 
-h1, h2 {
-  /* font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; */
-  /* font-weight: bold; */
-  text-transform: none;
-}
+ /* Italicized inline code. */
+ em > code {
+   background-color: inherit;
+   border: none;
+ }
 
-h1 {
-  font-weight: bold;
-}
+ /* -------------------------------------------------------------------------- */
+ /* Headings. */
 
-h2 {
-  font-size: 2rem;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-}
+ h1, h2 {
+   /* font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; */
+   /* font-weight: bold; */
+   text-transform: none;
+ }
 
-/* -------------------------------------------------------------------------- */
-/* Make code highlighting work */
+ h1 {
+   font-weight: bold;
+ }
 
-/* https://discourse.gohugo.io/t/solved-syntax-highlighting-changed-with-hugo-0-29-from-0-27/8678 */
-/* https://github.com/alecthomas/chroma/issues/41 */
-/* We don't modify syntax.css because we want to treat that entire file as machine-generated. */
+ h2 {
+   font-size: 2rem;
+   margin-top: 2rem;
+   margin-bottom: 1rem;
+ }
 
-.chroma code {
-  color: inherit;
-  background-color: inherit;
-}
+ /* -------------------------------------------------------------------------- */
+ /* Make code highlighting work. */
 
-.chroma {
-  color: #777;
-  background-color: #EEE;
-  border: 1px solid #DDD;
-  box-shadow: 2px 2px 2px #EEE;
-}
+ /* https://discourse.gohugo.io/t/solved-syntax-highlighting-changed-with-hugo-0-29-from-0-27/8678 */
+ /* https://github.com/alecthomas/chroma/issues/41 */
+ /* We don't modify syntax.css because we want to treat that entire file as machine-generated. */
 
-/* -------------------------------------------------------------------------- */
-/* Make top bar sticky. */
-/* TODO: Make it sticky only when it's needed to toggle the sidebar. */
+ .chroma code {
+   color: inherit;
+   background-color: inherit;
+ }
 
-#body > .padding {
-  overflow: visible;
-}
+ .chroma {
+   color: #777;
+   background-color: #EEE;
+   border: 1px solid #DDD;
+   box-shadow: 2px 2px 2px #EEE;
+ }
 
-#top-bar {
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-}
+ /* -------------------------------------------------------------------------- */
+ /* Make top bar sticky. */
+ /* TODO: Make it sticky only when it's needed to toggle the sidebar. */
 
-/* -------------------------------------------------------------------------- */
-/* Hide copy-to-clipboard button, except for code blocks. */
+ #body > .padding {
+   overflow: visible;
+ }
 
-code + .copy-to-clipboard {
-  display: none;
-}
+ #top-bar {
+   position: sticky;
+   top: 0;
+   z-index: 9999;
+ }
 
-.chroma .copy-to-clipboard {
-  display: inline;
-}
+ /* -------------------------------------------------------------------------- */
+ /* Hide copy-to-clipboard button, except for code blocks. */
 
-/* -------------------------------------------------------------------------- */
+ code + .copy-to-clipboard {
+   display: none;
+ }
 
-#sidebar ul.topics > li.parent, #sidebar ul.topics > li.active {
-  background: inherit;
-}
+ .chroma .copy-to-clipboard {
+   display: inline;
+ }
 
-/* #sidebar ul.topics > li.parent li { */
-/*   background: green; */
-/* } */
+ /* -------------------------------------------------------------------------- */
+ /* Smaller navigation sidebars. */
 
-/* #sidebar ul.topics > li.parent.active li { */
-/*   background: inherit; */
-/* } */
+ #body > .padding {
+   padding-left: 2rem;
+   padding-right: 2rem;
+ }
 
-#sidebar ul > li {
-  text-indent: 0.15rem;
-}
+ #navigation .nav {
+   width: 2rem;
+ }
 
-/* #sidebar ul > li > a { */
-/*   width: 100%; */
-/* } */
+ #navigation .nav > i.fa {
+   font-size: 28px;
+ }
 
-#sidebar ul > li.active > a {
-  /* background-color: #fdf6e3 !important; */
-  background-color: white !important;
-  color: black !important;
-}
+ /* -------------------------------------------------------------------------- */
+ /* Menu sidebar. */
 
-#sidebar li.alwaysopen i.fa {
-  display: none;
-}
+ #sidebar ul.topics > li.parent, #sidebar ul.topics > li.active {
+   background: inherit;
+ }
 
-#sidebar ul.topics ul {
-  padding-bottom: 0;
-}
+ /* #sidebar ul.topics > li.parent li { */
+ /*   background: green; */
+ /* } */
 
-/* -------------------------------------------------------------------------- */
-/* XXX: Either docdock's styling is bad, or ox-hugo's rendering of shortcodes is broken. */
+ /* #sidebar ul.topics > li.parent.active li { */
+ /*   background: inherit; */
+ /* } */
 
-div.notices {
-  padding-bottom: 1px;
-}
+ #sidebar ul > li {
+   text-indent: 0.15rem;
+ }
 
-div.notices p {
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0.7rem;
-  margin-bottom: 0.7rem;
-}
+ /* #sidebar ul > li > a { */
+ /*   width: 100%; */
+ /* } */
+
+ #sidebar ul > li.active > a {
+   /* background-color: #fdf6e3 !important; */
+   background-color: white !important;
+   color: black !important;
+ }
+
+ #sidebar li.alwaysopen i.fa {
+   display: none;
+ }
+
+ #sidebar ul.topics ul {
+   padding-bottom: 0;
+ }
+
+ /* -------------------------------------------------------------------------- */
+ /* XXX: Either docdock's styling is bad, or ox-hugo's rendering of shortcodes is broken. */
+
+ div.notices {
+   padding-bottom: 1px;
+   padding-left: 1.1rem;
+   padding-right: 1.1rem;
+ }
+
+ div.notices p {
+   padding: 0;
+   margin-top: 0.6rem;
+   margin-bottom: 0.6rem;
+ }

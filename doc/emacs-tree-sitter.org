@@ -6,13 +6,15 @@
 # https://docdock.netlify.com/content-organisation/#unfolded-menu-entry-by-default
 #+HUGO_CUSTOM_FRONT_MATTER: :alwaysopen true
 
+# XXX: Requires hugo 0.70.0_0. Later hugo (e.g. 0.74.3_0) seems broken.
+
 * Tree-sitter
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_TYPE: homepage
 :END:
 
-~emacs-tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][Tree-sitter]], an incremental parsing system.
+~tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][Tree-sitter]], an incremental parsing system.
 
 It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
 - Faster, fine-grained code highlighting.
@@ -26,7 +28,7 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
 :PROPERTIES:
 :EXPORT_FILE_NAME: installation
 :END:
-~emacs-tree-sitter~ requires Emacs 25.1 or above, built with dynamic module support. Some Emacs distributions have this disabled by default. To check whether your Emacs has dynamic module support enabled, try evaluating one of these:
+~tree-sitter~ requires Emacs 25.1 or above, built with dynamic module support. Some Emacs distributions have this disabled by default. To check whether your Emacs has dynamic module support enabled, try evaluating one of these:
 
 #+begin_src emacs-lisp
   (functionp 'module-load) ; should be t
@@ -35,7 +37,7 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
 #+end_src
 
 {{% notice note %}}
-The methods below only work for macOS, Windows, Linux on x86_64, since they download pre-compiled binaries. For other systems, you will have to build from source.
+The methods below download pre-compiled binaries, so they only work for macOS, Linux and Windows, on x86_64 machines. For other systems, you will have to build from source.
 {{% /notice %}}
 
 ** Installing from an ELPA
@@ -69,7 +71,7 @@ The methods below only work for macOS, Windows, Linux on x86_64, since they down
     #+end_src
 
 ** Installing from Source
-- Clone the source repo:
+- Clone the source repository:
     #+begin_src sh
       git clone https://github.com/ubolonton/emacs-tree-sitter
     #+end_src
@@ -117,7 +119,8 @@ For the full list of supported major modes, check the variable ~tree-sitter-majo
 ** Turn on Syntax Highlighting
 Run ~M-x tree-sitter-hl-mode~ to replace the regex-based highlighting provided by ~font-lock-mode~ with tree-based syntax highlighting.
 
-For more details, see [[*Syntax Highlighting]].
+# FIX: ox-hugo cannot properly export [[*Syntax Highlighting]] here.
+For more details, see [[../syntax-highlighting/][Syntax Highlighting]].
 
 # TODO: Example screenshots.
 
@@ -159,7 +162,7 @@ For more details on tree queries, see [[*Queries]].
 :PROPERTIES:
 :EXPORT_FILE_NAME: languages
 :END:
-A language object defines how to parse a particular programming language. It is usually dynamically loaded from a *shared library* (~.dylib~, ~.so~, ~.dll~).
+A *language object* defines how to parse a particular programming language. It is usually dynamically loaded from a *shared library* (~.dylib~, ~.so~, ~.dll~).
 
 The variable ~tree-sitter-load-path~ is a list of directories that the function ~tree-sitter-require~ uses to search for these shared libraries. This is similar to how the built-in function ~require~ searches for Emacs libraries on ~load-path~. The default value contains the directory used by the ~tree-sitter~ CLI tool.
 
@@ -241,9 +244,9 @@ The package ~tree-sitter-langs~ provides syntax highlighting queries for some la
 - *TypeScript*
 
 {{% notice info %}}
-Most of the highlighting queries in the bundle are very basic, as they are copies of those included in the grammar repos. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
+Most of the [[https://github.com/ubolonton/emacs-tree-sitter/tree/master/langs/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
 
-Contribution to highlighting queries is welcome.
+Contributions to highlighting queries are welcome.
 {{% /notice %}}
 
 ** Queries
@@ -254,7 +257,7 @@ Contribution to highlighting queries is welcome.
 A query is a set of patterns, written in a Lisp-like syntax.
 
 {{% notice info %}}
-Queries are language-specific. Different language grammars use different node types and field names. Examples in this section apply to Rust.
+Queries are language-specific. Different language grammars use different /node types/ and /field names/. Examples in this section apply to Rust.
 {{% /notice %}}
 
 *** Patterns
@@ -397,12 +400,12 @@ By default, when the highlighting query associates a node with ~CAPTURE-NAME~, i
           (pcase capture-name
             ("doc" 'font-lock-comment-face))))))
 #+end_src
-*** Highlighting Patterns
+*** Additional Patterns
 You can use the function ~tree-sitter-hl-add-patterns~ to add custom highlighting patterns for a specific language, or in a buffer. These patterns will be prioritized over patterns defined by major modes or language bundles (~tree-sitter-hl-default-patterns~). Below are some examples:
 
 # TODO: Screenshots.
 
-Adding language-specific patterns:
+Language-specific patterns:
 #+begin_src emacs-lisp
   ;; Highlight Python's single-quoted strings as constants.
   (tree-sitter-hl-add-patterns 'python
@@ -410,7 +413,7 @@ Adding language-specific patterns:
       (.match? @constant "^'"))])
 #+end_src
 
-Adding buffer-local patterns:
+Buffer-local patterns:
 #+begin_src emacs-lisp
   ;; Map @rust.unsafe.use capture to a custom face.
   (add-function :before-until tree-sitter-hl-face-mapping-function
@@ -426,7 +429,7 @@ Adding buffer-local patterns:
          (impl_item "unsafe") @rust.unsafe.use])))
 #+end_src
 
-Adding project-specific patterns through ~.dir-locals.el~:
+Project-specific patterns (through ~.dir-locals.el~):
 #+begin_src emacs-lisp
   ;; Highlight DEFUN macros (in Emacs's C source).
   ((c-mode . ((tree-sitter-hl--extra-patterns-list
@@ -437,13 +440,15 @@ Adding project-specific patterns through ~.dir-locals.el~:
                  (.eq? @keyword "DEFUN"))]))))
 #+end_src
 
-When writing custom highlighting patterns, keep in mind that if a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
+{{% notice info %}}
+When a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
 #+begin_src scheme
   ;; More specific patterns should be written earlier.
   ((lifetime (identifier) @type.builtin)
    (.eq? @type.builtin "static"))
   (lifetime (identifier) @label)
 #+end_src
+{{% /notice %}}
 
 # TODO: Describe how to find and make changes to highlighting queries defined by tree-sitter-langs.
 
@@ -451,12 +456,14 @@ When writing custom highlighting patterns, keep in mind that if a node matches m
 :PROPERTIES:
 :EXPORT_FILE_NAME: interface-for-modes
 :END:
+
 /Major modes/ that want to integrate with ~tree-sitter-hl-mode~ should set the variable ~tree-sitter-hl-default-patterns~. It plays a similar role to ~font-lock-defaults~.
 
-# TODO: Update this part after making tree-sitter-hl-add-patterns support language-specific patterns.
-/Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~.
+/Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~. It plays a similar role to ~font-lock-add-keywords~.
 
-The language-bundle package ~tree-sitter-langs~ provides highlighting queries for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
+{{% notice info %}}
+The language bundle ~tree-sitter-langs~ provides [[https://github.com/ubolonton/emacs-tree-sitter/tree/master/langs/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
+{{% /notice %}}
 
 * Core APIs
 :PROPERTIES:
@@ -468,27 +475,33 @@ The language-bundle package ~tree-sitter-langs~ provides highlighting queries fo
 :EXPORT_TITLE: Core APIs
 :END:
 Functions and variables in this package have 2 prefixes:
-- =tree-sitter-=: High-level features, i.e. the *apps*. For example, [[*Syntax Highlighting]].
+# FIX: ox-hugo cannot properly export [[*Syntax Highlighting]] here.
+- =tree-sitter-=: High-level features, i.e. the *apps*. For example, [[../syntax-highlighting/][Syntax Highlighting]].
 - =ts-=: Core functionalities, i.e. the *lib*, which is the focus of this section.
 
-[[https://tree-sitter.github.io/tree-sitter/using-parsers][Tree-sitter's own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
+Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers][own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
 
 In order to follow Emacs Lisp's conventions, functions and data types in this package may differ from those in Tree-sitter's C/Rust APIs. These differences are discussed in their corresponding sections.
 
 *** Data Types
-- ~language~, ~parser~, ~tree~, ~node~, ~cursor~, ~query~, ~query-cursor~: corresponding Tree-sitter's data types, embedded in ~user-ptr~ objects.
-- ~point~: a pair of /~(line-number . byte-column)~/.
+- ~language~: A [[*Languages][language object]] that defines how to parse a language.
+- ~parser~: A stateful object that consumes source code and [[*Parsing][produces a parse tree]].
+- ~tree~: A parse tree that contains syntax ~node~'s, which can be [[*Inspecting][inspected]].
+- ~cursor~: A stateful object used to [[*Walking][traverse a parse tree]].
+- ~query~: A compiled list of [[*Queries][structural patterns]] to search for in a parse tree.
+- ~query-cursor~ A stateful object used to [[*Querying][execute a query]].
+- ~point~: A pair of /~(line-number . byte-column)~/.
   + /~line-number~/ is the absolute line number returned by ~line-number-at-pos~, counting from 1.
   + /~byte-column~/ counts from 0, like ~current-column~. However, unlike that function, it counts bytes, instead of displayed glyphs.
-- ~range~: a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
+- ~range~: A vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
 
 {{% notice info %}}
 These types are understood only by this package and its type-checking predicates, which are useful for debugging: ~ts-language-p~, ~ts-tree-p~, ~ts-node-p~... They are not recognized by ~type-of~.
 {{% /notice %}}
 
-For consistency with Emacs's conventions, there are some differences compared to Tree-Sitter's C/Rust APIs:
-- *1-based* byte positions are used, instead of 0-based byte offsets.
-- *1-based* line numbers are used, instead of 0-based row coordinates.
+For consistency with Emacs's conventions, there are some differences compared to Tree-sitter's C/Rust APIs:
+- It uses *1-based* byte positions, instead of 0-based byte offsets.
+- It uses *1-based* line numbers, instead of 0-based row coordinates.
 - Node types are *symbols* (named nodes) and *strings* (anonymous nodes), instead of always being strings.
 - Field names are *keywords*, instead of strings.
 
@@ -516,7 +529,7 @@ Parsing is done through stateful parser objects.
         (ts-set-language parser (tree-sitter-require 'rust))
         (ts-parse-string parser "fn foo() {}"))
     #+end_src
-- ~ts-parse-chunks~ /~parser input-function old-tree~/ :: Parse chunks of source code generated by an input function. /~input-function~/ should take 3 parameters: /~(bytepos line-number byte-column)~/, and return a fragment of the source code, starting from the position identified by either /~bytepos~/ or /~(line-number . byte-column)~/. It should return an empty string to signal the end of the source code.
+- ~ts-parse-chunks~ /~parser input-function old-tree~/ :: Parse chunks of source code generated by an /~input-function~/. The function should take 3 parameters: /~(bytepos line-number byte-column)~/, and return a fragment of the source code, starting from the position identified by either /~bytepos~/ or /~(line-number . byte-column)~/. It should return an empty string to signal the end of the source code.
 
     *Incremental parsing*: If you have already parsed an earlier version of this document, and it has since been edited, pass the previously parsed /~old-tree~/ so that its unchanged parts can be reused. This will save time and memory. For this to work correctly, you must have already edited it using ~ts-edit-tree~ function in a way that exactly matches the source code changes.
 - ~ts-edit-tree~ /~tree ...~/ :: Prepare a tree for incremental parsing, by editing it to keep it in sync with source code that has been edited. You must describe the edit both in terms of byte positions and in terms of /~(line-number . byte-column)~/ coordinates.
@@ -530,7 +543,7 @@ For more details, see Tree-sitter's documentation:
 :EXPORT_FILE_NAME: inspecting
 :END:
 
-The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and [[*Walking][traverse]] this structure, but does not support modifying it directly (for source code transformation/generation purposes).
+The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and [[*Walking][traverse]] this structure, but does not support modifying it directly (for the purposes of source code transformation or generation).
 
 - ~ts-root-node~ /~tree~/ :: Get the root node of a syntax tree.
 - ~ts-changed-ranges~ /~old-tree new-tree~/ :: Compare an edited old syntax tree to a newly parsed one. It is typically used in ~tree-sitter-after-change-functions~ hook. This function returns a sequence of ranges whose syntactic structure has changed. Each range is a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
@@ -560,7 +573,7 @@ Functions that return a node's property have the prefix =ts-node-=:
 - ~ts-node-range~ :: A node's /~[start-bytepos end-bytepos start-point end-point]~/.
 
 *** Related Nodes
-As described in the previous section, the ~-named-~  variants of the functions in this section allow working on the parse tree as an abstract syntax tree.
+As described in the previous section, the ~-named-~  variants of the functions in this section allow working on the parse tree as if it is an abstract syntax tree.
 
 - ~ts-get-parent~ /~node~/ :: Get a node's parent node.
 - ~ts-count-children~ /~node~/ :: <br>
@@ -618,7 +631,7 @@ Tree-sitter provides a Lisp-like [[*Queries][query language]] to search for patt
 
     *Patterns* can be specified as either a sequence (usually a vector, for convenience) of S-expressions, or their textual representations, concatenated into a string.
 
-    When the query is executed, each captured node is *tagged* with a symbol, whose name is the corresponding capture name defined in /~patterns~/. For example, nodes that are captured as ~@function.builtin~ will be tagged with the symbol ~function.builtin~. This behavior can be customized by the optional function /~tag-assigner~/, which should return a tag value when given a capture name (without the prefix ~@~). If it returns nil, the associated capture name is /disabled/.
+    When the query is executed, each captured node is *tagged* with a symbol, whose name is the corresponding capture name defined in /~patterns~/. For example, nodes that are captured as ~@function.builtin~ will be tagged with the symbol ~function.builtin~. This behavior can be customized by the optional function /~tag-assigner~/, which should return a tag value when given a capture name (without the prefix ~@~). If it returns nil, the associated capture name is disabled.
 - ~ts-make-query-cursor~ :: Create a new *query cursor* to execute queries. It stores the state that is needed to iteratively search for matches.
 - ~ts-query-captures~ /~query node text-function [query-cursor]~/ :: <br>
 - ~ts-query-matches~ /~query node text-function [query-cursor]~/ :: Execute a query on the given syntax node. ~ts-query-captures~ returns a sequence of captures, sorted in the order they appear in the source code. ~ts-query-matches~ returns a sequence of matches, sorted in the order they were found.
