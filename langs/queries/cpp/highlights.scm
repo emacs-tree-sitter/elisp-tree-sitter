@@ -1,62 +1,55 @@
-; Functions
+;; Keywords
+
+["catch"
+ "class"
+ "constexpr"
+ "delete"
+ "explicit"
+ "final"
+ "friend"
+ "mutable"
+ "namespace"
+ "noexcept"
+ "new"
+ "override"
+ "private"
+ "protected"
+ "public"
+ "template"
+ "throw"
+ "try"
+ "typename"
+ "using"
+ "virtual"] @keyword
+
+;;; ----------------------------------------------------------------------------
+;; Functions
 
 (call_expression
-  function: (scoped_identifier
-    name: (identifier) @function))
+ function: (scoped_identifier name: (_) @function.call))
 
 (template_function
-  name: (identifier) @function)
+ name: [(identifier) @function.call
+        (scoped_identifier name: (_) @function.call)])
 
 (template_method
-  name: (field_identifier) @function)
-
-(template_function
-  name: (scoped_identifier
-    name: (identifier) @function))
+ name: [(field_identifier) @method.call
+        (scoped_field_identifier name: (_) @method.call)])
 
 (function_declarator
-  declarator: (scoped_identifier
-    name: (identifier) @function))
+ declarator: [(field_identifier) @function
+              (scoped_identifier name: (_) @function)])
 
-(function_declarator
-  declarator: (scoped_identifier
-    name: (identifier) @function))
-
-(function_declarator
-  declarator: (field_identifier) @function)
-
-; Types
+;;; ----------------------------------------------------------------------------
+;; Types
 
 ((namespace_identifier) @type
  (.match? @type "^[A-Z]"))
 
 (auto) @type
 
-; Constants
+;;; ----------------------------------------------------------------------------
+;; Constants
 
 (this) @variable.builtin
 (nullptr) @constant
-
-; Keywords
-
-"catch" @keyword
-"class" @keyword
-"constexpr" @keyword
-"delete" @keyword
-"explicit" @keyword
-"final" @keyword
-"friend" @keyword
-"mutable" @keyword
-"namespace" @keyword
-"noexcept" @keyword
-"new" @keyword
-"override" @keyword
-"private" @keyword
-"protected" @keyword
-"public" @keyword
-"template" @keyword
-"throw" @keyword
-"try" @keyword
-"typename" @keyword
-"using" @keyword
-"virtual" @keyword

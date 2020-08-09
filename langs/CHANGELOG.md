@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Improved syntax highlighting for C/C++.
 
 ## 0.7.0
 - Replaced `#` with `.` in bundled highlighting queries' predicates.
