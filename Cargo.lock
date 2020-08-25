@@ -193,7 +193,7 @@ dependencies = [
  "emacs 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "tree-sitter 0.16.1 (git+https://github.com/tree-sitter/tree-sitter)",
+ "tree-sitter 0.16.1 (git+https://github.com/tree-sitter/tree-sitter?branch=query-pattern-is-definite)",
 ]
 
 [[package]]
@@ -475,7 +475,7 @@ dependencies = [
 [[package]]
 name = "tree-sitter"
 version = "0.16.1"
-source = "git+https://github.com/tree-sitter/tree-sitter#af655547e5817efbdf350935555b4aaf2642c618"
+source = "git+https://github.com/tree-sitter/tree-sitter?branch=query-pattern-is-definite#4aba684d6681278c82c3a472e0bead950da1ec9d"
 dependencies = [
  "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -595,7 +595,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum termcolor 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 "checksum thread_local 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d40c6d1b69745a6ec6fb1ca717914848da4b44ae29d9b3080cbee91d72a69b14"
-"checksum tree-sitter 0.16.1 (git+https://github.com/tree-sitter/tree-sitter)" = "<none>"
+"checksum tree-sitter 0.16.1 (git+https://github.com/tree-sitter/tree-sitter?branch=query-pattern-is-definite)" = "<none>"
 "checksum unicode-width 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "caaa9d531767d1ff2150b9332433f32a24622147e5ebb1f26409d5da67afd479"
 "checksum unicode-xid 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"
 "checksum vec_map 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
