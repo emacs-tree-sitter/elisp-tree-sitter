@@ -90,6 +90,7 @@ See `tree-sitter-langs-repos'."
                 (ocaml-mode      . ocaml)
                 (php-mode        . php)
                 (python-mode     . python)
+                (rjsx-mode       . javascript)
                 (ruby-mode       . ruby)
                 (rust-mode       . rust)
                 (rustic-mode     . rust)
