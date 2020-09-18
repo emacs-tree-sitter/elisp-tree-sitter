@@ -71,6 +71,12 @@ See `tree-sitter-langs-repos'."
 (cl-pushnew tree-sitter-langs--bin-dir
             tree-sitter-load-path)
 
+(defun tree-sitter-langs--hl-query-path (lang-symbol)
+  (concat (file-name-as-directory
+           (concat tree-sitter-langs--queries-dir
+                   (symbol-name lang-symbol)))
+          "highlights.scm"))
+
 ;;; Link known major modes to languages in the bundle.
 (pcase-dolist
     (`(,major-mode . ,lang-symbol)
@@ -97,14 +103,9 @@ See `tree-sitter-langs-repos'."
                 (scala-mode      . scala)
                 (swift-mode      . swift)
                 (typescript-mode . typescript))))
-  (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
-        lang-symbol))
-
-(defun tree-sitter-langs--hl-query-path (lang-symbol)
-  (concat (file-name-as-directory
-           (concat tree-sitter-langs--queries-dir
-                   (symbol-name lang-symbol)))
-          "highlights.scm"))
+  (when (file-exists-p (tree-sitter-langs--hl-query-path lang-symbol))
+    (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
+          lang-symbol)))
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return default syntax highlighting patterns for LANG-SYMBOL."
