@@ -72,7 +72,7 @@ install:
 before_script:
   - nvm install 10
   - nvm use 10
-  - npm install -g tree-sitter-cli
+  - npm install -g tree-sitter-cli@0.16.9
 
 script:
   - make test

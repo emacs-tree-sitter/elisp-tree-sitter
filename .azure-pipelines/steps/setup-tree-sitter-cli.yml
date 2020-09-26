@@ -1,3 +1,6 @@
+parameters:
+  version: 0.16.9
+
 steps:
 - task: NodeTool@0
   inputs:
@@ -5,7 +8,7 @@ steps:
 
 - script: |
     echo ##vso[task.setvariable variable=TREE_SITTER_DIR]%CD%\ci-tools\tree-sitter
-    npm install -g tree-sitter-cli
+    npm install -g tree-sitter-cli@${{ parameters.version }}
   displayName: Install tree-sitter-cli and set TREE_SITTER_DIR env var (Windows)
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
@@ -15,7 +18,7 @@ steps:
     mkdir -p "$NPM_PREFIX"
     echo "##vso[task.setvariable variable=TREE_SITTER_DIR]$(pwd)/ci-tools/tree-sitter"
     npm config set prefix "$NPM_PREFIX"
-    npm install -g tree-sitter-cli
+    npm install -g tree-sitter-cli@${{ parameters.version }}
     echo "##vso[task.prependpath]$NPM_PREFIX/bin"
   displayName: Install tree-sitter-cli and set TREE_SITTER_DIR env var
   condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
