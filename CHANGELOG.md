@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/644) an issue where [query captures miss some nodes](https://github.com/tree-sitter/tree-sitter/issues/659).
 
 ## [0.10.0] - 2020-08-01
 - Used keywords instead of strings for field names.
