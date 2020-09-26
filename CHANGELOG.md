@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-- Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/644) an issue where [query captures miss some nodes](https://github.com/tree-sitter/tree-sitter/issues/659).
+
+## [0.11.0] - 2020-09-26
+- Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/644) an issue where [query captures miss some nodes](https://github.com/tree-sitter/tree-sitter/issues/659). This also added a check for definitely-invalid patterns when creating a query.
 
 ## [0.10.0] - 2020-08-01
 - Used keywords instead of strings for field names.
@@ -80,7 +82,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...HEAD
+[0.11.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.0...0.9.1
