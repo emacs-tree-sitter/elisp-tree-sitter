@@ -88,7 +88,7 @@ The buffer on focus when the command is called is set as the target buffer."
       (unless tree-sitter-mode
         (tree-sitter-mode))
       ;; TODO: The query should be run against the changed range only.
-      (add-hook 'tree-sitter-after-change-functions 'tree-sitter-query--after-change nil :local)
+      (add-hook 'tree-sitter-after-change-functions #'tree-sitter-query--after-change nil :local)
       (setq tree-sitter-query--target-buffer target-buffer))
     (unless builder-window-is-visible
       (unless (display-buffer-in-side-window
@@ -99,8 +99,8 @@ The buffer on focus when the command is called is set as the target buffer."
     (with-current-buffer builder-buffer
       (erase-buffer)
       (tree-sitter-query-mode)
-      (add-hook 'after-change-functions 'tree-sitter-query--after-change nil :local)
-      (add-hook 'kill-buffer-hook 'tree-sitter-query--clean-target-buffer nil :local))
+      (add-hook 'after-change-functions #'tree-sitter-query--after-change nil :local)
+      (add-hook 'kill-buffer-hook #'tree-sitter-query--clean-target-buffer nil :local))
     (setf tree-sitter-query--target-buffer target-buffer)
     ;; Switch focus to the query builder window.
     (select-window (get-buffer-window builder-buffer))))
