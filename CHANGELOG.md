@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Made `tree-sitter-hl-mode` a "no-op" when `tree-sitter-hl-default-patterns` is nil.
 
 ## [0.11.0] - 2020-09-26
 - Upgraded `tree-sitter` crate to [fix](https://github.com/tree-sitter/tree-sitter/pull/644) an issue where [query captures miss some nodes](https://github.com/tree-sitter/tree-sitter/issues/659). This also added a check for definitely-invalid patterns when creating a query.
