@@ -292,15 +292,16 @@ language symbols, not major mode symbols.")
   "Return the tree query to be used for syntax highlighting in this buffer."
   (unless tree-sitter-hl--query
     (setq tree-sitter-hl--query
-          (ts-make-query
-           tree-sitter-language
-           (mapconcat #'ts--stringify-patterns
-                      (append tree-sitter-hl--extra-patterns-list
-                              (alist-get (ts--lang-symbol tree-sitter-language)
-                                         tree-sitter-hl--patterns-alist)
-                              (list tree-sitter-hl-default-patterns))
-                      "\n")
-           tree-sitter-hl-face-mapping-function)))
+          (when tree-sitter-hl-default-patterns
+            (ts-make-query
+             tree-sitter-language
+             (mapconcat #'ts--stringify-patterns
+                        (append tree-sitter-hl--extra-patterns-list
+                                (alist-get (ts--lang-symbol tree-sitter-language)
+                                           tree-sitter-hl--patterns-alist)
+                                (list tree-sitter-hl-default-patterns))
+                        "\n")
+             tree-sitter-hl-face-mapping-function))))
   tree-sitter-hl--query)
 
 (defun tree-sitter-hl-face-from-common-scope (capture-name)
@@ -575,35 +576,35 @@ OLD-TREE is the tree before the edit."
 This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   ;; TODO: If there's an error, disable `tree-sitter-hl--extra-patterns-list'
   ;; and retry.
-  (tree-sitter-hl--ensure-query)
-  (unless tree-sitter-hl--query-cursor
-    (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
-    ;; Invalidate the buffer, only if we were actually disabled previously.
-    (tree-sitter-hl--invalidate))
-  ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
-  ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
-  ;; work, we need to make sure `tree-sitter--after-change' runs before
-  ;; `jit-lock-after-change'.
-  (add-hook 'tree-sitter-after-change-functions
-            #'tree-sitter-hl--invalidate
-            nil :local)
-  ;; XXX
-  (add-function :override (local 'font-lock-fontify-region-function)
-                #'tree-sitter-hl--highlight-region)
-  (tree-sitter-hl--minimize-font-lock-keywords)
-  ;; When `font-lock-defaults' is not set up, `font-lock-mode' only does a
-  ;; partial initialization. In that case, we initialize it directly. This
-  ;; allows turning on tree-based syntax highlighting by temporarily binding
-  ;; `major-mode', even though such a major mode may not be installed, or does
-  ;; not exist. For example:
-  ;;
-  ;;     (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
-  ;;
-  ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
-  ;; e.g. so that fontification is updated in-time, instead of eventually in
-  ;; some cases.
-  (unless font-lock-set-defaults
-    (font-lock-turn-on-thing-lock)))
+  (when (tree-sitter-hl--ensure-query)
+    (unless tree-sitter-hl--query-cursor
+      (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
+      ;; Invalidate the buffer, only if we were actually disabled previously.
+      (tree-sitter-hl--invalidate))
+    ;; TODO: Override `font-lock-extend-after-change-region-function', or hook
+    ;; into `jit-lock-after-change-extend-region-functions' directly. For that to
+    ;; work, we need to make sure `tree-sitter--after-change' runs before
+    ;; `jit-lock-after-change'.
+    (add-hook 'tree-sitter-after-change-functions
+              #'tree-sitter-hl--invalidate
+              nil :local)
+    ;; XXX
+    (add-function :override (local 'font-lock-fontify-region-function)
+                  #'tree-sitter-hl--highlight-region)
+    (tree-sitter-hl--minimize-font-lock-keywords)
+    ;; When `font-lock-defaults' is not set up, `font-lock-mode' only does a
+    ;; partial initialization. In that case, we initialize it directly. This
+    ;; allows turning on tree-based syntax highlighting by temporarily binding
+    ;; `major-mode', even though such a major mode may not be installed, or does
+    ;; not exist. For example:
+    ;;
+    ;;     (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
+    ;;
+    ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
+    ;; e.g. so that fontification is updated in-time, instead of eventually in
+    ;; some cases.
+    (unless font-lock-set-defaults
+      (font-lock-turn-on-thing-lock))))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
@@ -612,20 +613,24 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   (remove-hook 'tree-sitter-after-change-functions
                #'tree-sitter-hl--invalidate
                :local)
-  (setq tree-sitter-hl--query nil)
   (when tree-sitter-hl--query-cursor
     (setq tree-sitter-hl--query-cursor nil)
     ;; Invalidate the buffer, only if we were actually enabled previously.
     (font-lock-flush))
-  (tree-sitter-hl--restore-font-lock-keywords)
-  ;; If we did a hackish initialization of `font-lock-mode', de-initialize it.
-  (unless font-lock-set-defaults
-    (font-lock-unfontify-buffer)
-    (font-lock-turn-off-thing-lock)))
+  (when tree-sitter-hl--query
+    (setq tree-sitter-hl--query nil)
+    (tree-sitter-hl--restore-font-lock-keywords)
+    ;; If we did a hackish initialization of `font-lock-mode', de-initialize it.
+    (unless font-lock-set-defaults
+      (font-lock-unfontify-buffer)
+      (font-lock-turn-off-thing-lock))))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-hl-mode
   "Toggle syntax highlighting based on Tree-sitter's syntax tree.
+If `tree-sitter-hl-default-patterns' is nil, turning on this mode does nothing,
+and does not interfere with `font-lock-mode'.
+
 Enabling this automatically enables `tree-sitter-mode' in the buffer.
 
 To enable this automatically whenever `tree-sitter-mode' is enabled:

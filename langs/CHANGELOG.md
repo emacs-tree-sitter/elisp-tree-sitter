@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Set `tree-sitter-hl-default-patterns` to nil if there is no query file, instead of signaling an error.
 
 ## 0.7.1 - 2020-08-09
 - Improved syntax highlighting for C/C++.

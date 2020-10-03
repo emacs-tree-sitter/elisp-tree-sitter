@@ -107,18 +107,21 @@ See `tree-sitter-langs-repos'."
           "highlights.scm"))
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
-  "Return default syntax highlighting patterns for LANG-SYMBOL."
-  (with-temp-buffer
-    ;; TODO: Make this less ad-hoc.
-    (dolist (sym (cons lang-symbol
-                       (pcase lang-symbol
-                         ('cpp '(c))
-                         ('typescript '(javascript))
-                         (_ nil))))
-      (insert-file-contents (tree-sitter-langs--hl-query-path sym))
-      (goto-char (point-max))
-      (insert "\n"))
-    (buffer-string)))
+  "Return the bundled default syntax highlighting patterns for LANG-SYMBOL.
+Return nil if there are no bundled patterns."
+  (condition-case nil
+      (with-temp-buffer
+        ;; TODO: Make this less ad-hoc.
+        (dolist (sym (cons lang-symbol
+                           (pcase lang-symbol
+                             ('cpp '(c))
+                             ('typescript '(javascript))
+                             (_ nil))))
+          (insert-file-contents (tree-sitter-langs--hl-query-path sym))
+          (goto-char (point-max))
+          (insert "\n"))
+        (buffer-string))
+    (file-missing nil)))
 
 (defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
   "Use syntax highlighting patterns provided by `tree-sitter-langs'."
