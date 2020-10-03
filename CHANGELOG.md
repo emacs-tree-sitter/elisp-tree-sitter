@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.11.1] - 2020-10-03
 - Made `tree-sitter-hl-mode` a "no-op" when `tree-sitter-hl-default-patterns` is nil.
 
 ## [0.11.0] - 2020-09-26
@@ -83,7 +85,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...HEAD
+[0.11.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...0.11.1
 [0.11.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.1...0.9.2
