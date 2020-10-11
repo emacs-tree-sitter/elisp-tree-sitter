@@ -1,7 +1,8 @@
 $here = $PSScriptRoot
 $project_root = (Get-Item $here).Parent.FullName
-$module_name = "tree_sitter_dyn"
+$module_name = "tsc_dyn"
 $module_renamed = $module_name.replace("_", "-")
+$core_root = "$project_root\core"
 
 $target = $args[0]
 if ($target -eq "release") {
@@ -11,15 +12,21 @@ if ($target -eq "release") {
     $extra = ""
 }
 
-$module_dir = "$project_root\target\$target"
+$module_dir = "$core_root\target\$target"
 
-Push-Location $project_root
+Push-Location $core_root
 
 cargo build --all $extra
-Copy-Item $module_dir\$module_name.dll $project_root\lisp\$module_renamed.dll
+Copy-Item $module_dir\$module_name.dll $core_root\$module_renamed.dll
 
 $version = ((cargo pkgid) | Out-String).Trim().Split('#')[-1].Split(':')[-1]
-Set-Content -Path "$project_root\lisp\DYN-VERSION" -Value $version -NoNewLine -Force
+Set-Content -Path "$core_root\DYN-VERSION" -Value $version -NoNewLine -Force
+
+cask build
+
+Pop-Location
+
+Push-Location $project_root
 
 cask build
 

@@ -13,7 +13,7 @@
 
 (require 'map)
 
-(require 'tree-sitter-core)
+(require 'tsc)
 (require 'tree-sitter-cli)
 
 (eval-when-compile

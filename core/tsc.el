@@ -1,13 +1,19 @@
-;;; tree-sitter-core.el --- Core tree-sitter APIs -*- lexical-binding: t; coding: utf-8 -*-
+;;; tsc.el --- Core tree-sitter APIs -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
+;; Keywords: languages tools parsers dynamic-modules tree-sitter
+;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
+;; Version: 0.11.1
+;; Package-Requires: ((emacs "25.1"))
+;; License: MIT
 
 ;;; Commentary:
 
-;; This file contains the core functionalities of tree-sitter.
+;; This is the core APIs of the Emacs binding for Tree-sitter, an incremental
+;; parsing system.
 
 ;;; Code:
 
@@ -16,12 +22,12 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tree-sitter--dyn-version "0.11.0"
-    "Required version of the dynamic module `tree-sitter-dyn'.")
-  (require 'tree-sitter-dyn-get)
-  (tree-sitter-dyn-get-ensure tree-sitter--dyn-version))
+  (defconst tsc--dyn-version "0.11.0"
+    "Required version of the dynamic module `tsc-dyn'.")
+  (require 'tsc-dyn-get)
+  (tsc-dyn-get-ensure tsc--dyn-version))
 
-(require 'tree-sitter-dyn)
+(require 'tsc-dyn)
 
 (eval-when-compile
   (require 'pcase)
@@ -290,5 +296,5 @@ If a step cannot be followed, signal a `ts--invalid-node-step' error."
         (setq this new-node)))
     this))
 
-(provide 'tree-sitter-core)
-;;; tree-sitter-core.el ends here
+(provide 'tsc)
+;;; tsc.el ends here

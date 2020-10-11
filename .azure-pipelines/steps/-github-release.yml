@@ -11,4 +11,5 @@ steps:
     assetUploadMode: replace
     assets: |
       $(System.DefaultWorkingDirectory)/dist/*.tar.gz
-      $(System.DefaultWorkingDirectory)/lisp/tree-sitter-dyn.*
+      $(System.DefaultWorkingDirectory)/core/dist/*.tar.gz
+      $(System.DefaultWorkingDirectory)/core/tsc-dyn.*

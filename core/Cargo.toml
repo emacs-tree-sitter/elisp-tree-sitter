@@ -7,7 +7,7 @@ publish = false
 
 [lib]
 path = "src/lib.rs"
-name = "tree_sitter_dyn"
+name = "tsc_dyn"
 crate-type = ["cdylib"]
 
 [dependencies]

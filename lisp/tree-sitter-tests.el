@@ -143,7 +143,7 @@ If RESET is non-nil, also do another full parse and check again."
 
 (ert-deftest parsing::rust-buffer ()
   (ts-test-with 'rust parser
-    (ts-test-with-file "src/types.rs"
+    (ts-test-with-file "lisp/test-files/types.rs"
       (ts--without-restriction
         (let* ((tree) (old-tree)
                (initial (benchmark-run
@@ -255,7 +255,7 @@ tree is held (since nodes internally reference the tree)."
         (should (ts-cursor-p (ts-make-cursor node)))))))
 
 (ert-deftest cursor::reset ()
-  (ts-test-lang-with-file 'rust "src/types.rs"
+  (ts-test-lang-with-file 'rust "lisp/test-files/types.rs"
     (let* ((node (ts-root-node tree-sitter-tree))
            (cursor (ts-make-cursor node)))
       (ts-goto-first-child cursor)
@@ -311,7 +311,7 @@ tree is held (since nodes internally reference the tree)."
                  2)))))
 
 (ert-deftest query::basic ()
-  (ts-test-lang-with-file 'rust "src/query.rs"
+  (ts-test-lang-with-file 'rust "core/src/query.rs"
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-debug-query

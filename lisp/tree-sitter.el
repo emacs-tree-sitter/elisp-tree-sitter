@@ -3,21 +3,23 @@
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
-;; Keywords: languages tools parsers dynamic-modules tree-sitter
+;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
 ;; Version: 0.11.1
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "25.1") (tsc "0.11.1"))
 ;; License: MIT
 
 ;;; Commentary:
 
-;; This is an Emacs binding for tree-sitter, an incremental parsing system
-;; (https://tree-sitter.github.io/tree-sitter/). It includes both the core APIs,
-;; and a minor mode that provides a buffer-local up-to-date syntax tree.
+;; This is the base framework of the Emacs binding for Tree-sitter, an
+;; incremental parsing system. It includes a minor mode that provides a
+;; buffer-local up-to-date syntax tree. This minor mode is the base upon which
+;; other libraries can build on. An example is the included code-highlighting
+;; minor mode.
 
 ;;; Code:
 
-(require 'tree-sitter-core)
+(require 'tsc)
 (require 'tree-sitter-load)
 
 (defgroup tree-sitter nil

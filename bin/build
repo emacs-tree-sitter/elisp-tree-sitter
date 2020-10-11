@@ -4,13 +4,13 @@ set -euo pipefail
 
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
-
+core_root="$PROJECT_ROOT"/core
 
 (
-    cd "$PROJECT_ROOT"
+    cd "$core_root"
 
-    TARGET=${1:-debug}
-    if [[ $TARGET == "release" ]]; then
+    target=${1:-debug}
+    if [[ $target == "release" ]]; then
         extra="--release"
     else
         extra=""
@@ -18,9 +18,14 @@ source "$here/env.bash"
 
     cargo build --all $extra
 
-    MODULE_DIR="$PROJECT_ROOT/target/$TARGET"
-    cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./lisp/$MODULE_RENAMED"
-    cargo pkgid | cut -d# -f2 | cut -d: -f2 | tr -d $'\n' > lisp/DYN-VERSION
+    module_dir="$core_root/target/$target"
+    cp -f "$module_dir/$MODULE_ORIGINAL" "./$MODULE_RENAMED"
+    cargo pkgid | cut -d# -f2 | cut -d: -f2 | tr -d $'\n' > ./DYN-VERSION
 
+    cask build
+)
+
+(
+    cd "$PROJECT_ROOT"
     cask build
 )

@@ -2,9 +2,9 @@
 **/*.rs.bk
 **/*.elc*
 **/.cask
-grammars/
-lisp/tree-sitter-dyn.*
-lisp/DYN-VERSION
+
+core/tsc-dyn.*
+core/DYN-VERSION
 
 langs/bin/
 langs/repos/
