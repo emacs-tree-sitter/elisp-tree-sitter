@@ -4,9 +4,9 @@ parameters:
 steps:
 - ${{ each ext in parameters.extensions }}:
   - task: DownloadPipelineArtifact@2
-    displayName: Retrieve tree-sitter-dyn.${{ ext }}
+    displayName: Retrieve lts-dyn.${{ ext }}
     inputs:
-      artifact: tree-sitter-dyn.${{ ext }}
-      path: lisp
+      artifact: lts-dyn.${{ ext }}
+      path: core
 
-- bash: echo LOCAL > lisp/DYN-VERSION
+- bash: echo LOCAL > core/DYN-VERSION

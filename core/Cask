@@ -1,9 +1,9 @@
-(package-file "tsc.el")
+(package-file "lts.el")
 
-(files "tsc.el"
-       "tree-sitter-dyn.dylib"
-       "tree-sitter-dyn.so"
-       "tree-sitter-dyn.dll"
+(files "*.el"
+       "lts-dyn.dylib"
+       "lts-dyn.so"
+       "lts-dyn.dll"
        "Cargo.toml"
        "Cargo.lock"
        "src")

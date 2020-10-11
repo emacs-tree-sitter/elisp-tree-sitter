@@ -5,13 +5,24 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-(
-    cd "$PROJECT_ROOT"
-
-    cask build
-    cask package
-
-    tar_file="dist/tree-sitter-$(cask version).tar"
+function cask-zip-tar {
+    local name=$1
+    local tar_file
+    tar_file="dist/$name-$(cask version).tar"
     gzip --verbose "$tar_file" --stdout > "$tar_file.gz"
     tar --gzip --list --file "$tar_file"
+}
+
+(
+    cd "$PROJECT_ROOT"/core
+    cask build
+    cask package
+    cask-zip-tar lts
+)
+
+(
+    cd "$PROJECT_ROOT"
+    cask build
+    cask package
+    cask-zip-tar tree-sitter
 )

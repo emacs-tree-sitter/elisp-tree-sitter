@@ -23,6 +23,7 @@ LANG=$1
     cd "$PROJECT_ROOT"
 
     $EMACS --batch \
+           --directory "$PROJECT_ROOT/core" \
            --directory "$PROJECT_ROOT/lisp" \
            --directory "$PROJECT_ROOT/langs" \
            --eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-ensure '$LANG))"

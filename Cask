@@ -1,15 +1,16 @@
 (package-file "lisp/tree-sitter.el")
 
-(files "lisp/*.el"
-       "README.md"
-       "lisp/tree-sitter-dyn.dylib"
-       "lisp/tree-sitter-dyn.so"
-       "lisp/tree-sitter-dyn.dll"
-       "Cargo.toml"
-       "Cargo.lock"
-       "src")
+(files "lisp/*.el")
 
 (source melpa)
 
 (development
- (depends-on "rust-mode"))
+ (depends-on "rust-mode")
+ ;; XXX: This is a hack to work around Cask's lack of support for multiple packages in 1 codebase.
+ (depends-on "lts"
+             :git ".git" :branch "lts"
+             :files ("core/*.el"
+                     "core/DYN-VERSION"
+                     "core/lts-dyn.dylib"
+                     "core/lts-dyn.so"
+                     "core/lts-dyn.dll")))
