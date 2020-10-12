@@ -59,7 +59,7 @@ fn language(parser: &Parser) -> Result<Option<Language>> {
 /// If you have already parsed an earlier version of this document, and it has since
 /// been edited, pass the previously parsed OLD-TREE so that its unchanged parts can
 /// be reused. This will save time and memory. For this to work correctly, you must
-/// have already edited it using `ts-edit-tree' function in a way that exactly
+/// have already edited it using `lts-edit-tree' function in a way that exactly
 /// matches the source code changes.
 #[defun]
 fn parse_chunks(parser: &mut Parser, input_function: Value, old_tree: Option<&Shared<Tree>>) -> Result<Shared<Tree>> {

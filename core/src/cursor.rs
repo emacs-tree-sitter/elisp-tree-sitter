@@ -93,7 +93,7 @@ impl RCursor {
 /// Create a new cursor starting from the given TREE-OR-NODE.
 ///
 /// A cursor allows you to walk a syntax tree more efficiently than is possible
-/// using `ts-get-' functions. It is a mutable object that is always on a certain
+/// using `lts-get-' functions. It is a mutable object that is always on a certain
 /// syntax node, and can be moved imperatively to different nodes.
 ///
 /// If a tree is given, the returned cursor starts on its root node.

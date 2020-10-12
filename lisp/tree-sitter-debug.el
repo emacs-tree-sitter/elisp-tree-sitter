@@ -19,9 +19,9 @@
 
 (defun tree-sitter-debug--display-node (node depth)
   "Display NODE that appears at the given DEPTH in the syntax tree."
-  (insert (format "%s%s: \n" (make-string (* 2 depth) ?\ ) (ts-node-type node)))
-  (ts-mapc-children (lambda (c)
-                      (when (ts-node-named-p c)
+  (insert (format "%s%s: \n" (make-string (* 2 depth) ?\ ) (lts-node-type node)))
+  (lts-mapc-children (lambda (c)
+                      (when (lts-node-named-p c)
                         (tree-sitter-debug--display-node c (1+ depth))))
                     node))
 
@@ -31,7 +31,7 @@
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer
       (erase-buffer)
-      (tree-sitter-debug--display-node (ts-root-node tree) 0))))
+      (tree-sitter-debug--display-node (lts-root-node tree) 0))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."
@@ -64,20 +64,20 @@ This mode displays the syntax tree in another buffer, and keeps it up-to-date."
 (defun tree-sitter-debug-query (patterns &optional matches tag-assigner)
   "Execute query PATTERNS against the current syntax tree and return captures.
 
-If the optional arg MATCHES is non-nil, matches (from `ts-query-matches') are
-returned instead of captures (from `ts-query-captures').
+If the optional arg MATCHES is non-nil, matches (from `lts-query-matches') are
+returned instead of captures (from `lts-query-captures').
 
-If the optional arg TAG-ASSIGNER is non-nil, it is passed to `ts-make-query' to
+If the optional arg TAG-ASSIGNER is non-nil, it is passed to `lts-make-query' to
 assign custom tags to capture names.
 
 This function is primarily useful for debugging purpose. Other packages should
 build queries and cursors once, then reuse them."
-  (let* ((query (ts-make-query tree-sitter-language patterns tag-assigner))
-         (root-node (ts-root-node tree-sitter-tree)))
-    (ts--without-restriction
+  (let* ((query (lts-make-query tree-sitter-language patterns tag-assigner))
+         (root-node (lts-root-node tree-sitter-tree)))
+    (lts--without-restriction
       (if matches
-          (ts-query-matches query root-node #'ts--buffer-substring-no-properties)
-        (ts-query-captures query root-node #'ts--buffer-substring-no-properties)))))
+          (lts-query-matches query root-node #'lts--buffer-substring-no-properties)
+        (lts-query-captures query root-node #'lts--buffer-substring-no-properties)))))
 
 ;;; TODO: Kill tree-buffer when `tree-sitter' minor mode is turned off.
 

@@ -293,11 +293,11 @@ language symbols, not major mode symbols.")
   (unless tree-sitter-hl--query
     (setq tree-sitter-hl--query
           (when tree-sitter-hl-default-patterns
-            (ts-make-query
+            (lts-make-query
              tree-sitter-language
-             (mapconcat #'ts--stringify-patterns
+             (mapconcat #'lts--stringify-patterns
                         (append tree-sitter-hl--extra-patterns-list
-                                (alist-get (ts--lang-symbol tree-sitter-language)
+                                (alist-get (lts--lang-symbol tree-sitter-language)
                                            tree-sitter-hl--patterns-alist)
                                 (list tree-sitter-hl-default-patterns))
                         "\n")
@@ -356,7 +356,7 @@ See `tree-sitter-hl-add-patterns'."
     (unless (equal patterns (cl-first old-list))
       ;; Check whether the patterns are valid. TODO: Should we delay the check
       ;; if language is not yet loaded, instead of trying to load it?
-      (ts-make-query (tree-sitter-require lang-symbol) patterns)
+      (lts-make-query (tree-sitter-require lang-symbol) patterns)
       (setf (map-elt tree-sitter-hl--patterns-alist lang-symbol)
             (append (list patterns) (remove patterns old-list))))))
 
@@ -393,12 +393,12 @@ them to the dynamic modules, then garbage-collecting them. When dynamic modules
 have direct access to buffer text, this function may become obsolete.
 
 See https://github.com/tree-sitter/tree-sitter/issues/598."
-  (pcase-let* ((root-node (ts-root-node tree-sitter-tree))
+  (pcase-let* ((root-node (lts-root-node tree-sitter-tree))
                (`(,beg . ,end) hl-region)
                (orig-size (- end beg))
-               (node (ts-get-descendant-for-position-range
+               (node (lts-get-descendant-for-position-range
                       root-node beg end))
-               (`(,beg . ,end) (ts-node-position-range node))
+               (`(,beg . ,end) (lts-node-position-range node))
                (size (- end beg))
                (delta (- size orig-size))
                (level 0))
@@ -414,8 +414,8 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
       ;; Walk up to the parent node.
       (when (setq node (when (<= (cl-incf level)
                                  tree-sitter-hl--extend-region-levels)
-                         (ts-get-parent node)))
-        (let ((range (ts-node-position-range node)))
+                         (lts-get-parent node)))
+        (let ((range (lts-node-position-range node)))
           (setf `(,beg . ,end) range)
           (setq size (- end beg))
           (setq delta (- size orig-size)))))
@@ -485,7 +485,7 @@ This is intended to be used as a buffer-local override of
 `font-lock-fontify-region-function'.
 
 If LOUDLY is non-nil, print debug messages."
-  (ts--save-context
+  (lts--save-context
     (let ((inhibit-point-motion-hooks t))
       ;; Extend the region to be highlighted, so that it is not too wastefully
       ;; small. Then extend it again, based on some heuristic, for querying, to
@@ -495,15 +495,15 @@ If LOUDLY is non-nil, print debug messages."
             (query-region `(,beg . ,end)))
         (tree-sitter-hl--extend-regions hl-region query-region)
         (setf `(,beg . ,end) hl-region)
-        (ts--query-cursor-set-byte-range tree-sitter-hl--query-cursor
+        (lts--query-cursor-set-byte-range tree-sitter-hl--query-cursor
                                          (position-bytes (car query-region))
                                          (position-bytes (cdr query-region))))
-      (let* ((root-node (ts-root-node tree-sitter-tree))
-             (captures  (ts--query-cursor-captures-1
+      (let* ((root-node (lts-root-node tree-sitter-tree))
+             (captures  (lts--query-cursor-captures-1
                          tree-sitter-hl--query-cursor
                          tree-sitter-hl--query
                          root-node
-                         #'ts--buffer-substring-no-properties)))
+                         #'lts--buffer-substring-no-properties)))
         ;; TODO: Handle quitting.
         (with-silent-modifications
           (font-lock-unfontify-region beg end)
@@ -529,7 +529,7 @@ Installed on `tree-sitter-after-change-functions'.
 OLD-TREE is the tree before the edit."
   (if old-tree
       ;; Incremental parse.
-      (seq-doseq (range (ts-changed-ranges old-tree tree-sitter-tree))
+      (seq-doseq (range (lts-changed-ranges old-tree tree-sitter-tree))
         ;; TODO: How about invalidating a single large range?
         (pcase-let* ((`[,beg-byte ,end-byte] range)
                      (beg (byte-to-position beg-byte))
@@ -578,7 +578,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
   ;; and retry.
   (when (tree-sitter-hl--ensure-query)
     (unless tree-sitter-hl--query-cursor
-      (setq tree-sitter-hl--query-cursor (ts-make-query-cursor))
+      (setq tree-sitter-hl--query-cursor (lts-make-query-cursor))
       ;; Invalidate the buffer, only if we were actually disabled previously.
       (tree-sitter-hl--invalidate))
     ;; TODO: Override `font-lock-extend-after-change-region-function', or hook

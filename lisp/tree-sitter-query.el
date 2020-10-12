@@ -18,7 +18,7 @@
   "Tree-sitter playground."
   :group 'tree-sitter)
 
-(define-derived-mode tree-sitter-query-mode prog-mode "ts-query-builder"
+(define-derived-mode tree-sitter-query-mode prog-mode "lts-query-builder"
   "Major mode for building tree-sitter queries and testing them live."
   :syntax-table scheme-mode-syntax-table
   :abbrev-table scheme-mode-abbrev-table)
@@ -39,7 +39,7 @@
 (defun tree-sitter-query--highlight-capture (capture)
   "Highlight CAPTURE in the current buffer."
   (pcase-let* ((`(,capture-name . ,captured-node) capture)
-               (`(,node-start . ,node-end) (ts-node-position-range captured-node))
+               (`(,node-start . ,node-end) (lts-node-position-range captured-node))
                (overlay (make-overlay node-start node-end)))
     ;; Ensure the overlay is deleted when it becomes empty.
     (overlay-put overlay 'evaporate t)
@@ -51,11 +51,11 @@
 (defun tree-sitter-query--eval-query (patterns)
   "Evaluate query PATTERNS against the target buffer."
   (with-current-buffer tree-sitter-query--target-buffer
-    (ts--without-restriction
+    (lts--without-restriction
       (remove-overlays)
-      (let* ((query (ts-make-query tree-sitter-language patterns #'identity))
-             (root-node (ts-root-node tree-sitter-tree))
-             (captures (ts-query-captures query root-node #'ts--buffer-substring-no-properties)))
+      (let* ((query (lts-make-query tree-sitter-language patterns #'identity))
+             (root-node (lts-root-node tree-sitter-tree))
+             (captures (lts-query-captures query root-node #'lts--buffer-substring-no-properties)))
         (if (= (length captures) 0)
             (message "No matches found")
           (mapc #'tree-sitter-query--highlight-capture captures))))))

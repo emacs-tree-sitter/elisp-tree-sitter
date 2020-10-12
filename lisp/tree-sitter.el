@@ -72,7 +72,7 @@ Use this to enable other minor modes that depends on the syntax tree."
   "Update relevant editing states. Installed on `before-change-functions'.
 BEG and OLD-END are the begin and end positions of the text to be changed."
   (setq tree-sitter--beg-before-change beg)
-  (ts--without-restriction
+  (lts--without-restriction
     ;; TODO: Fallback to a full parse if this region is too big.
     (setq tree-sitter--text-before-change
           (when (> old-end beg)
@@ -95,9 +95,9 @@ OLD-LEN is the char length of the old text."
           (new-end-byte (position-bytes new-end))
           old-end-byte
           beg-point old-end-point new-end-point)
-      (ts--save-context
-        (setq beg-point (ts--point-from-position beg)
-              new-end-point (ts--point-from-position new-end)))
+      (lts--save-context
+        (setq beg-point (lts--point-from-position beg)
+              new-end-point (lts--point-from-position new-end)))
       ;; Compute the old text's end byte position, line number, byte column.
       ;;
       ;; Tree-sitter works with byte positions, line numbers, byte columns.
@@ -119,7 +119,7 @@ OLD-LEN is the char length of the old text."
                 ((rel-pos (+ 1 rel-beg old-len))
                  (rel-byte (position-bytes rel-pos))
                  (`(,beg-line-number . ,beg-byte-column) beg-point)
-                 (`(,rel-line-number . ,rel-byte-column) (ts--point-from-position rel-pos))
+                 (`(,rel-line-number . ,rel-byte-column) (lts--point-from-position rel-pos))
                  (old-end-line-number (+ beg-line-number
                                          rel-line-number -1))
                  (old-end-byte-column (if (> rel-line-number 1)
@@ -127,7 +127,7 @@ OLD-LEN is the char length of the old text."
                                         (+ beg-byte-column rel-byte-column))))
               (setq old-end-byte (+ beg-byte rel-byte -1)
                     old-end-point `(,old-end-line-number . ,old-end-byte-column))))))
-      (ts-edit-tree tree-sitter-tree
+      (lts-edit-tree tree-sitter-tree
                     beg-byte old-end-byte new-end-byte
                     beg-point old-end-point new-end-point)
       (tree-sitter--do-parse))))
@@ -137,8 +137,8 @@ OLD-LEN is the char length of the old text."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
           ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
-          (ts--without-restriction
-            (ts-parse-chunks tree-sitter-parser #'ts--buffer-input old-tree)))
+          (lts--without-restriction
+            (lts-parse-chunks tree-sitter-parser #'lts--buffer-input old-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
 
 (defun tree-sitter--setup ()
@@ -150,8 +150,8 @@ OLD-LEN is the char length of the old text."
         (error "No language registered for major mode `%s'" major-mode))
       (setq tree-sitter-language (tree-sitter-require lang-symbol))))
   (unless tree-sitter-parser
-    (setq tree-sitter-parser (ts-make-parser))
-    (ts-set-language tree-sitter-parser tree-sitter-language))
+    (setq tree-sitter-parser (lts-make-parser))
+    (lts-set-language tree-sitter-parser tree-sitter-language))
   (add-hook 'before-change-functions #'tree-sitter--before-change :append :local)
   (add-hook 'after-change-functions #'tree-sitter--after-change :append :local))
 
@@ -267,16 +267,16 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
 (defun tree-sitter-node-at-point (&optional node-type)
   "Return the smallest syntax node at point whose type is NODE-TYPE.
 If NODE-TYPE is nil, return the smallest syntax node at point."
-  (let* ((root (ts-root-node tree-sitter-tree))
+  (let* ((root (lts-root-node tree-sitter-tree))
          (p (point))
-         (node (ts-get-descendant-for-position-range root p p)))
+         (node (lts-get-descendant-for-position-range root p p)))
     (if node-type
         (let ((this node) result)
           (while this
-            (if (equal node-type (ts-node-type this))
+            (if (equal node-type (lts-node-type this))
                 (setq result this
                       this nil)
-              (setq this (ts-get-parent this))))
+              (setq this (lts-get-parent this))))
           result)
       node)))
 
