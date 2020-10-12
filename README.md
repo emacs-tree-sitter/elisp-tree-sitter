@@ -21,7 +21,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the next section instead.
 
 ## Setup for Development
 
-Clone this repo and add its `lisp` and `langs` directories to `load-path`.
+Clone this repo and add 3 of its directories to `load-path`: `core/`, `lisp/` and `langs/`.
 
 Install [cask](https://cask.readthedocs.io) and run `cask install` to install dev dependencies.
 

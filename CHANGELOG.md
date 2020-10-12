@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Moved the core APIs from `tree-sitter-core.el` into their own package `tsc`, to prepare for [distribution through MELPA](https://github.com/melpa/melpa/pull/7112). Also changed their prefix from `ts-` to `tsc-`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
 
 ## [0.11.1] - 2020-10-03
 - Made `tree-sitter-hl-mode` a "no-op" when `tree-sitter-hl-default-patterns` is nil.
