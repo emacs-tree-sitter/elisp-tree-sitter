@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+(
+    cd "$PROJECT_ROOT"
+    # XXX: Create the directory because `cask link` doesn't.
+    mkdir -p "$(cask package-directory)"
+    cask link tsc core
+    cask install
+)
