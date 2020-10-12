@@ -126,7 +126,7 @@ Return nil if there are no bundled patterns."
 (defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
   "Use syntax highlighting patterns provided by `tree-sitter-langs'."
   (unless tree-sitter-hl-default-patterns
-    (let ((lang-symbol (ts--lang-symbol tree-sitter-language)))
+    (let ((lang-symbol (tsc--lang-symbol tree-sitter-language)))
       (setq tree-sitter-hl-default-patterns
             (tree-sitter-langs--hl-default-patterns lang-symbol)))))
 

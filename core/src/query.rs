@@ -86,7 +86,7 @@ fn _query_capture_names(query: Value) -> Result<Vector> {
 }
 
 /// Return all of QUERY's available capture tags.
-/// See `ts-make-query' for an explanation of capture tagging.
+/// See `tsc-make-query' for an explanation of capture tagging.
 #[defun(mod_in_name = true)]
 fn capture_tags<'e>(env: &'e Env, query: &Query) -> Result<Vector<'e>> {
     let symbols = env.make_vector(query.capture_tags.len(), ())?;
@@ -256,7 +256,7 @@ fn _query_cursor_set_byte_range(cursor: &mut QueryCursor, beg: BytePos, end: Byt
 /// Limit CURSOR's query executions to the point range, from BEG to END.
 ///
 /// A "point" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
-/// `ts-parse-chunks' for a more detailed explanation.
+/// `tsc-parse-chunks' for a more detailed explanation.
 #[defun]
 fn _query_cursor_set_point_range(cursor: &mut QueryCursor, beg: Point, end: Point) -> Result<()> {
     cursor.set_point_range(beg.into(), end.into());
