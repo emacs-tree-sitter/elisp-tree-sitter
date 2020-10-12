@@ -1,10 +1,9 @@
 $here = $PSScriptRoot
 $project_root = (Get-Item $here).Parent.FullName
-$core_root = "$project_root\core"
 
 if ($args[0] -eq "watch") {
-    Push-Location $core_root
-    cargo watch -s "powershell ..\bin\build.ps1" -s "powershell ..\bin\test.ps1"
+    Push-Location $project_root
+    cargo watch -s "powershell bin\build.ps1" -s "powershell bin\test.ps1"
     Pop-Location
 } else {
     # XXX: It seems that Emacs writes to stderr, so PowerShell thinks it's an error. Redirecting to

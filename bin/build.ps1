@@ -4,30 +4,22 @@ $module_name = "tsc_dyn"
 $module_renamed = $module_name.replace("_", "-")
 $core_root = "$project_root\core"
 
+Push-Location $project_root
 $target = $args[0]
 if ($target -eq "release") {
-    $extra = "--release"
+    cargo build --all --release
 } else {
     $target = "debug"
-    $extra = ""
+    cargo build --all
 }
-
-$module_dir = "$core_root\target\$target"
+$module_dir = "$project_root\target\$target"
 
 Push-Location $core_root
-
-cargo build --all $extra
 Copy-Item $module_dir\$module_name.dll $core_root\$module_renamed.dll
-
 $version = ((cargo pkgid) | Out-String).Trim().Split('#')[-1].Split(':')[-1]
-Set-Content -Path "$core_root\DYN-VERSION" -Value $version -NoNewLine -Force
-
+Set-Content -Path "DYN-VERSION" -Value $version -NoNewLine -Force
 cask build
-
 Pop-Location
 
-Push-Location $project_root
-
 cask build
-
 Pop-Location
