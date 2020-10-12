@@ -17,6 +17,8 @@
 
 ;;; Code:
 
+(require 'tsc-obsolete)
+
 (unless (functionp 'module-load)
   (error "Dynamic module feature not available, please compile Emacs --with-modules option turned on"))
 
