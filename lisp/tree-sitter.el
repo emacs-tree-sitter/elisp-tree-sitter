@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.11.1
-;; Package-Requires: ((emacs "25.1") (tsc "0.11.1"))
+;; Version: 0.12.0
+;; Package-Requires: ((emacs "25.1") (tsc "0.12.0"))
 ;; License: MIT
 
 ;;; Commentary:

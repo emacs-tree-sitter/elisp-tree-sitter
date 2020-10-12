@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.12.0] - 2020-10-13
 - Moved the core APIs from `tree-sitter-core.el` into their own package `tsc`, to prepare for [distribution through MELPA](https://github.com/melpa/melpa/pull/7112). Also changed their prefix from `ts-` to `tsc-`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
 
 ## [0.11.1] - 2020-10-03
@@ -86,7 +88,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.0...HEAD
+[0.12.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...0.12.0
 [0.11.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...0.11.1
 [0.11.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.2...0.10.0
