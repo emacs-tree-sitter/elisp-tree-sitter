@@ -12,6 +12,7 @@
 
 ;;; Code:
 
+(require 'seq)
 (require 'dired-aux)
 
 (defconst tsc-dyn-get--version-file "DYN-VERSION")
@@ -49,6 +50,37 @@
       (let ((coding-system-for-write 'utf-8))
         (insert version)))))
 
+(defun tsc--try-load-dyn (file)
+  "Try loading `tsc-dyn' from FILE. Return nil if the file does not exist."
+  (or (featurep 'tsc-dyn)
+      (condition-case _
+          (module-load file)
+        (module-open-failed nil))))
+
+;; XXX: Using `require' after setting`module-file-suffix' to `.dylib' results in
+;; "Cannot open load file: No such file or directory, tsc-dyn".
+;;
+;; XXX: Using `load' results in an error message with garbled text: "Symbol’s
+;; value as variable is void: Ïúíþ".
+;;
+;; Therefore, we need to search for the file and use `module-load' directly.
+(defun tsc--mac-load-dyn ()
+  "Search and load the dynamic module on macOS."
+  (let ((file "tsc-dyn.dylib"))
+    ;; Try directory containing `load-file-name'. Typical case.
+    (when load-file-name
+      (tsc--try-load-dyn (concat (file-name-directory load-file-name)
+                                 file)))
+    ;; Try working directory (e.g. when invoked by `cask').
+    (tsc--try-load-dyn file)
+    ;; Fall back to `load-path'.
+    (seq-find (lambda (dir)
+                (let ((full-name (concat (file-name-as-directory
+                                          (expand-file-name dir))
+                                         file)))
+                  (tsc--try-load-dyn full-name)))
+              load-path)))
+
 (defun tsc-dyn-get-ensure (version)
   "Try to load a specific VERSION of  `tsc-dyn'.
 If it's not found, try to download it."
@@ -79,7 +111,7 @@ If it's not found, try to download it."
   ;; sensible than `.so' anyway.
   (unless (featurep 'tsc-dyn)
     (when (eq system-type 'darwin)
-      (load "tsc--mac-load.el")))
+      (tsc--mac-load-dyn)))
 
   ;; If we could not load it (e.g. when the dynamic module was deleted, but the
   ;; version file was not), try downloading again.
@@ -89,7 +121,7 @@ If it's not found, try to download it."
   ;; We should have the binary by now. Try to load for real.
   (unless (featurep 'tsc-dyn)
     (when (eq system-type 'darwin)
-      (load "tsc--mac-load.el"))
+      (tsc--mac-load-dyn))
     (require 'tsc-dyn)))
 
 (provide 'tsc-dyn-get)
