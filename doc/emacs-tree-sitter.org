@@ -483,8 +483,14 @@ The language bundle ~tree-sitter-langs~ provides [[https://github.com/ubolonton/
 :END:
 Emacs Tree-sitter is split into 2 packages:
 # FIX: ox-hugo cannot properly export [[*Syntax Highlighting]] here.
-- =tree-sitter=: The high-level features, i.e. the *framework* and the *apps*. For example, [[../syntax-highlighting/][Syntax Highlighting]].
-- =tsc=: The core functionalitie, i.e. the *lib*, which is the focus of this section.
+- ~tree-sitter~: The high-level features, i.e. the *framework* and the *apps*. For example, [[../syntax-highlighting/][Syntax Highlighting]].
+- ~tsc~: The core functionalities, i.e. the *lib*, which is the focus of this section.
+
+{{% notice warning %}}
+In older versions, the core APIs were prefixed with =ts-=, and provided by ~tree-sitter-core.el~. They are still available as deprecated aliases, but will eventually be removed.
+
+This was changed to [[https://github.com/melpa/melpa/pull/7112#issuecomment-703136075][conform with MELPA's conventions]] and to avoid [[https://github.com/ubolonton/emacs-tree-sitter/issues/35][naming conflicts with ~ts.el~]].
+{{% /notice %}}
 
 Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers][own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
 
