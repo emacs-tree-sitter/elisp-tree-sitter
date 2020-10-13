@@ -13,7 +13,7 @@
 
 (require 'map)
 
-(require 'tree-sitter-core)
+(require 'tsc)
 (require 'tree-sitter-cli)
 
 (eval-when-compile
@@ -58,7 +58,7 @@ to be LANG-SYMBOL's name, prefixed with \"tree_sitter_\"."
     (unless full-path
       ;; TODO: Define custom error class.
       (error "Cannot find shared library for language: %S" lang-symbol))
-    (let ((language (ts--load-language full-path native-symbol-name lang-symbol)))
+    (let ((language (tsc--load-language full-path native-symbol-name lang-symbol)))
       (setf (map-elt tree-sitter-languages lang-symbol) language)
       language)))
 

@@ -12,10 +12,14 @@ if [[ $* == "watch" ]]; then
         cargo watch -s bin/build -s bin/test
     )
 else
-    cask emacs --batch \
-           --directory "$PROJECT_ROOT/lisp" \
-           --directory "$PROJECT_ROOT/langs" \
-           -l ert \
-           -l tree-sitter-tests.el \
-           -f ert-run-tests-batch-and-exit
+    (
+        cd "$PROJECT_ROOT"
+        cask emacs --batch \
+             --directory "$PROJECT_ROOT/core" \
+             --directory "$PROJECT_ROOT/lisp" \
+             --directory "$PROJECT_ROOT/langs" \
+             -l ert \
+             -l tree-sitter-tests.el \
+             -f ert-run-tests-batch-and-exit
+    )
 fi

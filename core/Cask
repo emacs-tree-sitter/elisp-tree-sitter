@@ -1,0 +1,9 @@
+(package-file "tsc.el")
+
+(files "*.el"
+       "tsc-dyn.dylib"
+       "tsc-dyn.so"
+       "tsc-dyn.dll"
+       "Cargo.toml"
+       "Cargo.lock"
+       "src")

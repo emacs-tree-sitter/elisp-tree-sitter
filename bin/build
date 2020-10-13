@@ -5,22 +5,23 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-
 (
     cd "$PROJECT_ROOT"
 
-    TARGET=${1:-debug}
-    if [[ $TARGET == "release" ]]; then
-        extra="--release"
+    target=${1:-debug}
+    if [[ $target == "release" ]]; then
+        cargo build --all --release
     else
-        extra=""
+        cargo build --all
     fi
 
-    cargo build --all $extra
-
-    MODULE_DIR="$PROJECT_ROOT/target/$TARGET"
-    cp -f "$MODULE_DIR/$MODULE_ORIGINAL" "./lisp/$MODULE_RENAMED"
-    cargo pkgid | cut -d# -f2 | cut -d: -f2 | tr -d $'\n' > lisp/DYN-VERSION
+    module_dir="$PROJECT_ROOT/target/$target"
+    (
+        cd core
+        cp -f "$module_dir/$MODULE_ORIGINAL" "$MODULE_RENAMED"
+        cargo pkgid | cut -d# -f2 | cut -d: -f2 | tr -d $'\n' > DYN-VERSION
+        cask build
+    )
 
     cask build
 )

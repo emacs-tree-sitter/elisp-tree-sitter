@@ -1,0 +1,17 @@
+[package]
+name = "emacs-tree-sitter"
+version = "0.12.0"
+authors = ["Tuấn-Anh Nguyễn <ubolonton@gmail.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+name = "tsc_dyn"
+crate-type = ["cdylib"]
+
+[dependencies]
+emacs = "0.14.0"
+libloading = "0.6.2"
+tree-sitter = "0.17.0"
+once_cell = "1.2.0"

@@ -5,7 +5,7 @@ branches:
 language: rust
 
 rust:
-  - stable
+  - 1.46.0
 
 cache:
   - cargo

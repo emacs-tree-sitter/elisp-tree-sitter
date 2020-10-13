@@ -7,7 +7,8 @@
 ;;; Commentary:
 
 ;; This file contains functions to work with the tree-sitter CLI. It must not
-;; depend (directly on indirectly) on `tree-sitter-dyn'.
+;; depend (directly on indirectly) on `tsc-dyn'. It shouldn't depend on
+;; `tree-sitter'.
 
 ;;; Code:
 

@@ -1,6 +1,6 @@
 steps:
 - task: PublishPipelineArtifact@1
-  displayName: Save tree-sitter-dyn.$(DYN_EXT)
+  displayName: Save tsc-dyn.$(DYN_EXT)
   inputs:
-    targetPath: lisp/tree-sitter-dyn.$(DYN_EXT)
-    artifactName: tree-sitter-dyn.$(DYN_EXT)
+    targetPath: core/tsc-dyn.$(DYN_EXT)
+    artifactName: tsc-dyn.$(DYN_EXT)

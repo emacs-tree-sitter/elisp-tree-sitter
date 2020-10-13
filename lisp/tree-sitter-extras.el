@@ -60,8 +60,8 @@ instead, to make this restoration exact."
   (declare (indent 0))
   `(let* ((p (point))
           (old-node (tree-sitter-node-at-point))
-          (steps (ts--node-steps old-node))
-          (delta (- p (ts-node-start-position old-node)))
+          (steps (tsc--node-steps old-node))
+          (delta (- p (tsc-node-start-position old-node)))
           (screen-line (- (count-screen-lines (window-start) p) 1))
           (pixel-posn-y ,(if tree-sitter-save-excursion-pixelwise
                              '(pixel-posn-y-at-point)
@@ -69,12 +69,12 @@ instead, to make this restoration exact."
      (unwind-protect
          (save-excursion ,@body)
        (condition-case err
-           (when-let ((node (ts--node-from-steps tree-sitter-tree steps)))
-             (goto-char (+ delta (ts-node-start-position node)))
+           (when-let ((node (tsc--node-from-steps tree-sitter-tree steps)))
+             (goto-char (+ delta (tsc-node-start-position node)))
              (tree-sitter--recenter screen-line pixel-posn-y))
-         (ts--invalid-node-step
+         (tsc--invalid-node-step
           ,@(when tree-sitter-save-excursion-try-hard
-              '((goto-char (ts-node-start-position (cadr err)))
+              '((goto-char (tsc-node-start-position (cadr err)))
                 (tree-sitter--recenter screen-line pixel-posn-y))))))))
 
 (provide 'tree-sitter-extras)
