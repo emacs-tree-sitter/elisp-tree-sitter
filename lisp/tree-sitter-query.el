@@ -3,6 +3,7 @@
 ;; Copyright (C) 2020  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 

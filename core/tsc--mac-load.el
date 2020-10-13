@@ -1,3 +1,4 @@
+;; SPDX-License-Identifier: MIT
 (require 'seq)
 
 ;; XXX: Using `require' after setting`module-file-suffix' to `.dylib' results in

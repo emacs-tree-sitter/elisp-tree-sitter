@@ -1,7 +1,7 @@
 ;;; tsc-obsolete.el --- Obsolete tree-sitter APIs -*- lexical-binding: t; coding: utf-8-*-
 
 ;; Copyright (C) 2020 Tuấn-Anh Nguyễn
-;; License: MIT
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 

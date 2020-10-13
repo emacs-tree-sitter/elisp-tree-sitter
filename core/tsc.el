@@ -8,7 +8,7 @@
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
 ;; Version: 0.12.0
 ;; Package-Requires: ((emacs "25.1"))
-;; License: MIT
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 

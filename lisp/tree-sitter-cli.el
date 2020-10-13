@@ -3,6 +3,7 @@
 ;; Copyright (C) 2020 Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 

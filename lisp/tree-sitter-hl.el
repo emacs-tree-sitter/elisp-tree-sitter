@@ -4,6 +4,7 @@
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Timo von Hartz <c0untlizzi@gmail.com>
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 
