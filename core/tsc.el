@@ -1,4 +1,4 @@
-;;; tsc.el --- Core tree-sitter APIs -*- lexical-binding: t; coding: utf-8 -*-
+;;; tsc.el --- Core Tree-sitter APIs -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2019  Tuấn-Anh Nguyễn
 ;;

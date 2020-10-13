@@ -13,9 +13,9 @@
 
 ;; This is the base framework of the Emacs binding for Tree-sitter, an
 ;; incremental parsing system. It includes a minor mode that provides a
-;; buffer-local up-to-date syntax tree. This minor mode is the base upon which
-;; other libraries can build on. An example is the included code-highlighting
-;; minor mode.
+;; buffer-local syntax tree that is updated on every text change. This minor
+;; mode is the base for other libraries to build on. An example is the included
+;; code-highlighting minor mode.
 
 ;;; Code:
 
