@@ -96,7 +96,12 @@ If VERSION and OS are not specified, use the defaults of
     (typescript "ebd10b4" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.
 Note that these are mostly for the grammars. We treat the queries they include
-as references, instead of using them directly for syntax highlighting.")
+as references, instead of using them directly for syntax highlighting.
+
+If the grammar is not in an \"official\" repo (i.e. belonging to the
+organization https://github.com/tree-sitter), the repo URL must be specified.
+For example:
+    (hit \"bdeac01\" nil \"https://github.com/dschwen/tree-sitter-hit\")")
 
 (defconst tree-sitter-langs--repos-dir
   (file-name-as-directory

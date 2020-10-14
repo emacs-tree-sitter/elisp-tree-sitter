@@ -44,11 +44,11 @@ If you want to build additional (or all) grammars from source, or work on the co
     ```
 - Run:
     ```bash
-    # macOS/Linux
+    # macOS/Linux: make ensure/<lang-name>
     make ensure/rust
     ```
     ```powershell
-    # Windows
+    # Windows: .\bin\ensure-lang <lang-name>
     .\bin\ensure-lang rust
     ```
 - You can modify`tree-sitter-langs-repos` if the language you need is not declared there.
