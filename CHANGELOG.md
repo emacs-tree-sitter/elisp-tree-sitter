@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Upgraded `emacs` crate to [0.14.1](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.14.1) to fix the [compilation error on Rust 1.47](https://github.com/ubolonton/emacs-tree-sitter/issues/62).
 
 ## [0.12.0] - 2020-10-13
 - Moved the core APIs from `tree-sitter-core.el` into their own package `tsc`, to prepare for [distribution through MELPA](https://github.com/melpa/melpa/pull/7112). Also changed their prefix from `ts-` to `tsc-`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
