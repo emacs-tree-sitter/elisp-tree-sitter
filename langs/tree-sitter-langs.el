@@ -43,6 +43,10 @@
 (eval-when-compile
   (require 'pcase))
 
+(defgroup tree-sitter-langs nil
+  "Grammar bundle for `tree-sitter'."
+  :group 'tree-sitter)
+
 (defvar tree-sitter-langs--testing)
 (eval-and-compile
   (unless (bound-and-true-p tree-sitter-langs--testing)
@@ -86,6 +90,7 @@ See `tree-sitter-langs-repos'."
                 (js-mode         . javascript)
                 (js2-mode        . javascript)
                 (json-mode       . json)
+                (jsonc-mode      . json)
                 (julia-mode      . julia)
                 (ocaml-mode      . ocaml)
                 (php-mode        . php)

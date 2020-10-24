@@ -30,9 +30,16 @@
 (defconst tree-sitter-langs--dir
   (file-name-directory (locate-library "tree-sitter-langs.el")))
 
-(defconst tree-sitter-langs--bin-dir
-  (file-name-as-directory
-   (concat tree-sitter-langs--dir "bin")))
+(defvar tree-sitter-langs--bin-dir nil)
+
+(defcustom tree-sitter-langs-grammar-dir tree-sitter-langs--dir
+  "Directory to store grammar binaries."
+  :group 'tree-sitter-langs
+  :type 'directory
+  :set (lambda (sym val)
+         (setq tree-sitter-langs--bin-dir
+               (concat (file-name-as-directory val) "bin/"))
+         (set-default sym val)))
 
 (defconst tree-sitter-langs--queries-dir
   (file-name-as-directory
@@ -113,7 +120,8 @@ For example:
   (when-let ((source (alist-get lang-symbol tree-sitter-langs-repos)))
     (let ((version (or (nth 0 source) "origin/master"))
           (paths (or (nth 1 source) (list "")))
-          (repo (or (nth 2 source) (format "https://github.com/tree-sitter/tree-sitter-%s" (symbol-name lang-symbol)))))
+          (repo (or (nth 2 source) (format "https://github.com/tree-sitter/tree-sitter-%s"
+                                           (symbol-name lang-symbol)))))
       (list :repo repo :version version :paths paths))))
 
 (defvar tree-sitter-langs--out nil)
@@ -130,7 +138,8 @@ If BUFFER is nil, `princ' is used to forward its stdout+stderr."
                      `(:buffer ,tree-sitter-langs--out)
                    `(:filter (lambda (proc string)
                                (princ string)))))
-         (proc (let ((process-environment (cons (format "TREE_SITTER_DIR=%s" tree-sitter-langs--dir)
+         (proc (let ((process-environment (cons (format "TREE_SITTER_DIR=%s"
+                                                        tree-sitter-langs-grammar-dir)
                                                 process-environment)))
                  (apply #'make-process (append base output))))
          (exit-code (progn
