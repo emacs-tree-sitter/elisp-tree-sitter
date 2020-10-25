@@ -185,7 +185,7 @@ signal an error."
 (define-minor-mode tree-sitter-mode
   "Minor mode that keeps an up-to-date syntax tree using incremental parsing."
   :init-value nil
-  :lighter "tree-sitter"
+  :lighter " tree-sitter"
   :after-hook (when tree-sitter-mode
                 (unless tree-sitter-tree
                   (tree-sitter--do-parse)
