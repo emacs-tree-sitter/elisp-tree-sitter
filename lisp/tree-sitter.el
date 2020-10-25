@@ -91,13 +91,13 @@ BEG is the begin position of the change.
 NEW-END is the end position of the changed text.
 OLD-LEN is the char length of the old text."
   (when tree-sitter-tree
-    (let ((beg-byte (position-bytes beg))
-          (new-end-byte (position-bytes new-end))
-          old-end-byte
-          beg-point old-end-point new-end-point)
+    (let ((beg:byte (position-bytes beg))
+          (new-end:byte (position-bytes new-end))
+          old-end:byte
+          beg:point old-end:point new-end:point)
       (tsc--save-context
-        (setq beg-point (tsc--point-from-position beg)
-              new-end-point (tsc--point-from-position new-end)))
+        (setq beg:point (tsc--point-from-position beg)
+              new-end:point (tsc--point-from-position new-end)))
       ;; Compute the old text's end byte position, line number, byte column.
       ;;
       ;; Tree-sitter works with byte positions, line numbers, byte columns.
@@ -109,27 +109,33 @@ OLD-LEN is the char length of the old text."
       ;; we store the old text through `tree-sitter--before-change', and inspect
       ;; it here. TODO XXX FIX: Improve change tracking in Emacs.
       (if (= old-len 0)
-          (setq old-end-byte beg-byte
-                old-end-point beg-point)
+          (setq old-end:byte beg:byte
+                old-end:point beg:point)
         (let ((old-text tree-sitter--text-before-change)
-              (rel-beg (- beg tree-sitter--beg-before-change)))
+              (rel-beg (1+ (- beg tree-sitter--beg-before-change))))
+          ;; FIX: Don't assume before-change's beg and after-change's beg are
+          ;; the same.
           (with-temp-buffer
             (insert old-text)
             (pcase-let*
-                ((rel-pos (+ 1 rel-beg old-len))
-                 (rel-byte (position-bytes rel-pos))
-                 (`(,beg-line-number . ,beg-byte-column) beg-point)
-                 (`(,rel-line-number . ,rel-byte-column) (tsc--point-from-position rel-pos))
-                 (old-end-line-number (+ beg-line-number
-                                         rel-line-number -1))
-                 (old-end-byte-column (if (> rel-line-number 1)
-                                          rel-byte-column
-                                        (+ beg-byte-column rel-byte-column))))
-              (setq old-end-byte (+ beg-byte rel-byte -1)
-                    old-end-point `(,old-end-line-number . ,old-end-byte-column))))))
+                ((rel-old-end (+ rel-beg old-len))
+                 (old-len:byte (- (position-bytes rel-old-end)
+                                  (position-bytes rel-beg)))
+                 (`(,beg:linum . ,beg:bytecol) beg:point)
+                 (`(,rel-beg:linum . ,rel-beg:bytecol)
+                  (tsc--point-from-position rel-beg))
+                 (`(,rel-old-end:linum . ,rel-old-end:bytecol)
+                  (tsc--point-from-position rel-old-end))
+                 (old-diff:linum (- rel-old-end:linum rel-beg:linum))
+                 (old-end:linum (+ beg:linum old-diff:linum))
+                 (old-end:bytecol (if (> old-diff:linum 0)
+                                      rel-old-end:bytecol
+                                    (+ beg:bytecol old-len:byte))))
+              (setq old-end:byte (+ beg:byte old-len:byte)
+                    old-end:point `(,old-end:linum . ,old-end:bytecol))))))
       (tsc-edit-tree tree-sitter-tree
-                    beg-byte old-end-byte new-end-byte
-                    beg-point old-end-point new-end-point)
+                     beg:byte old-end:byte new-end:byte
+                     beg:point old-end:point new-end:point)
       (tree-sitter--do-parse))))
 
 (defun tree-sitter--do-parse ()

@@ -25,7 +25,11 @@
 (require 'ert)
 
 (eval-when-compile
-  (require 'subr-x))
+  (require 'subr-x)
+  (require 'cl-lib))
+
+;;; ----------------------------------------------------------------------------
+;;; Helpers.
 
 (defun tsc-test-make-parser (lang-symbol)
   "Return a new parser for LANG-SYMBOL."
@@ -80,6 +84,18 @@ If RESET is non-nil, also do another full parse and check again."
   `(tsc-test-with-file ,relative-path
      (tsc-test-use-lang ,lang-symbol)
      ,@body))
+
+(defmacro tsc-test-with-advice (symbol where function &rest body)
+  "Eval BODY while advising SYMBOL with FUNCTION at WHERE."
+  (declare (indent 3))
+  `(progn
+     (advice-add ,symbol ,where ,function)
+     (unwind-protect
+         ,@body
+       (advice-remove ,symbol ,function))))
+
+;;; ----------------------------------------------------------------------------
+;;; Tests.
 
 (ert-deftest creating-parser ()
   (should (tsc-parser-p (tsc-test-make-parser 'rust))))
@@ -174,14 +190,22 @@ If RESET is non-nil, also do another full parse and check again."
     (tsc-test-tree-sexp '(source_file))))
 
 (ert-deftest minor-mode::incremental:change-case-region ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/change-case-region.rs"
-    (let* ((orig-sexp (read (tsc-tree-to-sexp tree-sitter-tree)))
-           (end (re-search-forward "this text"))
-           (beg (match-beginning 0)))
-      (upcase-initials-region beg end)
-      (tsc-test-tree-sexp orig-sexp)
-      (downcase-region beg end)
-      (tsc-test-tree-sexp orig-sexp :reset))))
+  (cl-flet ((assert-same-range
+             (_tree _beg-byte old-end-byte new-end-byte
+                    _beg-point old-end-point new-end-point &rest _)
+             (should (= old-end-byte new-end-byte))
+             (should (equal old-end-point new-end-point))))
+    (tsc-test-lang-with-file 'rust "lisp/test-files/change-case-region.rs"
+      (tsc-test-with-advice 'tsc-edit-tree :before #'assert-same-range
+        (let* ((orig-sexp (read (tsc-tree-to-sexp tree-sitter-tree)))
+               (end (re-search-forward "this text"))
+               (beg (match-beginning 0)))
+          (upcase-initials-region beg end)
+          (tsc-test-tree-sexp orig-sexp)
+          (upcase-region beg end)
+          (tsc-test-tree-sexp orig-sexp)
+          (downcase-region beg end)
+          (tsc-test-tree-sexp orig-sexp :reset))))))
 
 (ert-deftest minor-mode::incremental:delete-non-ascii-text ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/delete-non-ascii-text.rs"

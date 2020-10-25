@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Fixed incorrect parsing when after-change's start position is not the same as before-change's start position. For example, this happens when calling `upcase-region` on a region whose first character is already upcased.
 - Upgraded `emacs` crate to [0.14.1](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.14.1) to fix the [compilation error on Rust 1.47](https://github.com/ubolonton/emacs-tree-sitter/issues/62).
 
 ## [0.12.0] - 2020-10-13
