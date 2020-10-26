@@ -187,9 +187,13 @@ In batch mode, return nil, so that stdout is used instead."
       (redisplay)
       buf)))
 
-(defun tree-sitter-langs-compile (lang-symbol)
+(defun tree-sitter-langs-compile (lang-symbol &optional clean)
   "Download and compile the grammar for LANG-SYMBOL.
-This function requires git and tree-sitter CLI."
+This function requires git and tree-sitter CLI.
+
+If the optional arg CLEAN is non nil, compile from the revision specified in
+`tree-sitter-langs-repos', and clean up afterwards. Otherwise, compile from the
+current state of the grammar repo, without cleanup."
   (message "[tree-sitter-langs] Processing %s" lang-symbol)
   (unless (executable-find "git")
     (error "Could not find git (needed to download grammars)"))
@@ -212,8 +216,9 @@ This function requires git and tree-sitter CLI."
           (tree-sitter-langs--call "git" "remote" "-v" "update"))
       (tree-sitter-langs--call "git" "clone" "-q" repo dir))
     (let ((default-directory dir))
-      (tree-sitter-langs--call "git" "stash" "push")
-      (tree-sitter-langs--call "git" "checkout" version)
+      (when clean
+        (tree-sitter-langs--call "git" "stash" "push")
+        (tree-sitter-langs--call "git" "checkout" version))
       (tree-sitter-langs--call "npm" "set" "progress=false")
       ;; TODO: Figure out why we need to skip `npm install' for some repos.
       (ignore-errors
@@ -234,12 +239,17 @@ This function requires git and tree-sitter CLI."
                 (when (file-exists-p new-name)
                   (delete-file new-name))
                 (rename-file file new-name))))))
-      (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
-      (tree-sitter-langs--call "git" "clean" "-f"))))
+      (when clean
+        (tree-sitter-langs--call "git" "reset" "--hard" "HEAD")
+        (tree-sitter-langs--call "git" "clean" "-f")))))
 
-(defun tree-sitter-langs-create-bundle ()
+(defun tree-sitter-langs-create-bundle (&optional clean)
   "Create a bundle of language grammars.
-The bundle includes all languages declared in `tree-sitter-langs-repos'."
+The bundle includes all languages declared in `tree-sitter-langs-repos'.
+
+If the optional arg CLEAN is non nil, compile from the revisions specified in
+`tree-sitter-langs-repos', and clean up afterwards. Otherwise, compile from the
+current state of the grammar repos, without cleanup."
   (unless (executable-find "tar")
     (error "Could not find tar executable (needed to bundle compiled grammars)"))
   (let ((errors (thread-last tree-sitter-langs-repos
@@ -248,7 +258,7 @@ The bundle includes all languages declared in `tree-sitter-langs-repos'."
                      (pcase-let ((`(,lang-symbol . _) desc))
                        (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                        (condition-case err
-                           (tree-sitter-langs-compile lang-symbol)
+                           (tree-sitter-langs-compile lang-symbol clean)
                          (error `[,lang-symbol ,err])))))
                   (seq-filter #'identity))))
     (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
