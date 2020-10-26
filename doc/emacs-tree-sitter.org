@@ -40,39 +40,25 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
 The methods below download pre-compiled binaries, so they only work for macOS, Linux and Windows, on x86_64 machines. For other systems, you will have to build from source.
 {{% /notice %}}
 
-** Installing from an ELPA
-- Add ~tree-sitter~'s ELPA to ~package-archives~:
-    #+begin_src emacs-lisp
-      (add-to-list 'package-archives '("ublt" . "https://elpa.ubolonton.org/packages/"))
-    #+end_src
+** Installing from MELPA
 - Run ~M-x package-refresh-contents~.
 - Install ~tree-sitter~ and ~tree-sitter-langs~ packages.
-- Load the language bundle:
+- Load the framework and the language bundle:
     #+begin_src emacs-lisp
+      (require 'tree-sitter)
       (require 'tree-sitter-langs)
     #+end_src
 
 ** Installing with straight.el
-- Install ~tree-sitter~ and ~tree-sitter-langs~ with custom recipes:
+- Run ~(straight-pull-package "melpa")~ to update MELPA recipes, if necessary.
+- Install ~tree-sitter~ and ~tree-sitter-langs~ packages.
     #+begin_src emacs-lisp
-      ;; Core APIs.
-      (straight-register-package
-       '(tsc :host github
-             :repo "ubolonton/emacs-tree-sitter"
-             :files ("core/*.el")))
-      ;; Base framework, syntax highlighting.
-      (straight-use-package
-       '(tree-sitter :host github
-                     :repo "ubolonton/emacs-tree-sitter"
-                     :files ("lisp/*.el")))
-      ;; Language bundle.
-      (straight-use-package
-       '(tree-sitter-langs :host github
-                           :repo "ubolonton/emacs-tree-sitter"
-                           :files ("langs/*.el" "langs/queries")))
+      (straight-use-package 'tree-sitter)
+      (straight-use-package 'tree-sitter-langs)
     #+end_src
-- Load the language bundle:
+- Load the framework and the language bundle:
     #+begin_src emacs-lisp
+      (require 'tree-sitter)
       (require 'tree-sitter-langs)
     #+end_src
 
