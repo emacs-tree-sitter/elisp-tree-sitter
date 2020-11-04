@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.12.1] - 2020-11-04
 - Fixed incorrect parsing when after-change's start position is not the same as before-change's start position. For example, this happens when calling `upcase-region` on a region whose first character is already upcased.
 - Upgraded `emacs` crate to [0.14.1](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.14.1) to fix the [compilation error on Rust 1.47](https://github.com/ubolonton/emacs-tree-sitter/issues/62).
 - Upgraded `tree-sitter` crate to 0.17.1 to [fix](https://github.com/tree-sitter/tree-sitter/issues/790) [handling of repeated field names in queries](https://github.com/ubolonton/emacs-tree-sitter/issues/67).
@@ -91,7 +93,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.1...HEAD
+[0.12.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.0...0.12.1
 [0.12.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...0.12.0
 [0.11.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...0.11.1
 [0.11.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...0.11.0
