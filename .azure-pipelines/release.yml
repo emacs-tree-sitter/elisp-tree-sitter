@@ -22,18 +22,16 @@ jobs:
       vs2017-win2016:
         IMAGE_NAME: 'vs2017-win2016'
         DYN_EXT: dll
-      macos-10.14-emacs-25.3:
+      macos-10.14-emacs-27.1:
         IMAGE_NAME: 'macos-10.14'
-        EVM_EMACS: emacs-25.3
+        EVM_EMACS: emacs-27.1
         DYN_EXT: dylib
-      ubuntu-16.04-emacs-25.3:
+      ubuntu-16.04-emacs-27.1:
         IMAGE_NAME: 'ubuntu-16.04'
-        EVM_EMACS: emacs-25.3
+        EVM_EMACS: emacs-27.1
         DYN_EXT: so
   steps:
   - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
-    parameters:
-      version: 1.46.0
   - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs

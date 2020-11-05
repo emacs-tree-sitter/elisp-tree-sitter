@@ -9,32 +9,48 @@ strategy:
   matrix:
     vs2017-win2016:
       IMAGE_NAME: 'vs2017-win2016'
+    # Sometimes fails.
     # windows-2019:
     #   IMAGE_NAME: 'windows-2019'
 
-    macos-10.14-emacs-25.3:
-      IMAGE_NAME: 'macos-10.14'
-      EVM_EMACS: emacs-25.3
+    # Sometimes fails: TLS issue against melpa.org and ftpmirror.gnu.org.
+    # macos-10.14-emacs-25.3:
+    #   IMAGE_NAME: 'macos-10.14'
+    #   EVM_EMACS: emacs-25.3
     macos-10.14-emacs-26.3:
       IMAGE_NAME: 'macos-10.14'
       EVM_EMACS: emacs-26.3
-    # Emacs is getting "Killed 9" on these agents, probably due to macOS 10.15 updates.
+    macos-10.14-emacs-27.1:
+      IMAGE_NAME: 'macos-10.14'
+      EVM_EMACS: emacs-27.1
+
+    # Always fails: ValueError: Could not determine the version of Emacs at emacs
     # macos-10.15-emacs-25.3:
     #   IMAGE_NAME: 'macos-10.15'
     #   EVM_EMACS: emacs-25.3
     # macos-10.15-emacs-26.3:
     #   IMAGE_NAME: 'macos-10.15'
     #   EVM_EMACS: emacs-26.3
+    macos-10.15-emacs-27.1:
+      IMAGE_NAME: 'macos-10.15'
+      EVM_EMACS: emacs-27.1
 
     ubuntu-16.04-emacs-25.3:
       IMAGE_NAME: 'ubuntu-16.04'
       EVM_EMACS: emacs-25.3
+    ubuntu-16.04-emacs-27.1:
+      IMAGE_NAME: 'ubuntu-16.04'
+      EVM_EMACS: emacs-27.1
+
     ubuntu-18.04-emacs-25.3:
       IMAGE_NAME: 'ubuntu-18.04'
       EVM_EMACS: emacs-25.3
     ubuntu-18.04-emacs-26.3:
       IMAGE_NAME: 'ubuntu-18.04'
       EVM_EMACS: emacs-26.3
+    ubuntu-18.04-emacs-27.1:
+      IMAGE_NAME: 'ubuntu-18.04'
+      EVM_EMACS: emacs-27.1
 
 pool:
   vmImage: $(IMAGE_NAME)
@@ -49,8 +65,6 @@ resources:
 
 steps:
 - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
-  parameters:
-    version: 1.46.0
 - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
 - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
 - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
