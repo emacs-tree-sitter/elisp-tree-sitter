@@ -65,8 +65,6 @@ resources:
 
 steps:
 - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
-  parameters:
-    version: 1.46.0
 - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
 - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
 - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
