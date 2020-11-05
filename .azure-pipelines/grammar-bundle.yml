@@ -20,13 +20,13 @@ jobs:
       vs2017-win2016:
         IMAGE_NAME: 'vs2017-win2016'
         BUNDLE_OS: windows
-      macos-10.14-emacs-25.3:
+      macos-10.14-emacs-27.1:
         IMAGE_NAME: 'macos-10.14'
-        EVM_EMACS: emacs-25.3
+        EVM_EMACS: emacs-27.1
         BUNDLE_OS: macos
-      ubuntu-16.04-emacs-25.3:
+      ubuntu-16.04-emacs-27.1:
         IMAGE_NAME: 'ubuntu-16.04'
-        EVM_EMACS: emacs-25.3
+        EVM_EMACS: emacs-27.1
         BUNDLE_OS: linux
   steps:
   - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
