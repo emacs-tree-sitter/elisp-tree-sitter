@@ -24,13 +24,13 @@ addons:
 
 matrix:
   include:
-    - env: EVM_EMACS=emacs-25.3
-      os: osx
     - env: EVM_EMACS=emacs-26.3
+      os: osx
+    - env: EVM_EMACS=emacs-27.1
       os: osx
 
     # 16.04
-    - env: EVM_EMACS=emacs-25.3
+    - env: EVM_EMACS=emacs-27.1
       dist: xenial
       addons:
         apt:
