@@ -35,7 +35,6 @@
 (boolean_type) @type.builtin
 (integral_type) @type.builtin
 (floating_point_type) @type.builtin
-(floating_point_type) @type.builtin
 (void_type) @type.builtin
 
 ; Variables
