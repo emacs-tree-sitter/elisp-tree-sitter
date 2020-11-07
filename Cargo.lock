@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "emacs-tree-sitter"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "emacs",
  "libloading 0.6.2",
@@ -532,9 +532,9 @@ dependencies = [
 
 [[package]]
 name = "tree-sitter"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70ee7370fec3aecde3862a7d64c571048f70a7298daef1815e8fc68b9de54b5c"
+checksum = "d18dcb776d3affaba6db04d11d645946d34a69b3172e588af96ce9fecd20faac"
 dependencies = [
  "cc",
  "regex",
