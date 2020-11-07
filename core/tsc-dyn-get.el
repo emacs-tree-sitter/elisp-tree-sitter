@@ -102,27 +102,27 @@ If it's not found, try to download it."
       (when (or (not current-version)
                 (version< current-version version))
         (tsc-dyn-get--download version))))
-
-  ;; TODO: If the currently loaded version of `tsc-dyn' is too old,
-  ;; restart Emacs (or ask user to do so).
-
   ;; XXX: We want a universal package containing binaries for all platforms, so
   ;; we use a unique extension for each. On macOS, we use`.dylib', which is more
   ;; sensible than `.so' anyway.
   (unless (featurep 'tsc-dyn)
     (when (eq system-type 'darwin)
       (tsc--mac-load-dyn)))
-
   ;; If we could not load it (e.g. when the dynamic module was deleted, but the
   ;; version file was not), try downloading again.
   (unless (require 'tsc-dyn nil :noerror)
     (tsc-dyn-get--download version))
-
   ;; We should have the binary by now. Try to load for real.
   (unless (featurep 'tsc-dyn)
     (when (eq system-type 'darwin)
       (tsc--mac-load-dyn))
-    (require 'tsc-dyn)))
+    (require 'tsc-dyn))
+  ;; Check if and older version was already loaded.
+  (unless (string= version tsc-dyn--version)
+    (display-warning 'tree-sitter
+                     (format "Version %s of tsc-dyn was already loaded. Please restart Emacs to load the requested version %s"
+                             tsc-dyn--version version)
+                     :emergency)))
 
 (provide 'tsc-dyn-get)
 ;;; tsc-dyn-get.el ends here
