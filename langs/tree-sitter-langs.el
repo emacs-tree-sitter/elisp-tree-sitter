@@ -72,7 +72,7 @@ See `tree-sitter-langs-repos'."
     (tree-sitter-langs--copy-query lang-symbol)))
 
 ;;; Add the bundle directory.
-(cl-pushnew tree-sitter-langs--bin-dir
+(cl-pushnew (tree-sitter-langs--bin-dir)
             tree-sitter-load-path)
 
 ;;; Link known major modes to languages in the bundle.
@@ -107,7 +107,7 @@ See `tree-sitter-langs-repos'."
 
 (defun tree-sitter-langs--hl-query-path (lang-symbol)
   (concat (file-name-as-directory
-           (concat tree-sitter-langs--queries-dir
+           (concat (tree-sitter-langs--queries-dir)
                    (symbol-name lang-symbol)))
           "highlights.scm"))
 

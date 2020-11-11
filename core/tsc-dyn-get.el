@@ -15,6 +15,9 @@
 (require 'seq)
 (require 'dired-aux)
 
+(eval-when-compile
+  (defvar tsc-dyn--version))
+
 (defconst tsc-dyn-get--version-file "DYN-VERSION")
 
 (defun tsc-dyn-get--dir ()
