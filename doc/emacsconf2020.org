@@ -1,0 +1,163 @@
+#+Title: Emacs Tree-sitter
+#+Author: Tuấn-Anh Nguyễn
+#+Email: ubolonton@gmail.com
+
+#+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:https://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+#+LATEX_CLASS: beamer
+#+LATEX_CLASS_OPTIONS: [bigger]
+
+#+BEAMER_THEME: Madrid
+#+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
+
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+
+# TODO: Clearly explain the roles of the 3 packages.
+
+# TODO: Clearly explain the roles of tree-sitter-mode and tree-sitter-hl-mode.
+
+# TODO: Give Typescript and wat-mode as examples.
+
+# TODO: Discuss the current state and directions for improvements.
+
+# I have a general mental picture of how tree-sitter's incremental parsing works, but I don't grok
+# it at the level where I can elucidate that mental picture.
+
+* Introduction
+** Problem
+Like other editors, Emacs relies on *regular expressions* for many programming functionalities. They are:
+- Slow and inaccurate
+- Hard to write and read
+- Not able to deal with complex syntaxes
+
+If only Emacs had *structural understanding* of source code, like other IDEs...
+
+# There's a reason structural editing packages like Paredit primarily target Lisp code: extracting the structural information from source code's text is much easier for Lisp.
+
+** Existing Solutions
+- Language Server Protocol
+   + High *latency*
+   + Additional dependencies for each language
+- Language-specific parsers in ELisp
+   + Not performant
+   + Hard to maintain
+   + No *generic APIs*
+
+# They don't seem to be performant. They also take a lot of efforts to maintain. Few people work on the parsers. They are usually hand-written recursive-descendant parsers, which take time to get familiar with. They don't have generic APIs usable by minor modes with cross-cutting concerns.
+
+** Tree-sitter
+- Parser generator and incremental parsing library
+- Written in C, targetting all major platforms (and WASM)
+- Originated from Atom, also being integrated into NeoVim
+- Used by GitHub for source code analysis and navigation features
+
+# Since the grammars being editor-independent and declarative, they have high probability of being better maintained than the parsers written in Emacs Lisp.
+
+** Tree-sitter Features
+- Fast: incremental parsing, structural sharing
+- Uniform: same programming interface across languages
+- No dependencies: self-contained, embeddable C code
+- Robust error recovery
+
+# Same data structures, same functions to manipulate them.
+
+* Emacs Tree-sitter
+** emacs-tree-sitter
+- Tree-sitter bindings for Emacs
+- Provides compiled binaries for 3 major platforms (x86_64): macOS, Linux, Windows
+- Comprises of 3 packages:
+   + ~tree-sitter~: base framework
+   + ~tree-sitter-langs~: language bundle
+   + ~tsc~: core APIs (implicit dependency)
+#+ATTR_LATEX: :center nil :width 0.2\textwidth
+[[file:static/img/emacs-tree-sitter-96x96.png]]
+
+** The Foundation: ~tree-sitter-mode~
+- The base minor mode for other major/minor modes to build on
+- Provides an always-up-to-date syntax tree
+- Uses Emacs's change tracking hooks for incremental parsing
+# Explain how it works.
+# Show the query viewer.
+
+** Syntax Highlighting: ~tree-sitter-hl-mode~
+- Built in top of ~tree-sitter-mode~
+- Overrides ~font-lock-mode~
+- Query-driven
+
+#+ATTR_LATEX: :align |l|l|
+|-------------------------+---------------------------------|
+| *~font-lock-mode~*        | *~tree-sitter-hl-mode~*           |
+|-------------------------+---------------------------------|
+| ~font-lock-defaults~      | ~tree-sitter-hl-default-patterns~ |
+| ~font-lock-add-keywords~  | ~tree-sitter-hl-add-patterns~     |
+|-------------------------+---------------------------------|
+| Regular expressions     | Lisp-like query patterns        |
+| Face prefix: ~font-lock-~ | Face prefix: ~tree-sitter-hl:~    |
+|-------------------------+---------------------------------|
+
+# Explain how it works.
+# Go through the query syntax in a bit more details.
+# Demo how to customize it, using the grammar declaration files, parse tree viewer, query builder, query files, customization functions.
+
+** Core APIs: ~tsc~
+# Describe the different groups of APIs.
+# Explain parser objects vs language objects.
+# Give examples of inspecting and querying.
+- Parsing: generic *parser* object, specific *language* objects
+- Inspecting: *node* type, location, errors, related nodes
+- Walking: efficient tree traversal through a *cursor* object
+- Querying: searching for structural patterns with a sexp *query*
+
+** Pattern Matching with Tree Queries
+- Structural patterns written in a Lisp-like syntax
+- Matching by node types, field names, predicates
+- Capturing nodes for further processing
+- Alternations, repetitions, wildcards
+
+** Language Bundle: ~tree-sitter-langs~
+A package that provides compiled *grammar binaries* and *highlighting queries* for several languages. It currently bundles C, C++, CSS, Go, HTML, Java, JavaScript, PHP, Python, Ruby, Rust, TypeScript.
+
+\bigskip
+
+This should be treated as an *interim* distribution mechanism that helps *bootstrapping* ~tree-sitter~'s adoption. Eventually, these files should be provided by language *major modes* themselves.
+
+# Explain its role as a convenient, temporary mechanism to boost tree-sitter's adoption.
+# Explain why it's better currently for grammar binaries to be distributed by this instead of language major modes. Take Typescript as an example.
+
+** Areas for Contribution
+- Maintaining syntax highlighting queries
+# Tree-sitter's upstream language repositories contain highlighting queries, but we maintain our own so that they better fit Emacs's existing conventions. This requires maintenance, until language major modes adopt tree-sitter and maintain the queries on their own.
+
+- Integrating ~tree-sitter~ into language major modes
+# Go through writing a simple minor mode.
+# Use this as an example: https://github.com/ubolonton/emacs-tree-sitter/issues/70
+
+- Writing minor modes and integration packages: ~imenu~, ~evil~, ~xref~, ~hideshow~, ~polymode~, ...
+
+- Improving language grammars
+# This is more involved, but also quite approachable.
+# The tooling needs to be improved though. New Emacs modes might help here.
+
+* Extra
+** Writing Language Grammars
+- GLR with an DSL embedded in JavaScript.
+- Generation-time conflicts are resolved by precedences.
+- Parse-time conflicts are resolved by dynamic precedences.
+# Give a demo of working on the Scala grammar.
+
+** Links
+- Source code: https://github.com/ubolonton/emacs-tree-sitter/
+- Documentation: https://ubolonton.github.io/emacs-tree-sitter/
+- Tree-sitter's documentation: https://tree-sitter.github.io/tree-sitter/
+
+** Addendum: Dynamic Modules
+The dynamic module that powers ~tree-sitter~ is written in Rust. Overall it's a much nicer experience than doing the same in C. There are various areas where Emacs's dynamic module support can be improved:
+- Direct *read-only* access to strings and buffer texts
+- Better *printed representation* for ~user-ptr~ objects
+- *Module-defined* ~equal~ for ~user-ptr~ (or sensible defaults)
+- Direct calling of core C functions to avoid ~funcall~ overhead
+- Releasing/acquiring the GIL
