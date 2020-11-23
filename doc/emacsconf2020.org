@@ -39,13 +39,15 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 # There's a reason structural editing packages like Paredit primarily target Lisp code: extracting the structural information from source code's text is much easier for Lisp.
 
 ** Existing Solutions
-- Language Server Protocol
-   + High *latency*
-   + Additional dependencies for each language
-- Language-specific parsers in ELisp
-   + Not performant
-   + Hard to maintain
-   + No *generic APIs*
+*** Language Server Protocol
+- High *latency*
+- Resource-intensive
+- Additional dependencies for each language
+
+*** Language-specific parsers in ELisp
+- Not performant
+- Hard to maintain
+- No *generic APIs*
 
 # They don't seem to be performant. They also take a lot of efforts to maintain. Few people work on the parsers. They are usually hand-written recursive-descendant parsers, which take time to get familiar with. They don't have generic APIs usable by minor modes with cross-cutting concerns.
 
@@ -70,18 +72,16 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 - Tree-sitter bindings for Emacs
 - Provides compiled binaries for 3 major platforms (x86_64): macOS, Linux, Windows
 - Comprises of 3 packages:
-   + ~tree-sitter~: base framework
+   + ~tree-sitter~: base "framework"
    + ~tree-sitter-langs~: language bundle
    + ~tsc~: core APIs (implicit dependency)
-#+ATTR_LATEX: :center nil :width 0.2\textwidth
-[[file:static/img/emacs-tree-sitter-96x96.png]]
 
 ** The Foundation: ~tree-sitter-mode~
 - The base minor mode for other major/minor modes to build on
-- Provides an always-up-to-date syntax tree
 - Uses Emacs's change tracking hooks for incremental parsing
+- Provides an *always-up-to-date* syntax tree
 # Explain how it works.
-# Show the query viewer.
+# Show the parse-tree viewer.
 
 ** Syntax Highlighting: ~tree-sitter-hl-mode~
 - Built in top of ~tree-sitter-mode~
@@ -119,11 +119,8 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 - Alternations, repetitions, wildcards
 
 ** Language Bundle: ~tree-sitter-langs~
-A package that provides compiled *grammar binaries* and *highlighting queries* for several languages. It currently bundles C, C++, CSS, Go, HTML, Java, JavaScript, PHP, Python, Ruby, Rust, TypeScript.
-
-\bigskip
-
-This should be treated as an *interim* distribution mechanism that helps *bootstrapping* ~tree-sitter~'s adoption. Eventually, these files should be provided by language *major modes* themselves.
+- A package that provides compiled *grammar binaries* and *highlighting queries* for several languages. It currently bundles C, C++, CSS, Go, HTML, Java, JavaScript, PHP, Python, Ruby, Rust, TypeScript.
+- This should be treated as an *interim* distribution mechanism that helps *bootstrapping* ~tree-sitter~'s adoption. Eventually, these files should be provided by language *major modes* themselves.
 
 # Explain its role as a convenient, temporary mechanism to boost tree-sitter's adoption.
 # Explain why it's better currently for grammar binaries to be distributed by this instead of language major modes. Take Typescript as an example.
