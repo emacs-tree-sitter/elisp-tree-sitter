@@ -1,6 +1,7 @@
 #+Title: Emacs Tree-sitter
 #+Author: Tuấn-Anh Nguyễn
 #+Email: ubolonton@gmail.com
+#+Date: November 25, 2020
 
 #+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
 #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
@@ -10,6 +11,7 @@
 
 #+LATEX_CLASS: beamer
 #+LATEX_CLASS_OPTIONS: [bigger]
+#+LATEX_HEADER: \hypersetup{hidelinks, unicode, colorlinks=true, urlcolor=blue}
 
 #+BEAMER_THEME: Madrid
 #+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
@@ -28,7 +30,7 @@
 # it at the level where I can elucidate that mental picture.
 
 * Introduction
-** Problem
+** The Problem
 Like other editors, Emacs relies on *regular expressions* for many programming functionalities. They are:
 - Slow and inaccurate
 - Hard to write and read
@@ -39,11 +41,6 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 # There's a reason structural editing packages like Paredit primarily target Lisp code: extracting the structural information from source code's text is much easier for Lisp.
 
 ** Existing Solutions
-*** Language Server Protocol
-- High *latency*
-- Resource-intensive
-- Additional dependencies for each language
-
 *** Language-specific parsers in ELisp
 - Not performant
 - Hard to maintain
@@ -51,11 +48,16 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 
 # They don't seem to be performant. They also take a lot of efforts to maintain. Few people work on the parsers. They are usually hand-written recursive-descendant parsers, which take time to get familiar with. They don't have generic APIs usable by minor modes with cross-cutting concerns.
 
+*** Language Server Protocol
+- High *latency*
+- Resource-intensive
+- Additional dependencies for each language
+
 ** Tree-sitter
 - Parser generator and incremental parsing library
-- Written in C, targetting all major platforms (and WASM)
 - Originated from Atom, also being integrated into NeoVim
 - Used by GitHub for source code analysis and navigation features
+- Written in C, targetting all major platforms (and WASM)
 
 # Since the grammars being editor-independent and declarative, they have high probability of being better maintained than the parsers written in Emacs Lisp.
 
@@ -99,10 +101,6 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 | Face prefix: ~font-lock-~ | Face prefix: ~tree-sitter-hl:~    |
 |-------------------------+---------------------------------|
 
-# Explain how it works.
-# Go through the query syntax in a bit more details.
-# Demo how to customize it, using the grammar declaration files, parse tree viewer, query builder, query files, customization functions.
-
 ** Core APIs: ~tsc~
 # Describe the different groups of APIs.
 # Explain parser objects vs language objects.
@@ -118,6 +116,10 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 - Capturing nodes for further processing
 - Alternations, repetitions, wildcards
 
+# Explain how it works.
+# Go through the query syntax in a bit more details.
+# Demo how to customize it, using the grammar declaration files, parse tree viewer, query builder, query files, customization functions.
+
 ** Language Bundle: ~tree-sitter-langs~
 - A package that provides compiled *grammar binaries* and *highlighting queries* for several languages. It currently bundles C, C++, CSS, Go, HTML, Java, JavaScript, PHP, Python, Ruby, Rust, TypeScript.
 - This should be treated as an *interim* distribution mechanism that helps *bootstrapping* ~tree-sitter~'s adoption. Eventually, these files should be provided by language *major modes* themselves.
@@ -126,30 +128,31 @@ If only Emacs had *structural understanding* of source code, like other IDEs...
 # Explain why it's better currently for grammar binaries to be distributed by this instead of language major modes. Take Typescript as an example.
 
 ** Areas for Contribution
-- Maintaining syntax highlighting queries
+- Maintaining syntax highlighting [[https://github.com/ubolonton/emacs-tree-sitter/tree/master/langs/queries][queries]]
 # Tree-sitter's upstream language repositories contain highlighting queries, but we maintain our own so that they better fit Emacs's existing conventions. This requires maintenance, until language major modes adopt tree-sitter and maintain the queries on their own.
 
-- Integrating ~tree-sitter~ into language major modes
+- Integrating ~tree-sitter~ into [[https://github.com/emacs-typescript/typescript.el/issues/4#issuecomment-727180339][an existing major mode]], or [[https://github.com/ubolonton/emacs-tree-sitter/issues/70][writing a new one]]
 # Go through writing a simple minor mode.
 # Use this as an example: https://github.com/ubolonton/emacs-tree-sitter/issues/70
 
 - Writing minor modes and integration packages: ~imenu~, ~evil~, ~xref~, ~hideshow~, ~polymode~, ...
 
-- Improving language grammars
+- Improving language grammars: https://github.com/tree-sitter/
 # This is more involved, but also quite approachable.
 # The tooling needs to be improved though. New Emacs modes might help here.
 
 * Extra
 ** Writing Language Grammars
-- GLR with an DSL embedded in JavaScript.
-- Generation-time conflicts are resolved by precedences.
-- Parse-time conflicts are resolved by dynamic precedences.
+- GLR with an DSL embedded in JavaScript
+- Generation-time conflicts are resolved by precedences
+- Parse-time conflicts are resolved by dynamic precedences
 # Give a demo of working on the Scala grammar.
 
 ** Links
 - Source code: https://github.com/ubolonton/emacs-tree-sitter/
 - Documentation: https://ubolonton.github.io/emacs-tree-sitter/
 - Tree-sitter's documentation: https://tree-sitter.github.io/tree-sitter/
+- Tree-sitter's StrangeLoop talk: https://youtu.be/Jes3bD6P0To
 
 ** Addendum: Dynamic Modules
 The dynamic module that powers ~tree-sitter~ is written in Rust. Overall it's a much nicer experience than doing the same in C. There are various areas where Emacs's dynamic module support can be improved:
