@@ -85,7 +85,7 @@ If VERSION and OS are not specified, use the defaults of
     (c-sharp    "075a1b2")
     (cpp        "5e7476b")
     (css        "23f2cb9")
-    (elm        nil nil "https://github.com/razzeee/tree-sitter-elm")
+    (elm        "cbec3e4" nil "https://github.com/razzeee/tree-sitter-elm")
     (fluent     "858fdd6")
     (go         "f5cae4e")
     (html       "92c17db")
