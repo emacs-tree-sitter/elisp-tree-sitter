@@ -52,7 +52,9 @@ If NATIVE-SYMBOL-NAME is nil, the name of the exported native symbol is assumed
 to be LANG-SYMBOL's name, prefixed with \"tree_sitter_\"."
   (let* ((lang-name (symbol-name lang-symbol))
          (native-symbol-name (or native-symbol-name
-                                 (format "tree_sitter_%s" lang-name)))
+                                 (format "tree_sitter_%s"
+                                         ;; Example: c-sharp
+                                         (replace-regexp-in-string "-" "_" lang-name))))
          (full-path (locate-file (or file lang-name)
                                  tree-sitter-load-path
                                  tree-sitter-load-suffixes)))

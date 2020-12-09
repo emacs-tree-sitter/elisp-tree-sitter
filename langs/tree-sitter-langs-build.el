@@ -228,6 +228,14 @@ current state of the grammar repo, without cleanup."
         (let ((default-directory (file-name-as-directory (concat dir path))))
           (tree-sitter-langs--call "tree-sitter" "generate")
           (tree-sitter-langs--call "tree-sitter" "test")))
+      ;; Replace underscores with hyphens. Example: c_sharp.
+      (let ((default-directory tree-sitter-langs--bin-dir))
+        (dolist (file (directory-files default-directory))
+          (when (string-match "_" file)
+            (let ((new-name (replace-regexp-in-string "_" "-" file)))
+              (when (file-exists-p new-name)
+                (delete-file new-name))
+              (rename-file file new-name)))))
       ;; On macOS, rename .so => .dylib, because we will make a "universal"
       ;; bundle.
       (when (eq system-type 'darwin)
