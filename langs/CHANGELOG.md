@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.0 - 2020-12-15
+- Added `elm`.
+- Handled underscores in language names correctly.  This enabled using `c-sharp` instead of `c_sharp`.
+
 ## 0.7.2 - 2020-10-03
 - Set `tree-sitter-hl-default-patterns` to nil if there is no query file, instead of signaling an error.
 

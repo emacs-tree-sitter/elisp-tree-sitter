@@ -45,7 +45,7 @@
   (file-name-as-directory
    (concat tree-sitter-langs--dir "queries")))
 
-(defconst tree-sitter-langs--bundle-version "0.5.0"
+(defconst tree-sitter-langs--bundle-version "0.8.0"
   "Version of the grammar bundle.
 This is bumped whenever `tree-sitter-langs-repos' is updated, which should be
 infrequent (grammar-only changes). It is different from the version of
