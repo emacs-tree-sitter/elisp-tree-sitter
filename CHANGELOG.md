@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.12.2] - 2020-12-15
+- Added warning after upgrading `tsc` if it requires a new version of the dynamic module `tsc-dyn`, but an older version was already loaded.
 - Improved language loading mechanism's tolerance of hyphens in language names.
 
 ## [0.12.1] - 2020-11-04
@@ -94,7 +97,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.1...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.2...HEAD
+[0.12.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.1...0.12.2
 [0.12.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.0...0.12.1
 [0.12.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...0.12.0
 [0.11.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...0.11.1
