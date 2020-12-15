@@ -13,6 +13,7 @@
 ;;; Code:
 
 (require 'map)
+(require 'seq)
 
 (require 'tsc)
 (require 'tree-sitter-cli)
@@ -51,13 +52,25 @@ If FILE is nil, the base name is assumed to be LANG-SYMBOL's name.
 If NATIVE-SYMBOL-NAME is nil, the name of the exported native symbol is assumed
 to be LANG-SYMBOL's name, prefixed with \"tree_sitter_\"."
   (let* ((lang-name (symbol-name lang-symbol))
+         ;; Example: c-sharp -> c_sharp.
+         (fallback-name (replace-regexp-in-string "-" "_" lang-name))
          (native-symbol-name (or native-symbol-name
                                  (format "tree_sitter_%s"
-                                         ;; Example: c-sharp
-                                         (replace-regexp-in-string "-" "_" lang-name))))
-         (full-path (locate-file (or file lang-name)
-                                 tree-sitter-load-path
-                                 tree-sitter-load-suffixes)))
+                                         fallback-name)))
+         ;; List of base file names to search for.
+         (files (if file
+                    ;; Use only FILE, if it's given.
+                    (list file)
+                  ;; Otherwise use LANG-SYMBOL. First, as-is. Then, with hyphens
+                  ;; replaced by underscores.
+                  (cons lang-name
+                        (unless (string= lang-name fallback-name)
+                          (list fallback-name)))))
+         (full-path (seq-some (lambda (base-name)
+                               (locate-file base-name
+                                            tree-sitter-load-path
+                                            tree-sitter-load-suffixes))
+                             files)))
     (unless full-path
       ;; TODO: Define custom error class.
       (error "Cannot find shared library for language: %S" lang-symbol))

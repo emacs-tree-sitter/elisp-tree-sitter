@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Improved language loading mechanism's tolerance of hyphens in language names.
 
 ## [0.12.1] - 2020-11-04
 - Fixed incorrect parsing when after-change's start position is not the same as before-change's start position. For example, this happens when calling `upcase-region` on a region whose first character is already upcased.
