@@ -18,9 +18,29 @@
 (defvar-local tree-sitter-debug--tree-buffer nil
   "Buffer used to display the syntax tree of this buffer.")
 
+(defun tree-sitter-debug--button-node-lookup (button)
+  "The function called when `BUTTON' was activated on a tree-sitter debug buffer."
+  (let* ((target-buffer-name (substring (buffer-name) 18)) ; Recover the target buffer name from `tree-sitter-debug--setup'
+         (target-buffer (or (get-buffer target-buffer-name)
+                            (user-error "Could not jump to buffer: \"%s\"" target-buffer-name)))
+         (pos (button-get button 'points-to)))
+    (tree-sitter-debug--goto-node target-buffer (car pos) (cdr pos))))
+
+(defun tree-sitter-debug--goto-node (buffer start end)
+  "Switch to `BUFFER', centering on the region defined by `START' and `END'."
+  (switch-to-buffer-other-window buffer)
+  (goto-char start)
+  (if end
+      (push-mark end t t)
+      (deactivate-mark)))
+
 (defun tree-sitter-debug--display-node (node depth)
-  "Display NODE that appears at the given DEPTH in the syntax tree."
-  (insert (format "%s%s: \n" (make-string (* 2 depth) ?\ ) (tsc-node-type node)))
+  "Display `NODE' that appears at the given `DEPTH' in the syntax tree."
+  (insert (make-string (* 2 depth) ?\ ))
+  (insert-button (format "%s:\n" (tsc-node-type node))
+                 'action 'tree-sitter-debug--button-node-lookup
+                 'follow-link t
+                 'points-to (tsc-node-position-range node))
   (tsc-mapc-children (lambda (c)
                       (when (tsc-node-named-p c)
                         (tree-sitter-debug--display-node c (1+ depth))))

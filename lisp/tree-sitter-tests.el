@@ -476,6 +476,18 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)
     (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
 
+(ert-deftest debug::jump ()
+  "Test if the first button takes us to the beginning of the file.
+We know it should since it is the `source_file' node."
+  (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (let ((buf-name (buffer-name)))
+    (tree-sitter-debug-mode)
+    (goto-char (point-max))
+    (should (> (point) 0)) ; Test if worthless if the file is empty
+    (switch-to-buffer tree-sitter-debug--tree-buffer nil t)
+    (tree-sitter-debug--button-node-lookup (button-at 1))
+    (should (= (point) (point-min))))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
