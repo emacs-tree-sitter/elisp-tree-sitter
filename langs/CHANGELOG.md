@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Updated `javascript` and `typescript` grammars.
+
 ## 0.8.0 - 2020-12-15
 - Added `elm`.
 - Handled underscores in language names correctly.  This enabled using `c-sharp` instead of `c_sharp`.

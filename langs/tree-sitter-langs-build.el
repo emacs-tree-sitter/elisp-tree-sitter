@@ -90,7 +90,7 @@ If VERSION and OS are not specified, use the defaults of
     (go         "f5cae4e")
     (html       "92c17db")
     (java       "0b18a22")
-    (javascript "687e20a")
+    (javascript "3f8b62f")
     (jsdoc      "77e7785")
     (json       "d3976b2")
     (julia      "165e2ae")
@@ -101,7 +101,7 @@ If VERSION and OS are not specified, use the defaults of
     (rust       "40620bf")
     (scala      "904e2b1")
     (swift      "a22fa5e")
-    (typescript "ebd10b4" ("typescript" "tsx")))
+    (typescript "a3a4bec" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.
 Note that these are mostly for the grammars. We treat the queries they include
 as references, instead of using them directly for syntax highlighting.
