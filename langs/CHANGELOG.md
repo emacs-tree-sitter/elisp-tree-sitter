@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## 0.9.0 - 2020-12-16
 - Updated `javascript` and `typescript` grammars.
 
 ## 0.8.0 - 2020-12-15
