@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Fixed the [highlighting error when exporting org as html](https://github.com/ubolonton/emacs-tree-sitter/issues/74), by removing the hack that allows `tree-sitter-hl` to work without (a major mode) setting up `font-lock-defaults`.
 
 ## [0.12.2] - 2020-12-15
 - Added warning after upgrading `tsc` if it requires a new version of the dynamic module `tsc-dyn`, but an older version was already loaded.
