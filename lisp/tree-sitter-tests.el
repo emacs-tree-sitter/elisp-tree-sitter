@@ -19,7 +19,7 @@
 (let ((tree-sitter-langs--testing t))
   (require 'tree-sitter-langs))
 ;;; Build the grammars, if necessary.
-(dolist (lang-symbol '(rust bash javascript c))
+(dolist (lang-symbol '(rust python javascript c bash))
   (tree-sitter-langs-ensure lang-symbol))
 
 (require 'ert)
