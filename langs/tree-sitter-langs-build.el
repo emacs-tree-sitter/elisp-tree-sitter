@@ -215,7 +215,12 @@ current state of the grammar repo, without cleanup."
     (if (file-directory-p dir)
         (let ((default-directory dir))
           (tree-sitter-langs--call "git" "remote" "-v" "update"))
-      (tree-sitter-langs--call "git" "clone" "-q" repo dir))
+      (progn
+        (tree-sitter-langs--call "git" "clone" "-q" repo dir)
+        (let ((default-directory dir))
+          ;; Use the specified version on first build. This makes CI runs more
+          ;; reproducible.
+          (tree-sitter-langs--call "git" "checkout" version))))
     (let ((default-directory dir))
       (when clean
         (tree-sitter-langs--call "git" "stash" "push")
