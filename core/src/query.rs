@@ -3,11 +3,7 @@ use std::cell::RefCell;
 use emacs::{defun, Env, Error, GlobalRef, IntoLisp, Result, Value, Vector};
 use tree_sitter::{Node, QueryCursor};
 
-use crate::{
-    types::{BytePos, Point},
-    lang::Language,
-    node::RNode,
-};
+use crate::{types::{BytePos, Point}, lang::Language, node::RNode, buffer};
 
 fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vector<'e>> {
     let vector = env.make_vector(vec.len(), ())?;
@@ -198,6 +194,120 @@ fn _query_cursor_captures_1<'e>(
             env.cons(beg, end)?,
         )?;
         vec.push((m.pattern_index, capture));
+    }
+    // Prioritize captures from earlier patterns.
+    vec.sort_unstable_by_key(|(i, _)| *i);
+    let vector = env.make_vector(vec.len(), ())?;
+    for (i, (_, v)) in vec.into_iter().enumerate() {
+        vector.set(i, v)?;
+    }
+    Ok(vector)
+}
+
+#[defun]
+fn _query_cursor_captures_2<'e>(
+    cursor: &mut QueryCursor,
+    query: Value<'e>,
+    node: &RNode,
+) -> Result<Vector<'e>> {
+    use std::borrow::Cow;
+    let env = query.env;
+    let input = |node: Node| -> Cow<[u8]> {
+        let (before_gap, after_gap) = unsafe { buffer::current_buffer_contents(env) };
+        let range = node.byte_range();
+        let beg = range.start;
+        let end = range.end;
+        let before_len = before_gap.len();
+        if end < before_len {
+            return Cow::Borrowed(&before_gap[beg..end])
+        }
+        if beg >= before_len {
+            let rem_beg = beg - before_len;
+            let rem_end = end - before_len;
+            return Cow::Borrowed(&after_gap[rem_beg..rem_end.min(after_gap.len())])
+        }
+        // &before_gap[beg..];
+        // let concat: Vec<u8> = &before_gap[beg..].iter().chain(&after_gap[..end]).collect();
+        // let concat = &before_gap[beg..].iter().chain(&after_gap[..end].iter());
+        // let mut concat: Vec<u8> = Vec::with_capacity(end - beg);
+        // concat.copy_from_slice(&before_gap[beg..]);
+        // let text: Vec<u8> = [&before_gap[beg..], &after_gap[..end]].concat();
+        let mut text = Vec::from(&before_gap[beg..]);
+        text.extend_from_slice(&after_gap[..end.min(after_gap.len())]);
+        // let text: Vec<u8> = vec![];
+        Cow::Owned(text)
+        // Cow::Borrowed(&[])
+    };
+    let query = query.into_rust::<&RefCell<Query>>()?.borrow();
+    let raw = &query.raw;
+
+    let captures = cursor.captures(
+        raw,
+        node.borrow().clone(),
+        input,
+    );
+
+    let mut vec = vec![];
+    for (m, capture_index) in captures {
+        let c = m.captures[capture_index];
+        let beg: BytePos = c.node.start_byte().into();
+        let end: BytePos = c.node.end_byte().into();
+        let capture = env.cons(
+            &query.capture_tags[c.index as usize],
+            env.cons(beg, end)?,
+        )?;
+        vec.push((m.pattern_index, capture));
+    }
+    // Prioritize captures from earlier patterns.
+    vec.sort_unstable_by_key(|(i, _)| *i);
+    let vector = env.make_vector(vec.len(), ())?;
+    for (i, (_, v)) in vec.into_iter().enumerate() {
+        vector.set(i, v)?;
+    }
+    Ok(vector)
+}
+
+
+#[defun]
+fn _query_cursor_captures_3<'e>(
+    // env: &Env,
+    cursor: &mut QueryCursor,
+    query: Value<'e>,
+    node: &RNode,
+) -> Result<Vector<'e>> {
+    use std::borrow::Cow;
+    let env = query.env;
+    let (before_gap, after_gap) = unsafe { buffer::current_buffer_contents(env) };
+    let input = |node: Node| -> Cow<[u8]> {
+        let range = node.byte_range();
+        let beg = range.start;
+        let end = range.end;
+        let before_len = before_gap.len();
+        if end < before_len {
+            return Cow::Borrowed(&before_gap[beg..end])
+        }
+        if beg >= before_len {
+            let rem_beg = beg - before_len;
+            let rem_end = end - before_len;
+            return Cow::Borrowed(&after_gap[rem_beg..rem_end.min(after_gap.len())])
+        }
+        let mut text = Vec::from(&before_gap[beg..]);
+        text.extend_from_slice(&after_gap[..end.min(after_gap.len())]);
+        Cow::Owned(text)
+    };
+    let query = query.into_rust::<&RefCell<Query>>()?.borrow();
+    let raw = &query.raw;
+    let captures = cursor.captures(
+        raw,
+        node.borrow().clone(),
+        input,
+    );
+    let mut vec = vec![];
+    for (m, capture_index) in captures {
+        let c = m.captures[capture_index];
+        let beg: BytePos = c.node.start_byte().into();
+        let end: BytePos = c.node.end_byte().into();
+        vec.push((m.pattern_index, env.vector((&query.capture_tags[c.index as usize], beg, end))?));
     }
     // Prioritize captures from earlier patterns.
     vec.sort_unstable_by_key(|(i, _)| *i);

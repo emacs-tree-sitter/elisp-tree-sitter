@@ -470,14 +470,22 @@ It also expects VALUE to be a single value, not a list."
                            object))
       (setq start next))))
 
+;; (defun tree-sitter-hl--highlight-capture (capture)
+;;   "Highlight the given CAPTURE."
+;;   (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
+;;     ;; TODO: If it's a function, call it with (BEG END).
+;;     (when (facep face)
+;;       (tree-sitter-hl--append-text-property
+;;        (byte-to-position beg-byte)
+;;        (byte-to-position end-byte) 'face face))))
+
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
-  (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
-    ;; TODO: If it's a function, call it with (BEG END).
-    (when (facep face)
-      (tree-sitter-hl--append-text-property
-       (byte-to-position beg-byte)
-       (byte-to-position end-byte) 'face face))))
+  (when-let ((face (car capture)))
+    (tree-sitter-hl--append-text-property
+     (byte-to-position (cadr capture))
+     (byte-to-position (cddr capture))
+     'face face)))
 
 ;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional loudly)
@@ -497,14 +505,19 @@ If LOUDLY is non-nil, print debug messages."
         (tree-sitter-hl--extend-regions hl-region query-region)
         (setf `(,beg . ,end) hl-region)
         (tsc--query-cursor-set-byte-range tree-sitter-hl--query-cursor
-                                         (position-bytes (car query-region))
-                                         (position-bytes (cdr query-region))))
+                                          (position-bytes (car query-region))
+                                          (position-bytes (cdr query-region))))
       (let* ((root-node (tsc-root-node tree-sitter-tree))
-             (captures  (tsc--query-cursor-captures-1
-                         tree-sitter-hl--query-cursor
-                         tree-sitter-hl--query
-                         root-node
-                         #'tsc--buffer-substring-no-properties)))
+             (captures  (if (bound-and-true-p tsc-direct-access-to-buffer-contents)
+                            (tsc--query-cursor-captures-2
+                             tree-sitter-hl--query-cursor
+                             tree-sitter-hl--query
+                             root-node)
+                          (tsc--query-cursor-captures-1
+                           tree-sitter-hl--query-cursor
+                           tree-sitter-hl--query
+                           root-node
+                           #'tsc--buffer-substring-no-properties))))
         ;; TODO: Handle quitting.
         (with-silent-modifications
           (font-lock-unfontify-region beg end)

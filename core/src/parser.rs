@@ -1,12 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use emacs::{defun, Result, Value, Vector};
+use emacs::{defun, Env, Result, Value, Vector};
 use emacs::failure;
 use tree_sitter::{Parser, Tree};
 
 use crate::{
     types::{BytePos, Point, Range, Shared},
     lang::Language,
+    buffer,
 };
 
 fn shared<T>(t: T) -> Shared<T> {
@@ -145,4 +146,32 @@ fn set_included_ranges(parser: &mut Parser, ranges: Vector) -> Result<()> {
     }
     // TODO: Define custom error class.
     Ok(parser.set_included_ranges(included).unwrap())
+}
+
+#[defun]
+fn parse_current_buffer(env: &Env, parser: &mut Parser, old_tree: Option<&Shared<Tree>>) -> Result<Shared<Tree>> {
+    let old_tree = match old_tree {
+        Some(v) => Some(v.try_borrow()?),
+        _ => None,
+    };
+    let old_tree = match &old_tree {
+        Some(r) => Some(&**r),
+        _ => None,
+    };
+
+    let (before_gap, after_gap) = unsafe { buffer::current_buffer_contents(env) };
+    let input = &mut |byte: usize, point: tree_sitter::Point| -> &[u8] {
+        if byte < before_gap.len() {
+            return &before_gap[byte..]
+        } else {
+            let remaining_byte = byte - before_gap.len();
+            if remaining_byte < after_gap.len() {
+                return &after_gap[remaining_byte..]
+            } else {
+                &[]
+            }
+        }
+    };
+    let tree = parser.parse_with(input, old_tree).unwrap();
+    Ok(shared(tree))
 }

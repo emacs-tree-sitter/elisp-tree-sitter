@@ -487,6 +487,14 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)
     (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
 
+;;; ----------------------------------------------------------------------------
+
+(ert-deftest experimental::direct-buffer ()
+  (tsc-test-with-file "bin/build"
+   (tsc-access-current-buffer)))
+
+;;; ----------------------------------------------------------------------------
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
