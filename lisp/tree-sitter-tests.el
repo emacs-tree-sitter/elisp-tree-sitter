@@ -481,6 +481,7 @@ tree is held (since nodes internally reference the tree)."
 We know it should since it is the `source_file' node."
   (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
     (let ((buf-name (buffer-name)))
+    (setq tree-sitter-debug-jump-buttons t)
     (tree-sitter-debug-mode)
     (goto-char (point-max))
     (should (> (point) 0)) ; Test if worthless if the file is empty
