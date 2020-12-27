@@ -560,7 +560,7 @@ Functions that return a node's property have the prefix =tsc-node-=:
 - ~tsc-node-start-byte~ :: <br>
 - ~tsc-node-end-byte~ :: The start/end byte position of a node.
 - ~tsc-node-start-position~ :: <br>
-- ~tsc-node-end-position~ :: The start/end position of a node.
+- ~tsc-node-end-position~ :: The start/end position of a node. These functions assume that the current buffer is the source buffer of the given node's syntax tree.
 - ~tsc-node-range~ :: A node's /~[start-bytepos end-bytepos start-point end-point]~/.
 
 *** Related Nodes
