@@ -46,17 +46,16 @@ Only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
     (user-error "Source code buffer has been killed"))
   (unless button
     (user-error "This function must be called on a button"))
-  (let ((pos (button-get button 'points-to)))
-    (tree-sitter-debug--goto-node tree-sitter-debug--source-code-buffer
-                                  (car pos) (cdr pos))))
+  (tree-sitter-debug--goto-node tree-sitter-debug--source-code-buffer
+                                (button-get button 'points-to)))
 
-(defun tree-sitter-debug--goto-node (buffer start end)
-  "Switch to BUFFER, centering on the region defined by START and END."
+(defun tree-sitter-debug--goto-node (buffer node)
+  "Switch to BUFFER, centering on the region defined by NODE."
   (switch-to-buffer-other-window buffer)
-  (goto-char start)
-  (if end
-      (push-mark end t tree-sitter-debug-highlight-jump-region)
-    (deactivate-mark)))
+  (let ((range (tsc-node-position-range node)))
+    (goto-char (car range))
+    (push-mark (cdr range)
+               t tree-sitter-debug-highlight-jump-region)))
 
 (defun tree-sitter-debug--display-node (node depth)
   "Display NODE that appears at the given DEPTH in the syntax tree."
@@ -66,7 +65,7 @@ Only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
         (insert-button node-text
                        'action 'tree-sitter-debug--button-node-lookup
                        'follow-link t
-                       'points-to (tsc-node-position-range node))
+                       'points-to node)
       (insert node-text)))
   (tsc-mapc-children (lambda (c)
                        (when (tsc-node-named-p c)

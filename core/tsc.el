@@ -157,7 +157,8 @@ This function must be called with narrowing disabled, e.g. within a
   (byte-to-position (tsc-node-end-byte node)))
 
 (defun tsc-node-position-range (node)
-  "Return NODE's (START-POSITION . END-POSITION)."
+  "Return NODE's (START-POSITION . END-POSITION).
+Must be called from NODE's associated source code buffer."
   (let ((range (tsc-node-byte-range node)))
     (cl-callf byte-to-position (car range))
     (cl-callf byte-to-position (cdr range))
