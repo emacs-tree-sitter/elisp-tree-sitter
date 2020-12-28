@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.7.2
-;; Package-Requires: ((emacs "25.1") (tree-sitter "0.9.2"))
+;; Version: 0.9.0
+;; Package-Requires: ((emacs "25.1") (tree-sitter "0.12.2"))
 ;; License: MIT
 
 ;;; Commentary:
@@ -81,8 +81,10 @@ See `tree-sitter-langs-repos'."
      (reverse '((agda-mode       . agda)
                 (sh-mode         . bash)
                 (c-mode          . c)
+                (csharp-mode     . c-sharp)
                 (c++-mode        . cpp)
                 (css-mode        . css)
+                (elm-mode        . elm)
                 (go-mode         . go)
                 (haskell-mode    . haskell)
                 (html-mode       . html)

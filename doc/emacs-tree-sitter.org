@@ -104,8 +104,6 @@ To enable it for all supported major modes:
 
 For the full list of supported major modes, check the variable ~tree-sitter-major-mode-language-alist~.
 
-# TODO: Describe how to turn it on without installing the corresponding major modes first.
-
 # ~tree-sitter-node-at-point~
 # ~tree-sitter-save-excursion~
 
@@ -214,12 +212,6 @@ To enable it whenever possible (assuming the language major modes were already i
 #+begin_src emacs-lisp
   (global-tree-sitter-mode)
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-#+end_src
-
-It can also be enabled without installing the corresponding language major modes:
-#+begin_src emacs-lisp
-  (let ((major-mode 'go-mode))
-    (tree-sitter-hl-mode))
 #+end_src
 
 The package ~tree-sitter-langs~ provides syntax highlighting queries for some languages:
@@ -568,7 +560,7 @@ Functions that return a node's property have the prefix =tsc-node-=:
 - ~tsc-node-start-byte~ :: <br>
 - ~tsc-node-end-byte~ :: The start/end byte position of a node.
 - ~tsc-node-start-position~ :: <br>
-- ~tsc-node-end-position~ :: The start/end position of a node.
+- ~tsc-node-end-position~ :: The start/end position of a node. These functions assume that the current buffer is the source buffer of the given node's syntax tree.
 - ~tsc-node-range~ :: A node's /~[start-bytepos end-bytepos start-point end-point]~/.
 
 *** Related Nodes

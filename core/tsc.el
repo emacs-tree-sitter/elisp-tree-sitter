@@ -129,14 +129,16 @@ This function must be called with narrowing disabled, e.g. within a
 ;;; Convenient versions of some functions.
 
 (defun tsc-get-descendant-for-position-range (node beg end)
-  "Return the smallest node within NODE that spans the range (BEG . END)."
+  "Return the smallest node within NODE that spans the range (BEG . END).
+This function must be called in NODE's source buffer."
   (tsc-get-descendant-for-byte-range
    node
    (position-bytes beg)
    (position-bytes end)))
 
 (defun tsc-get-named-descendant-for-position-range (node beg end)
-  "Return the smallest named node within NODE that spans the range (BEG . END)."
+  "Return the smallest named node within NODE that spans the range (BEG . END).
+This function must be called in NODE's source buffer."
   (tsc-get-named-descendant-for-byte-range
    node
    (position-bytes beg)
@@ -149,16 +151,18 @@ This function must be called with narrowing disabled, e.g. within a
   (tsc--get-child-by-field-name node (substring (symbol-name field) 1)))
 
 (defun tsc-node-start-position (node)
-  "Return NODE's start position."
+  "Return NODE's start position.
+This function must be called in NODE's source buffer."
   (byte-to-position (tsc-node-start-byte node)))
 
 (defun tsc-node-end-position (node)
-  "Return NODE's end position."
+  "Return NODE's end position.
+This function must be called in NODE's source buffer."
   (byte-to-position (tsc-node-end-byte node)))
 
 (defun tsc-node-position-range (node)
   "Return NODE's (START-POSITION . END-POSITION).
-Must be called from NODE's associated source code buffer."
+This function must be called in NODE's source buffer."
   (let ((range (tsc-node-byte-range node)))
     (cl-callf byte-to-position (car range))
     (cl-callf byte-to-position (cdr range))

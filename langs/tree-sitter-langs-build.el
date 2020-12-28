@@ -45,7 +45,7 @@
   (file-name-as-directory
    (concat tree-sitter-langs--dir "queries")))
 
-(defconst tree-sitter-langs--bundle-version "0.5.0"
+(defconst tree-sitter-langs--bundle-version "0.9.0"
   "Version of the grammar bundle.
 This is bumped whenever `tree-sitter-langs-repos' is updated, which should be
 infrequent (grammar-only changes). It is different from the version of
@@ -85,11 +85,12 @@ If VERSION and OS are not specified, use the defaults of
     (c-sharp    "075a1b2")
     (cpp        "5e7476b")
     (css        "23f2cb9")
+    (elm        "06a8ff7" nil "https://github.com/razzeee/tree-sitter-elm")
     (fluent     "858fdd6")
     (go         "f5cae4e")
     (html       "92c17db")
     (java       "0b18a22")
-    (javascript "687e20a")
+    (javascript "3f8b62f")
     (jsdoc      "77e7785")
     (json       "d3976b2")
     (julia      "165e2ae")
@@ -100,7 +101,7 @@ If VERSION and OS are not specified, use the defaults of
     (rust       "40620bf")
     (scala      "904e2b1")
     (swift      "a22fa5e")
-    (typescript "ebd10b4" ("typescript" "tsx")))
+    (typescript "a3a4bec" ("typescript" "tsx")))
   "List of language symbols and their corresponding grammar sources.
 Note that these are mostly for the grammars. We treat the queries they include
 as references, instead of using them directly for syntax highlighting.
@@ -214,7 +215,12 @@ current state of the grammar repo, without cleanup."
     (if (file-directory-p dir)
         (let ((default-directory dir))
           (tree-sitter-langs--call "git" "remote" "-v" "update"))
-      (tree-sitter-langs--call "git" "clone" "-q" repo dir))
+      (progn
+        (tree-sitter-langs--call "git" "clone" "-q" repo dir)
+        (let ((default-directory dir))
+          ;; Use the specified version on first build. This makes CI runs more
+          ;; reproducible.
+          (tree-sitter-langs--call "git" "checkout" version))))
     (let ((default-directory dir))
       (when clean
         (tree-sitter-langs--call "git" "stash" "push")

@@ -571,7 +571,6 @@ OLD-TREE is the tree before the edit."
       (setq font-lock-keywords tree-sitter-hl--font-lock-keywords
             tree-sitter-hl--font-lock-keywords nil))))
 
-;;; TODO: We want to work even without `font-lock-mode', right?
 (defun tree-sitter-hl--setup ()
   "Set up `tree-sitter-hl' in the current buffer.
 This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
@@ -589,23 +588,28 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     (add-hook 'tree-sitter-after-change-functions
               #'tree-sitter-hl--invalidate
               nil :local)
-    ;; XXX
+    ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
+    ;; without relying on `font-lock-mode'. Among other things, it would enable
+    ;; highlighting without setting `font-lock-defaults'. At the moment,
+    ;; `font-lock-mode' somehow helps with making sure that fontification is
+    ;; updated in-time, instead of eventually.
     (add-function :override (local 'font-lock-fontify-region-function)
                   #'tree-sitter-hl--highlight-region)
     (tree-sitter-hl--minimize-font-lock-keywords)
-    ;; When `font-lock-defaults' is not set up, `font-lock-mode' only does a
-    ;; partial initialization. In that case, we initialize it directly. This
-    ;; allows turning on tree-based syntax highlighting by temporarily binding
-    ;; `major-mode', even though such a major mode may not be installed, or does
-    ;; not exist. For example:
+    ;; XXX: We used to have a hack that calls`font-lock-turn-on-thing-lock',
+    ;; which allows turning on tree-based syntax highlighting by temporarily
+    ;; binding `major-mode', even though such a major mode may not be installed,
+    ;; or does not exist. For example:
     ;;
     ;;     (let ((major-mode 'go-mode)) (tree-sitter-hl-mode))
     ;;
-    ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
-    ;; e.g. so that fontification is updated in-time, instead of eventually in
-    ;; some cases.
-    (unless font-lock-set-defaults
-      (font-lock-turn-on-thing-lock))))
+    ;; However, if `font-lock-mode' is subsequently disabled, because
+    ;; `font-lock-turn-off-thing-lock' does not properly clean up the local
+    ;; value of `font-lock-ensure-function', calling `font-lock-ensure' will
+    ;; signal an error. For example, this happens when org-mode's code blocks
+    ;; are highlighted). Therefore, we disabled that hack. See
+    ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+    ))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
@@ -620,11 +624,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     (font-lock-flush))
   (when tree-sitter-hl--query
     (setq tree-sitter-hl--query nil)
-    (tree-sitter-hl--restore-font-lock-keywords)
-    ;; If we did a hackish initialization of `font-lock-mode', de-initialize it.
-    (unless font-lock-set-defaults
-      (font-lock-unfontify-buffer)
-      (font-lock-turn-off-thing-lock))))
+    (tree-sitter-hl--restore-font-lock-keywords)))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-hl-mode

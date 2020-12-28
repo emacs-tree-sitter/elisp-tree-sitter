@@ -19,7 +19,7 @@
 (let ((tree-sitter-langs--testing t))
   (require 'tree-sitter-langs))
 ;;; Build the grammars, if necessary.
-(dolist (lang-symbol '(rust bash javascript c))
+(dolist (lang-symbol '(rust python javascript c bash))
   (tree-sitter-langs-ensure lang-symbol))
 
 (require 'ert)
@@ -388,6 +388,9 @@ tree is held (since nodes internally reference the tree)."
   (should-error (tree-sitter-require 'abc-xyz))
   (tree-sitter-require 'rust))
 
+;;; ----------------------------------------------------------------------------
+;;; Highlighting tests.
+
 (ert-deftest hl::extend-region ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/extend-region.rs"
     (tree-sitter-hl-mode)
@@ -456,6 +459,14 @@ tree is held (since nodes internally reference the tree)."
       (ert-info ("`face' should be nil for the whole buffer")
         (should (null (get-text-property 1 'face)))
         (should (null (next-single-property-change 1 'face)))))))
+
+(ert-deftest hl::with-font-lock-mode-disabled ()
+  ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+  (with-current-buffer (find-file (tsc-test-full-path "lisp/test-files/hl.py"))
+    (tree-sitter-hl-mode)
+    (font-lock-mode -1)
+    (font-lock-ensure)
+    (should (memq 'tree-sitter-hl-face:function (get-text-property 6 'face)))))
 
 (ert-deftest hl::bench ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
