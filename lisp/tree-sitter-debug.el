@@ -19,27 +19,26 @@
   "Buffer used to display the syntax tree of this buffer.")
 
 (defvar-local tree-sitter-debug--source-code-buffer nil
-  "Buffer of the source code tree-sitter is displaying.")
+  "Source buffer of the syntax tree displayed in this `tree-sitter-debug' buffer.")
 
 (defgroup tree-sitter-debug nil
   "Tree sitter debug and display features."
   :group 'tree-sitter)
 
 (defcustom tree-sitter-debug-jump-buttons nil
-  "Wither to enable jump to node buttons in the tree-sitter-debug view.
-This can have a performace penalty on large buffers."
+  "Whether to enable jump-to-node buttons in `tree-sitter-debug' views.
+This can have a performance penalty in large buffers."
   :type 'boolean
   :group 'tree-sitter-debug)
 
 (defcustom tree-sitter-debug-highlight-jump-region nil
-  "Wither to highlight the node jumped to.
-Only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
+  "Whether to highlight the node jumped to.
+This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   :type 'boolean
   :group 'tree-sitter-debug)
 
-
 (defun tree-sitter-debug--button-node-lookup (button)
-  "The function called when BUTTON was activated on a tree-sitter debug buffer."
+  "The function to call when a `tree-sitter-debug' BUTTON is clicked."
   (unless tree-sitter-debug--source-code-buffer
     (error "No source code buffer set"))
   (unless (buffer-live-p tree-sitter-debug--source-code-buffer)
