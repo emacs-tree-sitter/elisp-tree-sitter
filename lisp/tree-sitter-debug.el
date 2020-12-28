@@ -18,13 +18,59 @@
 (defvar-local tree-sitter-debug--tree-buffer nil
   "Buffer used to display the syntax tree of this buffer.")
 
+(defvar-local tree-sitter-debug--source-code-buffer nil
+  "Buffer of the source code tree-sitter is displaying.")
+
+(defgroup tree-sitter-debug nil
+  "Tree sitter debug and display features."
+  :group 'tree-sitter)
+
+(defcustom tree-sitter-debug-jump-buttons nil
+  "Wither to enable jump to node buttons in the tree-sitter-debug view.
+This can have a performace penalty on large buffers."
+  :type 'boolean
+  :group 'tree-sitter-debug)
+
+(defcustom tree-sitter-debug-highlight-jump-region nil
+  "Wither to highlight the node jumped to.
+Only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
+  :type 'boolean
+  :group 'tree-sitter-debug)
+
+
+(defun tree-sitter-debug--button-node-lookup (button)
+  "The function called when BUTTON was activated on a tree-sitter debug buffer."
+  (unless tree-sitter-debug--source-code-buffer
+    (error "No source code buffer set"))
+  (unless (buffer-live-p tree-sitter-debug--source-code-buffer)
+    (user-error "Source code buffer has been killed"))
+  (unless button
+    (user-error "This function must be called on a button"))
+  (tree-sitter-debug--goto-node tree-sitter-debug--source-code-buffer
+                                (button-get button 'points-to)))
+
+(defun tree-sitter-debug--goto-node (buffer node)
+  "Switch to BUFFER, centering on the region defined by NODE."
+  (switch-to-buffer-other-window buffer)
+  (let ((range (tsc-node-position-range node)))
+    (goto-char (car range))
+    (push-mark (cdr range)
+               t tree-sitter-debug-highlight-jump-region)))
+
 (defun tree-sitter-debug--display-node (node depth)
   "Display NODE that appears at the given DEPTH in the syntax tree."
-  (insert (format "%s%s: \n" (make-string (* 2 depth) ?\ ) (tsc-node-type node)))
+  (insert (make-string (* 2 depth) ?\ ))
+  (let ((node-text (format "%s:\n" (tsc-node-type node))))
+    (if tree-sitter-debug-jump-buttons
+        (insert-button node-text
+                       'action 'tree-sitter-debug--button-node-lookup
+                       'follow-link t
+                       'points-to node)
+      (insert node-text)))
   (tsc-mapc-children (lambda (c)
-                      (when (tsc-node-named-p c)
-                        (tree-sitter-debug--display-node c (1+ depth))))
-                    node))
+                       (when (tsc-node-named-p c)
+                         (tree-sitter-debug--display-node c (1+ depth))))
+                     node))
 
 (defun tree-sitter-debug--display-tree (_old-tree)
   "Display the current `tree-sitter-tree'."
@@ -39,6 +85,9 @@
   (unless (buffer-live-p tree-sitter-debug--tree-buffer)
     (setq tree-sitter-debug--tree-buffer
           (get-buffer-create (format "tree-sitter-tree: %s" (buffer-name)))))
+  (let ((source-buffer (current-buffer)))
+    (with-current-buffer tree-sitter-debug--tree-buffer
+      (setq tree-sitter-debug--source-code-buffer source-buffer)))
   (add-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree nil :local)
   (add-hook 'kill-buffer-hook #'tree-sitter-debug--teardown nil :local)
   (display-buffer tree-sitter-debug--tree-buffer)
