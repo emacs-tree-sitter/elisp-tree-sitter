@@ -181,9 +181,9 @@ dependencies = [
 
 [[package]]
 name = "emacs"
-version = "0.14.1"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dc7209c303607dbd9cded8950f3db7af88cdde67fec8cf90ce4181668aaae56"
+checksum = "98aee6c962f5986d093f3618525f324fd082a358a4429a3564e0c9feff5e3bb7"
 dependencies = [
  "ctor",
  "emacs-macros",

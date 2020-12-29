@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Upgraded `emacs` crate to [0.15.0](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.15.0) to improve performance on Emacs 27+.
 - Fixed the [highlighting error when exporting org as html](https://github.com/ubolonton/emacs-tree-sitter/issues/74), by removing the hack that allows `tree-sitter-hl` to work without (a major mode) setting up `font-lock-defaults`.
 
 ## [0.12.2] - 2020-12-15
