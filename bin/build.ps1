@@ -17,7 +17,7 @@ $module_dir = "$project_root\target\$target"
 Push-Location $core_root
 Copy-Item $module_dir\$module_name.dll $core_root\$module_renamed.dll
 $version = ((cargo pkgid) | Out-String).Trim().Split('#')[-1].Split(':')[-1]
-Set-Content -Path "DYN-VERSION" -Value $version -NoNewLine -Force
+Set-Content -Path "DYN-VERSION" -Value "${version}.1" -NoNewLine -Force
 cask build
 Pop-Location
 

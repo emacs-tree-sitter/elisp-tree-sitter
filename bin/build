@@ -19,7 +19,8 @@ source "$here/env.bash"
     (
         cd core
         cp -f "$module_dir/$MODULE_ORIGINAL" "$MODULE_RENAMED"
-        cargo pkgid | cut -d# -f2 | cut -d: -f2 | tr -d $'\n' > DYN-VERSION
+        version=$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
+        echo "$version".1 | tr -d $'\n' > DYN-VERSION
         cask build
     )
 
