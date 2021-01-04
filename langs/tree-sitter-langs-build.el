@@ -343,7 +343,9 @@ non-nil."
           (ignore-errors
             (with-temp-buffer
               (insert-file-contents bundle-file) (tar-mode) (tar-untar-buffer)))
-        (shell-command (format "tar -xvzf %s%s" default-directory bundle-file)))
+        (shell-command (format "tar -xvzf %s"
+                               (shell-quote-argument
+                                (concat default-directory bundle-file)))))
       ;; FIX: This should be a metadata file in the bundle itself.
       (with-temp-file tree-sitter-langs--bundle-version-file
         (let ((coding-system-for-write 'utf-8))
