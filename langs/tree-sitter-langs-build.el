@@ -339,10 +339,11 @@ non-nil."
       ;; FIX: Handle HTTP errors properly.
       (url-copy-file (tree-sitter-langs--bundle-url version os)
                      bundle-file 'ok-if-already-exists)
-      (with-temp-buffer
-        (insert-file-contents bundle-file)
-        (tar-mode)
-        (tar-untar-buffer))
+      (unless
+          (ignore-errors
+            (with-temp-buffer
+              (insert-file-contents bundle-file) (tar-mode) (tar-untar-buffer)))
+        (shell-command (format "tar -xvzf %s%s" default-directory bundle-file)))
       ;; FIX: This should be a metadata file in the bundle itself.
       (with-temp-file tree-sitter-langs--bundle-version-file
         (let ((coding-system-for-write 'utf-8))
