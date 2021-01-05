@@ -68,8 +68,7 @@
 (pair key: (property_identifier) @property.definition)
 (member_expression
  property: (property_identifier) @property)
-((shorthand_property_identifier) @property.definition
- (.match? @property.definition "^[A-Za-z_][A-Za-z_\\d]*$"))
+((shorthand_property_identifier) @property.definition)
 
 ;; Literals
 
