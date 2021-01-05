@@ -4,7 +4,7 @@
  (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((shorthand_property_identifier) @constant
- (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
+ (.match? @constant "^[A-Za-z_][A-Za-z_\\d]*$"))
 
 ((identifier) @constructor
  (.match? @constructor "^[A-Z]"))
