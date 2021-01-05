@@ -4,7 +4,7 @@
  (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((shorthand_property_identifier) @constant
- (.match? @constant "^[A-Za-z_][A-Za-z_\\d]*$"))
+ (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 ((identifier) @constructor
  (.match? @constructor "^[A-Z]"))
@@ -68,6 +68,8 @@
 (pair key: (property_identifier) @property.definition)
 (member_expression
  property: (property_identifier) @property)
+((shorthand_property_identifier) @property.definition
+ (.match? @property.definition "^[A-Za-z_][A-Za-z_\\d]*$"))
 
 ;; Literals
 
