@@ -68,6 +68,7 @@
 (pair key: (property_identifier) @property.definition)
 (member_expression
  property: (property_identifier) @property)
+((shorthand_property_identifier) @property.definition)
 
 ;; Literals
 
