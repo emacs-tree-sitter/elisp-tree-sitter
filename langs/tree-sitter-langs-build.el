@@ -82,7 +82,7 @@ If VERSION and OS are not specified, use the defaults of
   '((agda       "d710ff1")
     (bash       "f226a4b")
     (c          "99151b1")
-    (c-sharp    "075a1b2")
+    (c-sharp    "aae8ab2")
     (cpp        "5e7476b")
     (css        "23f2cb9")
     (elm        "06a8ff7" nil "https://github.com/razzeee/tree-sitter-elm")
