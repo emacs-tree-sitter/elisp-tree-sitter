@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.9.1 - 2021-01-14
+- Updated `c-sharp` grammar.
+
 ## 0.9.0 - 2020-12-16
 - Updated `javascript` and `typescript` grammars.
 
