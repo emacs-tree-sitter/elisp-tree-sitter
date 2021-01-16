@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "emacs-tree-sitter"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "emacs",
  "libloading 0.6.2",
