@@ -1,0 +1,4 @@
+[target.x86_64-pc-windows-msvc]
+# Avoid dynamic linking to vcruntime*.dll, which requires users to install VC++ redistributable
+# package. See https://github.com/ubolonton/emacs-tree-sitter/issues/86.
+rustflags = ["-C", "target-feature=+crt-static"]
