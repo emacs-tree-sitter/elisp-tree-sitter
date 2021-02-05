@@ -344,6 +344,33 @@ The special *wildcard* symbol ~_~ matches any node (except for anonymous nodes).
    arguments: (_) @function.args)
 #+end_src
 
+*** Anchors
+The special dot symbol ~.~ denotes an *anchor*, which effectively "glues together" its 2 sides, disallowing any nodes in between (except for anonymous nodes).
+#+begin_src scheme
+  ;; A string anywhere in the argument list.
+  (call_expression (arguments (string_literal)))
+
+  ;; 2 consecutive strings anywhere in the argument list.
+  (call_expression (arguments (string_literal) . (string_literal)))
+
+  ;; First argument is a string.
+  (call_expression (arguments . (string_literal)))
+
+  ;; Last argument is a string.
+  (call_expression (arguments (string_literal) .))
+#+end_src
+
+{{% notice info %}}
+The dot symbol ~.~ is not a valid read syntax in Emacs Lisp, so it has to be escaped in query patterns embedded in code:
+#+begin_src emacs-lisp
+  (tree-sitter-hl-add-patterns 'c
+   [((call_expression
+      function: (identifier) @keyword
+      arguments: (argument_list \. (string_literal) @function))
+     (.eq? @keyword "DEFUN"))])
+#+end_src
+{{% /notice %}}
+
 # TODO: Link to Querying API section.
 
 For more details, see Tree-sitter's documentation:
