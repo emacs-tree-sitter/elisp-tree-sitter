@@ -90,7 +90,7 @@ If VERSION and OS are not specified, use the defaults of
     (go         "f5cae4e")
     (html       "92c17db")
     (java       "0b18a22")
-    (javascript "3f8b62f")
+    (javascript "6296f90")
     (jsdoc      "77e7785")
     (json       "d3976b2")
     (julia      "165e2ae")
