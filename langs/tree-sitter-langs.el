@@ -110,9 +110,7 @@ See `tree-sitter-langs-repos'."
 
 (defun tree-sitter-langs--hl-query-path (lang-symbol)
   (concat (file-name-as-directory
-           (concat tree-sitter-langs--queries-dir
-                   (symbol-name lang-symbol)))
-          "highlights.scm"))
+           (concat tree-sitter-langs--queries-dir (symbol-name lang-symbol)))))
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return the bundled default syntax highlighting patterns for LANG-SYMBOL.
@@ -125,9 +123,12 @@ Return nil if there are no bundled patterns."
                              ('cpp '(c))
                              ('typescript '(javascript))
                              (_ nil))))
-          (insert-file-contents (tree-sitter-langs--hl-query-path sym))
-          (goto-char (point-max))
-          (insert "\n"))
+          (let* ((path (tree-sitter-langs--hl-query-path sym))
+                 (quries (directory-files path t "\\.scm$")))
+            (dolist (query quries)
+              (insert-file-contents query)
+              (goto-char (point-max))
+              (insert "\n"))))
         (buffer-string))
     (file-missing nil)))
 
