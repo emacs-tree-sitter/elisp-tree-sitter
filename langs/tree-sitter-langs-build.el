@@ -364,11 +364,9 @@ This assumes the repo has already been set up, for example by
                       (concat tree-sitter-langs--queries-dir
                               (symbol-name lang-symbol)))))
         (message "Copying queries for %s" lang-symbol)
-        (if (and force (file-directory-p dst-dir))
-            (progn
-              (delete-directory dst-dir t)
-              (copy-directory src dst-dir nil t t))
-          (copy-directory src dst-dir nil t t))))))
+        (when (and force (file-directory-p dst-dir))
+          (delete-directory dst-dir t))
+        (copy-directory src dst-dir nil t t)))))
 
 (defun tree-sitter-langs--copy-queries ()
   "Copy query files to `tree-sitter-langs--queries-dir'.
