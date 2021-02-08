@@ -353,28 +353,25 @@ non-nil."
             (dired-omit-mode -1)))))))
 
 (defun tree-sitter-langs--copy-query (lang-symbol &optional force)
-  "Copy highlights.scm file of LANG-SYMBOL to `tree-sitter-langs--queries-dir'.
+  "Copy all quries files of LANG-SYMBOL to `tree-sitter-langs--queries-dir'.
 This assumes the repo has already been set up, for example by
 `tree-sitter-langs-compile'."
   (let ((src (thread-first tree-sitter-langs--repos-dir
                (concat (format "tree-sitter-%s" lang-symbol))
-               file-name-as-directory (concat "queries")
-               file-name-as-directory (concat "highlights.scm"))))
-    (when (file-exists-p src)
-      (let ((dst-dir  (file-name-as-directory
-                       (concat tree-sitter-langs--queries-dir
-                               (symbol-name lang-symbol)))))
-        (unless (file-directory-p dst-dir)
-          (make-directory dst-dir t))
-        (message "Copying highlights.scm for %s" lang-symbol)
-        (let ((default-directory dst-dir))
-          (if (file-exists-p "highlights.scm")
-              (when force
-                (copy-file src dst-dir :force))
-            (copy-file src dst-dir)))))))
+               file-name-as-directory (concat "queries"))))
+    (when (file-directory-p src)
+      (let ((dst-dir (file-name-as-directory
+                      (concat tree-sitter-langs--queries-dir
+                              (symbol-name lang-symbol)))))
+        (message "Copying queries for %s" lang-symbol)
+        (if (and force (file-directory-p dst-dir))
+            (progn
+              (delete-directory dst-dir t)
+              (copy-directory src dst-dir nil t t))
+          (copy-directory src dst-dir nil t t))))))
 
 (defun tree-sitter-langs--copy-queries ()
-  "Copy highlights.scm files to `tree-sitter-langs--queries-dir'.
+  "Copy query files to `tree-sitter-langs--queries-dir'.
 This assumes the repos have already been cloned set up, for example by
 `tree-sitter-langs-create-bundle'."
   (pcase-dolist (`(,lang-symbol . _) tree-sitter-langs-repos)
