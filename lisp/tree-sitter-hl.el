@@ -144,6 +144,24 @@
   :group 'tree-sitter-hl-faces)
 
 ;;; ------------------------------------
+;;; Local
+
+(defface tree-sitter-hl-face:local.scope
+  '((default :inherit font-lock-variable-name-face))
+  "Face for new local scope."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:local.definition
+  '((default :inherit font-lock-variable-name-face))
+  "Face for local definition."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:local.reference
+  '((default :inherit font-lock-variable-name-face))
+  "Face for new local reference."
+  :group 'tree-sitter-hl-faces)
+
+;;; ------------------------------------
 ;;; Strings, comments, text proses.
 
 (defface tree-sitter-hl-face:comment
