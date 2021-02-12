@@ -119,8 +119,8 @@ See `tree-sitter-langs-repos'."
   "Convert QUERY so it matches the core `emacs-tree-sitter' engine."
   (when (stringp query)
     (setq query (s-replace "#match?" ".match?" query)
-          query (s-replace "#eq?" ".eq?")
-          query (s-replace "#is-not?" ".is-not?")))
+          query (s-replace "#eq?" ".eq?" query)
+          query (s-replace "#is-not?" ".is-not?" query)))
   query)
 
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
