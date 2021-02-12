@@ -91,7 +91,7 @@ If VERSION and OS are not specified, use the defaults of
     (html       "92c17db")
     (janet-simple "45418f7" nil "https://codeberg.org/sogaiu/tree-sitter-janet-simple")
     (java       "0b18a22")
-    (javascript "3f8b62f")
+    (javascript "6296f90")
     (jsdoc      "77e7785")
     (json       "d3976b2")
     (julia      "165e2ae")
