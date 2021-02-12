@@ -6,7 +6,7 @@
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
 ;; Version: 0.9.1
-;; Package-Requires: ((emacs "25.1") (tree-sitter "0.12.2"))
+;; Package-Requires: ((emacs "25.1") (tree-sitter "0.12.2") (s "1.9.0"))
 ;; License: MIT
 
 ;;; Commentary:
@@ -33,6 +33,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 's)
 
 (require 'tree-sitter)
 (require 'tree-sitter-load)
@@ -114,6 +115,14 @@ See `tree-sitter-langs-repos'."
                    (symbol-name lang-symbol)))
           "highlights.scm"))
 
+(defun tree-sitter-langs--query-conversion (query)
+  "Convert QUERY so it matches the core `emacs-tree-sitter' engine."
+  (when (stringp query)
+    (setq query (s-replace "#match?" ".match?" query)
+          query (s-replace "#eq?" ".eq?")
+          query (s-replace "#is-not?" ".is-not?")))
+  query)
+
 (defun tree-sitter-langs--hl-default-patterns (lang-symbol)
   "Return the bundled default syntax highlighting patterns for LANG-SYMBOL.
 Return nil if there are no bundled patterns."
@@ -128,7 +137,7 @@ Return nil if there are no bundled patterns."
           (insert-file-contents (tree-sitter-langs--hl-query-path sym))
           (goto-char (point-max))
           (insert "\n"))
-        (buffer-string))
+        (tree-sitter-langs--query-conversion (buffer-string)))
     (file-missing nil)))
 
 (defun tree-sitter-langs--set-hl-default-patterns (&rest _args)
