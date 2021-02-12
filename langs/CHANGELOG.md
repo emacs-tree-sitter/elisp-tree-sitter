@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.2 - 2021-02-12
+- Added `janet-simple` grammars.
+- Added minor updates to some other grammars.
+
 ## 0.9.1 - 2021-01-14
 - Updated `c-sharp` grammar.
 
