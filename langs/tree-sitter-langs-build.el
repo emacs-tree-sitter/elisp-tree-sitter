@@ -81,7 +81,7 @@ If VERSION and OS are not specified, use the defaults of
 (defconst tree-sitter-langs-repos
   '((agda       "d710ff1")
     (bash       "f226a4b")
-    (c          "99151b1")
+    (c          "80b6b74")
     (c-sharp    "aae8ab2")
     (cpp        "5e7476b")
     (css        "23f2cb9")
