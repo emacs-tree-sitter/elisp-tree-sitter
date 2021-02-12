@@ -89,6 +89,7 @@ If VERSION and OS are not specified, use the defaults of
     (fluent     "858fdd6")
     (go         "f5cae4e")
     (html       "92c17db")
+    (janet-simple "45418f7" nil "https://codeberg.org/sogaiu/tree-sitter-janet-simple")
     (java       "0b18a22")
     (javascript "3f8b62f")
     (jsdoc      "77e7785")
