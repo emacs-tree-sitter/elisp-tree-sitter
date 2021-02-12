@@ -115,7 +115,7 @@
 ;;; Misc.
 
 ((identifier) @constant
- (.match? @constant "^[A-Z_][A-Z_\\d]*$"))
+ (#match? @constant "^[A-Z_][A-Z_\\d]*$"))
 
 [(null) (true) (false)] @constant.builtin
 

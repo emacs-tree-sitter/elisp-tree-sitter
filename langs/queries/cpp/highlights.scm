@@ -44,7 +44,7 @@
 ;; Types
 
 ((namespace_identifier) @type
- (.match? @type "^[A-Za-z]"))
+ (#match? @type "^[A-Za-z]"))
 
 (namespace_definition (identifier) @type)
 
