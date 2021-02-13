@@ -104,7 +104,8 @@ See `tree-sitter-langs-repos'."
                 (scala-mode      . scala)
                 (swift-mode      . swift)
                 (tuareg-mode     . ocaml)
-                (typescript-mode . typescript))))
+                (typescript-mode . typescript)
+                (web-mode        . html))))
   (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
         lang-symbol))
 
