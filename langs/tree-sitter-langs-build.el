@@ -73,8 +73,8 @@ If VERSION and OS are not spcified, use the defaults of
   "Return the URL to download the grammar bundle.
 If VERSION and OS are not specified, use the defaults of
 `tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'."
-  ;; TODO: Use https://elpa.ubolonton.org/packages/bin as the canonical source.
-  (format "https://dl.bintray.com/ubolonton/emacs/%s"
+  (format "https://github.com/ubolonton/tree-sitter-langs/releases/download/%s/%s"
+          version
           (tree-sitter-langs--bundle-file ".gz" version os)))
 
 ;;; A list of (LANG-SYMBOL VERSION-TO-BUILD &optional PATHS REPO-URL).
