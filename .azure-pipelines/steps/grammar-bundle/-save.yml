@@ -1,6 +1,0 @@
-steps:
-- task: PublishPipelineArtifact@1
-  displayName: Save tree-sitter-grammars-$(BUNDLE_OS)-$(BUNDLE_VERSION).tar.gz
-  inputs:
-    targetPath: langs/tree-sitter-grammars-$(BUNDLE_OS)-$(BUNDLE_VERSION).tar.gz
-    artifactName: tree-sitter-grammars-$(BUNDLE_OS)
