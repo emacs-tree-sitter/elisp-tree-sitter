@@ -20,6 +20,15 @@
   (require 'pcase)
   (require 'cl-lib))
 
+(eval-and-compile
+  (display-warning
+   'tree-sitter-langs
+   "This is a deprecated version of `tree-sitter-langs'.
+New developement is on https://github.com/ubolonton/tree-sitter-langs. If you
+are using `straight.el', please update the recipe `tree-sitter-langs'. This can
+usually be done by updating the `melpa' package."
+   :emergency))
+
 (declare-function dired-omit-mode "dired-x" (&optional arg))
 (declare-function magit-get-current-tag "magit-git" (&optional rev with-distance))
 (declare-function magit-rev-parse "magit-git" (&rest args))
