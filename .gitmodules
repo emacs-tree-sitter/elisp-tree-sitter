@@ -1,3 +1,8 @@
+[submodule "langs"]
+	path = langs
+	url = https://github.com/ubolonton/tree-sitter-langs
+	ignore = untracked
+
 [submodule "doc/themes/docdock"]
 	path = doc/themes/docdock
 	url = https://github.com/ubolonton/hugo-theme-docdock

@@ -20,7 +20,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the next section instead.
 
 ## Setup for Development
 
-- Clone this repo.
+- Clone this repo with the `--recursive` flag.
 - Add 3 of its directories to `load-path`: `core/`, `lisp/` and `langs/`.
 - Install [cask](https://cask.readthedocs.io).
 - Run `./bin/setup` (`.\bin\setup` on Windows).
@@ -104,5 +104,7 @@ Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
 ## Contribution
 
 Contributions are welcomed. Please take a look at the [issue list](https://github.com/ubolonton/emacs-tree-sitter/issues) for ideas, or [create a new issue](https://github.com/ubolonton/emacs-tree-sitter/issues/new) to describe any idea you have for improvement.
+
+For language-specific issues/features, please check out [tree-sitter-langs](https://github.com/ubolonton/tree-sitter-langs) instead.
 
 Show respect and empathy towards others. Both technical empathy and general empathy are highly valued.

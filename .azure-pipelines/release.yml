@@ -10,6 +10,7 @@ resources:
   - repository: emacs-module-rs
     type: github
     name: ubolonton/emacs-module-rs
+    ref: azure-pipelines
     endpoint: ubolonton
 
 jobs:
@@ -31,6 +32,8 @@ jobs:
         EVM_EMACS: emacs-27.1
         DYN_EXT: so
   steps:
+  - checkout: self
+    submodules: true
   - template: .azure-pipelines/steps/setup-rust.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-llvm.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
@@ -49,6 +52,8 @@ jobs:
   variables:
     EVM_EMACS: emacs-26.3
   steps:
+  - checkout: self
+    submodules: true
   - template: .azure-pipelines/steps/setup-emacs.yml@emacs-module-rs
   - template: .azure-pipelines/steps/setup-cask.yml@emacs-module-rs
   - template: steps/-retrieve-binaries.yml

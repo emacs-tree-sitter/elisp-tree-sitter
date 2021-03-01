@@ -5,6 +5,3 @@
 
 core/tsc-dyn.*
 core/DYN-VERSION
-
-langs/bin/
-langs/repos/
