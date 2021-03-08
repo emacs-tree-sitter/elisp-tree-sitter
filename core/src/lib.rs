@@ -3,6 +3,7 @@ use emacs::{Env, Result};
 
 #[macro_use]
 mod types;
+mod error;
 mod lang;
 mod parser;
 mod tree;

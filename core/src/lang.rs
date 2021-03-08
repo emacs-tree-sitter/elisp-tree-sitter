@@ -1,11 +1,12 @@
 use std::{mem, os, collections::HashMap, sync::Mutex};
 
-use emacs::{defun, Result, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
+use emacs::{defun, Result, ResultExt, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
 
 use libloading::{Library, Symbol};
 use once_cell::sync::Lazy;
 
-use crate::types;
+use crate::{types, error};
+use tree_sitter::{LANGUAGE_VERSION, MIN_COMPATIBLE_LANGUAGE_VERSION};
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
@@ -89,10 +90,21 @@ static LANG_INFOS: Lazy<Mutex<HashMap<usize, LangInfo>>> = Lazy::new(|| Mutex::n
 #[defun]
 fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Result<Language> {
     let env = lang_symbol.env;
-    let lib = Library::new(&file)?;
+    let lib = Library::new(&file).or_signal(env, error::tsc_lang_load_failed)?;
     let tree_sitter_lang: Symbol<'_, unsafe extern "C" fn() -> _> =
-        unsafe { lib.get(symbol_name.as_bytes())? };
+        unsafe { lib.get(symbol_name.as_bytes()) }.or_signal(env, error::tsc_lang_load_failed)?;
     let language: tree_sitter::Language = unsafe { tree_sitter_lang() };
+    let version = language.version();
+    if version < MIN_COMPATIBLE_LANGUAGE_VERSION {
+        return env.signal(error::tsc_lang_abi_too_old, (
+            version, supported_abi_range(env)?, file
+        ));
+    }
+    if version > LANGUAGE_VERSION {
+        return env.signal(error::tsc_lang_abi_too_new, (
+            version, supported_abi_range(env)?, file
+        ));
+    }
     let node_types = (0..language.node_kind_count() as u16).map(|id| {
         let type_str = language.node_kind_for_id(id).expect("Failed to get node type for id");
         let value = if language.node_kind_is_named(id) {
@@ -150,6 +162,12 @@ fn lang_field(language: Language, field_id: u16) -> Result<Option<&'static Globa
 #[defun]
 fn _lang_type_id_for_name(language: Language, type_name: String, named: Option<Value>) -> Result<u16> {
     Ok(language.0.id_for_node_kind(&type_name, named.is_some()))
+}
+
+/// Return the range of language ABI's that this module can load.
+#[defun]
+fn supported_abi_range(env: &Env) -> Result<Value> {
+    env.cons(MIN_COMPATIBLE_LANGUAGE_VERSION, LANGUAGE_VERSION)
 }
 
 macro_rules! defun_lang_methods {

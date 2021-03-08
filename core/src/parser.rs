@@ -1,7 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use emacs::{defun, Result, Value, Vector};
-use emacs::failure;
+use emacs::{defun, Result, Value, Vector, Error};
 use tree_sitter::{Parser, Tree};
 
 use crate::{
@@ -27,7 +26,7 @@ fn make_parser() -> Result<Parser> {
 /// with an incompatible version of tree-sitter-cli.
 #[defun]
 fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
-    parser.set_language(language.into()).map_err(failure::err_msg)?;
+    parser.set_language(language.into()).map_err(Error::msg)?;
     Ok(())
 }
 
