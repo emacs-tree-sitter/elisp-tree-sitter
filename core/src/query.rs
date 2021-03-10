@@ -1,12 +1,13 @@
 use std::cell::RefCell;
 
 use emacs::{defun, Env, Error, GlobalRef, IntoLisp, Result, Value, Vector};
-use tree_sitter::{Node, QueryCursor};
+use tree_sitter::{Node, QueryCursor, QueryErrorKind};
 
 use crate::{
     types::{BytePos, Point},
     lang::Language,
     node::RNode,
+    error,
 };
 
 fn vec_to_vector<'e, T: IntoLisp<'e>>(env: &'e Env, vec: Vec<T>) -> Result<Vector<'e>> {
@@ -38,8 +39,21 @@ impl_pred!(query_p, &RefCell<Query>);
 /// the associated capture name is disabled.
 #[defun(user_ptr)]
 fn _make_query(language: Language, source: String, tag_assigner: Value) -> Result<Query> {
-    // TODO: Better error message
-    let mut raw = tree_sitter::Query::new(language.into(), &source).unwrap();
+    let mut raw = tree_sitter::Query::new(language.into(), &source).or_else(|err| {
+        let symbol = match err.kind {
+            QueryErrorKind::Syntax => error::tsc_query_invalid_syntax,
+            QueryErrorKind::NodeType => error::tsc_query_invalid_node_type,
+            QueryErrorKind::Field => error::tsc_query_invalid_field,
+            QueryErrorKind::Capture => error::tsc_query_invalid_capture,
+            QueryErrorKind::Predicate => error::tsc_query_invalid_predicate,
+            QueryErrorKind::Structure => error::tsc_query_invalid_structure,
+        };
+        let byte_pos: BytePos = err.offset.into();
+        let point: Point = tree_sitter::Point { row: err.row, column: err.column }.into();
+        // TODO: Character position?
+        // TODO: Convert named node types and field names to symbols and keywords?
+        tag_assigner.env.signal(symbol, (err.message, point, byte_pos))
+    })?;
     let capture_names = raw.capture_names().to_vec();
     let mut capture_tags = vec![];
     for name in &capture_names {

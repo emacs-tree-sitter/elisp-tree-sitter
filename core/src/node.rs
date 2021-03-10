@@ -6,7 +6,6 @@ use std::{
 
 use emacs::{defun, Env, IntoLisp, Result, Value, GlobalRef};
 use tree_sitter::{InputEdit, Node, Tree};
-use once_cell::sync::OnceCell;
 
 use crate::{
     types::{self, BytePos, Point, Shared, Range},
@@ -134,7 +133,7 @@ macro_rules! defun_node_navs {
     };
 }
 
-pub static ERROR: OnceCell<GlobalRef> = OnceCell::new();
+emacs::use_symbols!(ERROR);
 
 /// Return NODE's type, as a symbol (named node), or a string (anonymous node).
 ///
@@ -145,7 +144,7 @@ fn node_type(node: &RNode) -> Result<&'static GlobalRef> {
     let node = node.borrow();
     let language: Language = node.language().into();
     Ok(if node.is_error() {
-        ERROR.get().expect("ERROR was not initialized")
+        ERROR
     } else {
         &language.info().node_type(node.kind_id()).expect("Failed to get node type from id")
     })

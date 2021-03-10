@@ -1,12 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 
-use emacs::{defun, Result, Value, Vector};
-use emacs::failure;
+use emacs::{defun, Result, Value, Vector, Env, ResultExt};
 use tree_sitter::{Parser, Tree};
 
 use crate::{
     types::{BytePos, Point, Range, Shared},
     lang::Language,
+    error,
 };
 
 fn shared<T>(t: T) -> Shared<T> {
@@ -26,9 +26,8 @@ fn make_parser() -> Result<Parser> {
 /// This may fail if there was a version mismatch: the loaded LANGUAGE was generated
 /// with an incompatible version of tree-sitter-cli.
 #[defun]
-fn set_language(parser: &mut Parser, language: Language) -> Result<()> {
-    parser.set_language(language.into()).map_err(failure::err_msg)?;
-    Ok(())
+fn set_language(parser: &mut Parser, language: Language, env: &Env) -> Result<()> {
+    parser.set_language(language.into()).or_signal(env, error::tsc_lang_abi_error)
 }
 
 /// Return PARSER's current language.
@@ -143,6 +142,7 @@ fn set_included_ranges(parser: &mut Parser, ranges: Vector) -> Result<()> {
         let range: Range = ranges.get(i)?;
         included.push(range.into());
     }
-    // TODO: Define custom error class.
-    Ok(parser.set_included_ranges(included).unwrap())
+    parser.set_included_ranges(included).or_else(|error| {
+        ranges.value().env.signal(error::tsc_invalid_ranges, (error.0, ))
+    })
 }
