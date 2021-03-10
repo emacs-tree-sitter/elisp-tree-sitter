@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.14.0] - 2021-03-10
+- Added ABI compatibility checks when loading a language object from a dynamic library.
+- Made `tsc-make-query` signal concrete error symbols, instead of `rust-panic`.
+
 ## [0.13.1] - 2021-01-16
 - Used static linking for C runtime on Windows, to avoid having to install VC++ redistributable package.
 
@@ -103,8 +107,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.0] - 2020-01-27
 Initial release
-
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.1...HEAD
+c
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.1...0.14.0
 [0.13.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.0...0.13.1
 [0.13.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.2...0.13.0
 [0.12.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.1...0.12.2
