@@ -90,7 +90,7 @@ static LANG_INFOS: Lazy<Mutex<HashMap<usize, LangInfo>>> = Lazy::new(|| Mutex::n
 #[defun]
 fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Result<Language> {
     let env = lang_symbol.env;
-    let lib = Library::new(&file).or_signal(env, error::tsc_lang_load_failed)?;
+    let lib = unsafe { Library::new(&file) }.or_signal(env, error::tsc_lang_load_failed)?;
     let tree_sitter_lang: Symbol<'_, unsafe extern "C" fn() -> _> =
         unsafe { lib.get(symbol_name.as_bytes()) }.or_signal(env, error::tsc_lang_load_failed)?;
     let language: tree_sitter::Language = unsafe { tree_sitter_lang() };
