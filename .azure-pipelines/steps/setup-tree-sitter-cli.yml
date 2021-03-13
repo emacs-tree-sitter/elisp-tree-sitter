@@ -1,5 +1,5 @@
 parameters:
-  version: 0.16.9
+  version: 0.19.3
 
 steps:
 - task: NodeTool@0
