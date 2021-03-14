@@ -19,8 +19,12 @@
 (let ((tree-sitter-langs--testing t))
   (require 'tree-sitter-langs))
 ;;; Build the grammars, if necessary.
-(dolist (lang-symbol '(rust python javascript c bash))
+(dolist (lang-symbol '(rust python javascript c))
   (tree-sitter-langs-ensure lang-symbol))
+
+;; XXX: Bash grammar failed 'tree-sitter test' on Windows: 'Escaped newlines'.
+(with-demoted-errors "Failed to ensure bash grammar %s"
+  (tree-sitter-langs-ensure 'bash))
 
 (require 'ert)
 

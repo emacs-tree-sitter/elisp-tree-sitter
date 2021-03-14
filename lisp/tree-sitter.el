@@ -1,12 +1,12 @@
 ;;; tree-sitter.el --- Incremental parsing system -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019  Tuấn-Anh Nguyễn
+;; Copyright (C) 2021  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.14.0
-;; Package-Requires: ((emacs "25.1") (tsc "0.14.0"))
+;; Version: 0.15.0
+;; Package-Requires: ((emacs "25.1") (tsc "0.15.0"))
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:

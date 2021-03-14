@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.15.0] - 2021-03-15
+- Upgraded `tree-sitter` crate to 0.19.3, which:
+  + Added [negated-field query patterns](https://github.com/tree-sitter/tree-sitter/pull/983).
+  + Fixed some bugs, mostly query-related.
+  + Is required to support newer versions of the language grammars.
+  + Raised the minimum and maximum supported language ABI versions to 13. Older versions of the language bundle `tree-sitter-langs` (before 0.10.0) will not be loaded.
+
 ## [0.14.0] - 2021-03-10
 - Added ABI compatibility checks when loading a language object from a dynamic library.
 - Made `tsc-make-query` signal concrete error symbols, instead of `rust-panic`.
@@ -107,8 +114,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.0] - 2020-01-27
 Initial release
-c
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.14.0...HEAD
+
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.0...HEAD
+[0.15.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.1...0.14.0
 [0.13.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.0...0.13.1
 [0.13.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.2...0.13.0
