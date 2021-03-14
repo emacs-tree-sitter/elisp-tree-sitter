@@ -293,6 +293,14 @@ Certain node types assign unique *field names* to specific child nodes. Within a
    arguments: (arguments) @function.args)
 #+end_src
 
+A symbol prefixed with the character ~!~ denotes a *negated field*, which requires that the pattern matches only nodes that lack the specified field.
+#+begin_src scheme
+  ;; Match non-generic struct definitions.
+  (struct_item
+   name: (type_identifier) @struct_name
+   !type_parameters)
+#+end_src
+
 *** Groups and Predicates
 # Grouping Sibling Nodes ("group forms").
 A *group* form is a list form whose first element is a node form. It is used to denote a sequence of sibling nodes, and to group predicate forms with node forms.
