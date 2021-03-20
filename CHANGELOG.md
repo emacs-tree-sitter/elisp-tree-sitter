@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.15.1] - 2021-03-20
 - Fixed some invalid query patterns [causing SIGABRT](https://github.com/ubolonton/emacs-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
 - Used keywords to represent auxiliary (invisible) node types. For example: `:end`, `:_expression`.
 
@@ -117,7 +119,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.0...HEAD
+[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.1...HEAD
+[0.15.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.0...0.15.1
 [0.15.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.1...0.14.0
 [0.13.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.0...0.13.1
