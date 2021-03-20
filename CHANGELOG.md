@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Fixed some invalid query patterns [causing SIGABRT](https://github.com/ubolonton/emacs-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
 
 ## [0.15.0] - 2021-03-15
 - Upgraded `tree-sitter` crate to 0.19.3, which:

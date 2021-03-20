@@ -9,3 +9,6 @@ lto = "thin"
 
 [profile.release.build-override]
 opt-level = 0
+
+[patch.crates-io.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
