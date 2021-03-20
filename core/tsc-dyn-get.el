@@ -21,16 +21,31 @@
 
 (defconst tsc-dyn-get--version-file "DYN-VERSION")
 
+(defconst tsc--dir (file-name-directory (or (locate-library "tsc.el") ""))
+  "The directory where the library `tsc' is located.")
+
+(defcustom tsc-dyn-dir tsc--dir
+  "The directory that `tsc-dyn' module is resided.
+This should be set before `tsc' is loaded.
+
+In Windows you may want to set this to prevent package upgrade failure by loaded
+module deletion. See ubolonton/emacs-tree-sitter#122 for more detail.
+
+Example setting:
+\(setq tsc-dyn-dir (expand-file-name \"tree-sitter/\" user-emacs-directory))"
+  :group 'tsc
+  :type 'directory)
+
 (defun tsc-dyn-get--dir ()
   "Return the directory to put `tsc-dyn' module in."
-  (let* ((main-file (locate-library "tsc.el"))
-         (_ (unless main-file
-              (error "Could not find tsc.el"))))
-    (file-name-directory main-file)))
+  (or tsc-dyn-dir
+      (error "Could not locate the directory for `tsc-dyn'")))
 
 (defun tsc-dyn-get--download (version)
   "Download the pre-compiled VERSION of `tsc-dyn' module."
-  (let* ((default-directory (tsc-dyn-get--dir))
+  (let* ((bin-dir (tsc-dyn-get--dir))
+         (default-directory bin-dir)
+         (_ (unless (file-directory-p bin-dir) (make-directory bin-dir)))
          ;; TODO: Handle systems with no pre-built binaries better.
          (ext (pcase system-type
                 ('windows-nt "dll")
@@ -106,21 +121,22 @@ If it's not found, try to download it."
       (when (or (not current-version)
                 (version< current-version version))
         (tsc-dyn-get--download version))))
-  ;; XXX: We want a universal package containing binaries for all platforms, so
-  ;; we use a unique extension for each. On macOS, we use`.dylib', which is more
-  ;; sensible than `.so' anyway.
-  (unless (featurep 'tsc-dyn)
-    (when (eq system-type 'darwin)
-      (tsc--mac-load-dyn)))
-  ;; If we could not load it (e.g. when the dynamic module was deleted, but the
-  ;; version file was not), try downloading again.
-  (unless (require 'tsc-dyn nil :noerror)
-    (tsc-dyn-get--download version))
-  ;; We should have the binary by now. Try to load for real.
-  (unless (featurep 'tsc-dyn)
-    (when (eq system-type 'darwin)
-      (tsc--mac-load-dyn))
-    (require 'tsc-dyn))
+  (let ((load-path (nconc `(,tsc-dyn-dir) load-path)))
+    ;; XXX: We want a universal package containing binaries for all platforms, so
+    ;; we use a unique extension for each. On macOS, we use`.dylib', which is more
+    ;; sensible than `.so' anyway.
+    (unless (featurep 'tsc-dyn)
+      (when (eq system-type 'darwin)
+        (tsc--mac-load-dyn)))
+    ;; If we could not load it (e.g. when the dynamic module was deleted, but the
+    ;; version file was not), try downloading again.
+    (unless (require 'tsc-dyn nil :noerror)
+      (tsc-dyn-get--download version))
+    ;; We should have the binary by now. Try to load for real.
+    (unless (featurep 'tsc-dyn)
+      (when (eq system-type 'darwin)
+        (tsc--mac-load-dyn))
+      (require 'tsc-dyn)))
   ;; Check if and older version was already loaded.
   (unless (string= version tsc-dyn--version)
     (display-warning 'tree-sitter
