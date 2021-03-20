@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 - Fixed some invalid query patterns [causing SIGABRT](https://github.com/ubolonton/emacs-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
+- Used keywords to represent auxiliary (invisible) node types. For example: `:end`, `:_expression`.
 
 ## [0.15.0] - 2021-03-15
 - Upgraded `tree-sitter` crate to 0.19.3, which:

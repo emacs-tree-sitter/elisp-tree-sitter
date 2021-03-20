@@ -126,7 +126,7 @@ If RESET is non-nil, also do another full parse and check again."
                          (tsc-lang-node-type language))
                        node-type))))
     (ert-info ("0 should be the special node type \"end\"")
-      (should (equal "end" (format "%s" (tsc-lang-node-type language 0)))))
+      (should (equal :end (tsc-lang-node-type language 0))))
     (ert-info ("Node type IDs should be from 0 to type count minus 1")
       (should-not (null (tsc-lang-node-type language 1)))
       (should-not (null (tsc-lang-node-type language (- type-count 1))))

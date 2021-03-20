@@ -107,7 +107,9 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
     }
     let node_types = (0..language.node_kind_count() as u16).map(|id| {
         let type_str = language.node_kind_for_id(id).expect("Failed to get node type for id");
-        let value = if language.node_kind_is_named(id) {
+        let value = if !language.node_kind_is_visible(id) {
+            env.intern(&format!(":{}", type_str)).expect("Failed to intern keyword for node type")
+        } else if language.node_kind_is_named(id) {
             env.intern(type_str).expect("Failed to intern symbol for node type")
         } else {
             type_str.into_lisp(env).expect("Failed to make string for node type")
@@ -147,6 +149,7 @@ fn _lang_load_file(language: Language) -> Result<&'static String> {
 ///
 /// For named nodes, the node type is a symbol. For example: 'identifier, 'block.
 /// For anonymous nodes, the node type is a string. For example: "if", "else".
+/// For auxiliary (invisible) nodes, the node type is a keyword. For example: :end, :_expression.
 #[defun]
 fn lang_node_type(language: Language, type_id: u16) -> Result<Option<&'static GlobalRef>> {
     Ok(language.info().node_type(type_id))
