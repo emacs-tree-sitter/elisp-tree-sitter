@@ -24,6 +24,10 @@
 (defconst tsc--dir (file-name-directory (or (locate-library "tsc.el") ""))
   "The directory where the library `tsc' is located.")
 
+(defgroup tsc nil
+  "Core tree-sitter APIs."
+  :group 'languages)
+
 (defcustom tsc-dyn-dir tsc--dir
   "The directory that `tsc-dyn' module is resided.
 This should be set before `tsc' is loaded.
