@@ -126,7 +126,7 @@ If RESET is non-nil, also do another full parse and check again."
                          (tsc-lang-node-type language))
                        node-type))))
     (ert-info ("0 should be the special node type \"end\"")
-      (should (equal 'end (tsc-lang-node-type language 0))))
+      (should (equal :end (tsc-lang-node-type language 0))))
     (ert-info ("Node type IDs should be from 0 to type count minus 1")
       (should-not (null (tsc-lang-node-type language 1)))
       (should-not (null (tsc-lang-node-type language (- type-count 1))))
@@ -387,6 +387,11 @@ tree is held (since nodes internally reference the tree)."
         (should (equal (mapcar #'car (tsc--query-cursor-captures-1
                                       cursor query root-node #'tsc--buffer-substring-no-properties))
                        capture-names))))))
+
+(ert-deftest query::validation ()
+  ;; https://github.com/ubolonton/emacs-tree-sitter/issues/125
+  (should (tsc-make-query (tree-sitter-require 'rust)
+                          [(unary_expression (identifier)* @variable)])))
 
 (ert-deftest load ()
   (should-error (tree-sitter-require 'abc-xyz))
