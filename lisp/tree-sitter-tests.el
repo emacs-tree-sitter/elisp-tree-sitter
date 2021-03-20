@@ -388,6 +388,11 @@ tree is held (since nodes internally reference the tree)."
                                       cursor query root-node #'tsc--buffer-substring-no-properties))
                        capture-names))))))
 
+(ert-deftest query::validation ()
+  ;; https://github.com/ubolonton/emacs-tree-sitter/issues/125
+  (should (tsc-make-query (tree-sitter-require 'rust)
+                          [(unary_expression (identifier)* @variable)])))
+
 (ert-deftest load ()
   (should-error (tree-sitter-require 'abc-xyz))
   (tree-sitter-require 'rust))
