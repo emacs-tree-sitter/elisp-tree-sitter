@@ -264,7 +264,7 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
            ;; Disable MODE when `tree-sitter-mode' is disabled. Quoting is
            ;; important, because we don't want a variable-capturing closure.
            (add-hook 'tree-sitter--before-off-hook
-                     '(lambda () (,mode -1))
+                     (with-no-warnings '(lambda () (,mode -1)))
                      nil :local))
        ,teardown)))
 
