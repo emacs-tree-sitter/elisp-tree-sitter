@@ -209,7 +209,7 @@ The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.co
 - *TypeScript*
 
 {{% notice info %}}
-Most of the [[https://github.com/ubolonton/emacs-tree-sitter/tree/master/langs/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
+Most of the [[https://github.com/ubolonton/tree-sitter-langs/tree/master/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
 
 Contributions to highlighting queries are welcome.
 {{% /notice %}}
