@@ -407,7 +407,9 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
       (setcar hl-region beg)
       (setcdr hl-region end))
     ;; Repeatedly extend the region, within the limit. TODO: What if the region
-    ;; of the minimal enclosing node is already too large?
+    ;; of the minimal enclosing node is already too large? TODO: Check whether
+    ;; we still need to extend QUERY-REGION, now that this was merged:
+    ;; https://github.com/tree-sitter/tree-sitter/pull/1130.
     (while (and node
                 (< delta tree-sitter-hl--extend-region-limit))
       (setcar query-region beg)
