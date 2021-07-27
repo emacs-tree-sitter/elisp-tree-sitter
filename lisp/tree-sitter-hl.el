@@ -374,6 +374,14 @@ See `tree-sitter-hl-add-patterns'."
 The assumption is that: in any syntax highlighting pattern, the captures do not
 lie deeper than this.")
 
+;; TODO: Check whether we still need to extend QUERY-REGION, now that this was
+;; merged: https://github.com/tree-sitter/tree-sitter/pull/1130.
+(defvar-local tree-sitter-hl-extend-query-region nil
+  "Whether to extend query region used for highlighting.
+If you get incorrect highlighting, try setting this to t.
+
+See `tree-sitter-hl--extend-regions' for more details.")
+
 (defun tree-sitter-hl--extend-regions (hl-region query-region)
   "Extend HL-REGION and QUERY-REGION before highlighting, mutably.
 For performance reason, we execute the highlighting query on a region, instead
@@ -407,26 +415,25 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
       (setcar hl-region beg)
       (setcdr hl-region end))
     ;; Repeatedly extend the region, within the limit. TODO: What if the region
-    ;; of the minimal enclosing node is already too large? TODO: Check whether
-    ;; we still need to extend QUERY-REGION, now that this was merged:
-    ;; https://github.com/tree-sitter/tree-sitter/pull/1130.
-    (while (and node
-                (< delta tree-sitter-hl--extend-region-limit))
-      (setcar query-region beg)
-      (setcdr query-region end)
-      ;; Walk up to the parent node.
-      (when (setq node (when (<= (cl-incf level)
-                                 tree-sitter-hl--extend-region-levels)
-                         (tsc-get-parent node)))
-        (let ((range (tsc-node-position-range node)))
-          (setf `(,beg . ,end) range)
-          (setq size (- end beg))
-          (setq delta (- size orig-size)))))
-    ;; Extend to whole lines.
-    (goto-char (car query-region))
-    (setcar query-region (line-beginning-position 0))
-    (goto-char (cdr query-region))
-    (setcdr query-region (line-beginning-position 2))))
+    ;; of the minimal enclosing node is already too large?
+    (when tree-sitter-hl-extend-query-region
+      (while (and node
+                  (< delta tree-sitter-hl--extend-region-limit))
+        (setcar query-region beg)
+        (setcdr query-region end)
+        ;; Walk up to the parent node.
+        (when (setq node (when (<= (cl-incf level)
+                                   tree-sitter-hl--extend-region-levels)
+                           (tsc-get-parent node)))
+          (let ((range (tsc-node-position-range node)))
+            (setf `(,beg . ,end) range)
+            (setq size (- end beg))
+            (setq delta (- size orig-size)))))
+      ;; Extend to whole lines.
+      (goto-char (car query-region))
+      (setcar query-region (line-beginning-position 0))
+      (goto-char (cdr query-region))
+      (setcdr query-region (line-beginning-position 2)))))
 
 (defun tree-sitter-hl--append-text-property (start end prop value &optional object)
   "Append VALUE to PROP of the text from START to END.

@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 - Upgraded `tree-sitter` crate to 0.20.0, which:
-  + Changed the semantics of range-restricted query to report matches that intersect the range, instead of only fully-contained matches.
+  + Changed the semantics of range-restricted query to report matches that intersect the range, instead of only fully-contained matches. See [tree-sitter#1130](https://github.com/tree-sitter/tree-sitter/pull/1130).
+- Disabled query-region extension, to improve performance. Added a flag to turn it back on: `tree-sitter-hl-extend-query-region`.
 
 ## [0.15.2] - 2021-09-12
 - Reduced GC pressure by not making the text property `face` a list if there is only one face.
