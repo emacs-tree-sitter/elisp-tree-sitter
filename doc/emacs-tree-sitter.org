@@ -171,6 +171,12 @@ Language major modes use these generic mechanisms to provide functionalities spe
 
 For the full list of languages bundled by ~tree-sitter-langs~, see the submodules under its [[https://github.com/ubolonton/tree-sitter-langs/tree/master/repos][repos/]] directory.
 
+{{% notice warning %}}
+Binaries for older versions were hosted on bintray, which was [[https://www.infoq.com/news/2021/02/jfrog-jcenter-bintray-closure/][shut down]]. If you install from source, you should update the code to a newer version whose binaries are hosted [[https://github.com/ubolonton/emacs-tree-sitter/releases][on GitHub]].
+
+If, for some reason, you cannot update, the older binaries can be downloaded from [[https://elpa.ubolonton.org/packages/bin/][here]].
+{{% /notice %}}
+
 * Syntax Highlighting
 :PROPERTIES:
 :EXPORT_HUGO_SECTION: syntax-highlighting
