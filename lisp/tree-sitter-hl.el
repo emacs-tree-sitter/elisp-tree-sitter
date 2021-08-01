@@ -374,11 +374,12 @@ See `tree-sitter-hl-add-patterns'."
 The assumption is that: in any syntax highlighting pattern, the captures do not
 lie deeper than this.")
 
-;; TODO: Check whether we still need to extend QUERY-REGION, now that this was
-;; merged: https://github.com/tree-sitter/tree-sitter/pull/1130.
-(defvar-local tree-sitter-hl-extend-query-region nil
-  "Whether to extend query region used for highlighting.
-If you get incorrect highlighting, try setting this to t.
+;; Disabling query-region extension still causes incorrect highlighting. TODO:
+;; Figure out exactly where it goes wrong.
+;; https://github.com/tree-sitter/tree-sitter/pull/1130.
+(defvar-local tree-sitter-hl-disable-query-region-extension nil
+  "Whether to disable pre-highlighting query-region extension.
+This is mainly a troubleshooting flag.
 
 See `tree-sitter-hl--extend-regions' for more details.")
 
@@ -416,7 +417,7 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
       (setcdr hl-region end))
     ;; Repeatedly extend the region, within the limit. TODO: What if the region
     ;; of the minimal enclosing node is already too large?
-    (when tree-sitter-hl-extend-query-region
+    (unless tree-sitter-hl-disable-query-region-extension
       (while (and node
                   (< delta tree-sitter-hl--extend-region-limit))
         (setcar query-region beg)
