@@ -187,6 +187,18 @@ If RESET is non-nil, also do another full parse and check again."
           (ert-info ("Incremental parsing should be faster than initial")
             (should (> (car initial) (car reparse)))))))))
 
+(ert-deftest parsing::bench ()
+  (tsc-test-with 'c parser
+    (tsc-test-with-file "lisp/test-files/types.rs"
+      (let ((n 0))
+        (while (<= n 4)
+          (let ((tsc--buffer-input-chunk-size (* 1024 (expt 2 n))))
+            (garbage-collect)
+            (message "tsc-parse-chunks %6d %s" tsc--buffer-input-chunk-size
+                     (benchmark-run 10
+                         (tsc-parse-chunks parser #'tsc--buffer-input nil)))
+            (cl-incf n)))))))
+
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
     (tsc-test-use-lang 'rust)
