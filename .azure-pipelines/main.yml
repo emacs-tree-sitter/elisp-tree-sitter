@@ -54,7 +54,7 @@ resources:
     type: github
     name: ubolonton/emacs-module-rs
     ref: azure-pipelines
-    endpoint: ubolonton
+    endpoint: emacs-tree-sitter
 
 steps:
 - checkout: self
