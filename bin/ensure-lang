@@ -2,9 +2,6 @@
 
 # TODO: Move away from hacky bash scripts.
 
-# Fetch latest grammar for a given language, generate and "install" the corresponding shared lib
-# at ~/.tree-sitter/bin/<name>.so
-#
 # Usage:
 # ensure-lang <name>
 #
@@ -26,5 +23,9 @@ LANG=$1
            --directory "$PROJECT_ROOT/core" \
            --directory "$PROJECT_ROOT/lisp" \
            --directory "$PROJECT_ROOT/langs" \
-           --eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-ensure '$LANG))"
+           --eval "
+(progn
+  (setq tree-sitter-langs--testing t)
+  (require 'tree-sitter-langs)
+  (tree-sitter-langs-ensure '$LANG))"
 )

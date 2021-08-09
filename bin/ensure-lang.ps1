@@ -8,6 +8,6 @@ emacs --batch `
   --directory "$project_root\core" `
   --directory "$project_root\lisp" `
   --directory "$project_root\langs" `
-  --eval "(progn (require 'tree-sitter-langs) (tree-sitter-langs-ensure '$lang))"
+  --eval "(progn (setq tree-sitter-langs--testing t) (require 'tree-sitter-langs) (tree-sitter-langs-ensure '$lang))"
 
 Pop-Location
