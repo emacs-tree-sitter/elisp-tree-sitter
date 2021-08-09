@@ -35,11 +35,12 @@ If you want to build additional (or all) grammars from source, or work on the co
 
 - Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation) (if you don't use NodeJS, you can download the binary directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases)):
     ```bash
+    # XXX: CLI versions 0.20+ cannot currently be used yet, due to this breaking change https://github.com/tree-sitter/tree-sitter/pull/1157.
     # For yarn user
-    yarn global add tree-sitter-cli
+    yarn global add tree-sitter-cli@0.19.3
 
     # For npm user
-    npm install -g tree-sitter-cli
+    npm install -g tree-sitter-cli@0.19.3
     ```
 - Run:
     ```bash
