@@ -4,7 +4,7 @@
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
-;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
+;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
 ;; Version: 0.15.1
 ;; Package-Requires: ((emacs "25.1") (tsc "0.15.1"))
 ;; SPDX-License-Identifier: MIT
@@ -141,7 +141,7 @@ OLD-LEN is the char length of the old text."
   "Parse the current buffer and update the syntax tree."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
-          ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
+          ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
           (tsc--without-restriction
             (tsc-parse-chunks tree-sitter-parser #'tsc--buffer-input old-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))

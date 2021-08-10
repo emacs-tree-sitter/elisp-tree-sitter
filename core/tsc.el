@@ -5,7 +5,7 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 ;; Keywords: languages tools parsers dynamic-modules tree-sitter
-;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
+;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
 ;; Version: 0.15.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: MIT

@@ -65,7 +65,7 @@ The methods below download pre-compiled binaries, so they only work for macOS, L
 ** Installing from Source
 - Clone the source repository:
     #+begin_src sh
-      git clone https://github.com/ubolonton/emacs-tree-sitter
+      git clone https://github.com/emacs-tree-sitter/elisp-tree-sitter
     #+end_src
 
 - Add its =core=, =lisp= and =langs= directories to ~load-path~:
@@ -169,10 +169,10 @@ Syntax-aware language-agnostic mechanisms are meant to be defined by ~tree-sitte
 
 Language major modes use these generic mechanisms to provide functionalities specific to their languages. Currently, there are *not many language major modes* built on top of ~tree-sitter~. An example is [[https://github.com/emacs-csharp/csharp-mode/][csharp-mode]].
 
-For the full list of languages bundled by ~tree-sitter-langs~, see the submodules under its [[https://github.com/ubolonton/tree-sitter-langs/tree/master/repos][repos/]] directory.
+For the full list of languages bundled by ~tree-sitter-langs~, see the submodules under its [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/repos][repos/]] directory.
 
 {{% notice warning %}}
-Binaries for older versions were hosted on bintray, which was [[https://www.infoq.com/news/2021/02/jfrog-jcenter-bintray-closure/][shut down]]. If you install from source, you should update the code to a newer version whose binaries are hosted [[https://github.com/ubolonton/emacs-tree-sitter/releases][on GitHub]].
+Binaries for older versions were hosted on bintray, which was [[https://www.infoq.com/news/2021/02/jfrog-jcenter-bintray-closure/][shut down]]. If you install from source, you should update the code to a newer version whose binaries are hosted [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases][on GitHub]].
 
 If, for some reason, you cannot update, the older binaries can be downloaded from [[https://elpa.ubolonton.org/packages/bin/][here]].
 {{% /notice %}}
@@ -200,7 +200,7 @@ To enable it whenever possible (assuming the language major modes were already i
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
 
-The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.com/ubolonton/tree-sitter-langs/tree/master/queries][queries]] for some languages:
+The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][queries]] for some languages:
 - C
 - C++
 - *CSS*
@@ -215,7 +215,7 @@ The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.co
 - *TypeScript*
 
 {{% notice info %}}
-Most of the [[https://github.com/ubolonton/tree-sitter-langs/tree/master/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
+Most of the [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
 
 Contributions to highlighting queries are welcome.
 {{% /notice %}}
@@ -468,7 +468,7 @@ When a node matches multiple patterns in a highlighting query, earlier patterns 
 /Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~. It plays a similar role to ~font-lock-add-keywords~.
 
 {{% notice info %}}
-The language bundle ~tree-sitter-langs~ provides [[https://github.com/ubolonton/emacs-tree-sitter/tree/master/langs/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
+The language bundle ~tree-sitter-langs~ provides [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/tree/master/langs/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
 {{% /notice %}}
 
 * Core APIs
@@ -488,7 +488,7 @@ Emacs Tree-sitter is split into 2 packages:
 {{% notice warning %}}
 In older versions, the core APIs were prefixed with =ts-=, and provided by ~tree-sitter-core.el~. They are still available as deprecated aliases, but will eventually be removed.
 
-This was changed to [[https://github.com/melpa/melpa/pull/7112#issuecomment-703136075][conform with MELPA's conventions]] and to avoid [[https://github.com/ubolonton/emacs-tree-sitter/issues/35][naming conflicts with ~ts.el~]].
+This was changed to [[https://github.com/melpa/melpa/pull/7112#issuecomment-703136075][conform with MELPA's conventions]] and to avoid [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/35][naming conflicts with ~ts.el~]].
 {{% /notice %}}
 
 Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers][own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
