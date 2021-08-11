@@ -33,7 +33,8 @@ If you want to build additional (or all) grammars from source, or work on the co
 
 ### Building grammars from source
 
-- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation) (if you don't use NodeJS, you can download the binary directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases)):
+- Install NodeJS. It is needed to generate the grammar code from the JavaScript DSL. The recommended tool to manage NodeJS is [volta](https://volta.sh/).
+- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).)
     ```bash
     # XXX: CLI versions 0.20+ cannot currently be used yet, due to this breaking change https://github.com/tree-sitter/tree-sitter/pull/1157.
     # For yarn user
