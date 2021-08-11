@@ -59,7 +59,7 @@ Example setting:
          (dyn-file (format "tsc-dyn.%s" ext))
          (gz-file (format "%s.gz" dyn-file))
          (uncompressed? (version< "0.7.0" version))
-         (url (format "https://github.com/ubolonton/emacs-tree-sitter/releases/download/%s/%s"
+         (url (format "https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases/download/%s/%s"
                       version (if uncompressed? dyn-file gz-file))))
     (message "Downloading %s" url)
     (if uncompressed?

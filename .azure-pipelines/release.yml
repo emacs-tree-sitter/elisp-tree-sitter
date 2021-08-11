@@ -11,7 +11,7 @@ resources:
     type: github
     name: ubolonton/emacs-module-rs
     ref: azure-pipelines
-    endpoint: ubolonton
+    endpoint: emacs-tree-sitter
 
 jobs:
 
@@ -65,4 +65,4 @@ jobs:
   - template: steps/-package.yml
   - template: steps/-github-release.yml
     parameters:
-      endpoint: github.com_ubolonton
+      endpoint: emacs-tree-sitter

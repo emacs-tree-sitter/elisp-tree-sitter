@@ -318,7 +318,7 @@ tree is held (since nodes internally reference the tree)."
     (tsc-test-use-lang 'javascript)
     (tsc-test-tree-sexp '(program (expression_statement (string))))))
 
-;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
+;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
 (ert-deftest buffer-input::narrowing ()
   (tsc-test-with-file "bin/build"
     (sh-mode)
@@ -389,7 +389,7 @@ tree is held (since nodes internally reference the tree)."
                        capture-names))))))
 
 (ert-deftest query::validation ()
-  ;; https://github.com/ubolonton/emacs-tree-sitter/issues/125
+  ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/125
   (should (tsc-make-query (tree-sitter-require 'rust)
                           [(unary_expression (identifier)* @variable)])))
 
@@ -470,7 +470,7 @@ tree is held (since nodes internally reference the tree)."
         (should (null (next-single-property-change 1 'face)))))))
 
 (ert-deftest hl::with-font-lock-mode-disabled ()
-  ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+  ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74
   (with-current-buffer (find-file (tsc-test-full-path "lisp/test-files/hl.py"))
     (tree-sitter-hl-mode)
     (font-lock-mode -1)

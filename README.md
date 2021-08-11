@@ -1,6 +1,6 @@
-# emacs-tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
+# ELisp Tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
 [![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://ubolonton.github.io/emacs-tree-sitter/)
-[![Build Status](https://dev.azure.com/ubolonton/emacs-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/ubolonton/emacs-tree-sitter/_build/latest?definitionId=2&branchName=master)
+[![Build Status](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
 
 This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library. It requires Emacs 25.1 or above, built with dynamic module support.
 
@@ -33,7 +33,8 @@ If you want to build additional (or all) grammars from source, or work on the co
 
 ### Building grammars from source
 
-- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation) (if you don't use NodeJS, you can download the binary directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases)):
+- Install NodeJS. It is needed to generate the grammar code from the JavaScript DSL. The recommended tool to manage NodeJS is [volta](https://volta.sh/).
+- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).)
     ```bash
     # XXX: CLI versions 0.20+ cannot currently be used yet, due to this breaking change https://github.com/tree-sitter/tree-sitter/pull/1157.
     # For yarn user
@@ -104,8 +105,8 @@ Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
 
 ## Contribution
 
-Contributions are welcomed. Please take a look at the [issue list](https://github.com/ubolonton/emacs-tree-sitter/issues) for ideas, or [create a new issue](https://github.com/ubolonton/emacs-tree-sitter/issues/new) to describe any idea you have for improvement.
+Contributions are welcomed. Please take a look at the [issue list](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues) for ideas, or [create a new issue](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/new) to describe any idea you have for improvement.
 
-For language-specific issues/features, please check out [tree-sitter-langs](https://github.com/ubolonton/tree-sitter-langs) instead.
+For language-specific issues/features, please check out [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs) instead.
 
 Show respect and empathy towards others. Both technical empathy and general empathy are highly valued.

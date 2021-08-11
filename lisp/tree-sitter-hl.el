@@ -608,7 +608,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; value of `font-lock-ensure-function', calling `font-lock-ensure' will
     ;; signal an error. For example, this happens when org-mode's code blocks
     ;; are highlighted). Therefore, we disabled that hack. See
-    ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+    ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74
     ))
 
 (defun tree-sitter-hl--teardown ()

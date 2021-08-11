@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ## [0.15.1] - 2021-03-20
-- Fixed some invalid query patterns [causing SIGABRT](https://github.com/ubolonton/emacs-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
+- Fixed some invalid query patterns [causing SIGABRT](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
 - Used keywords to represent auxiliary (invisible) node types. For example: `:end`, `:_expression`.
 
 ## [0.15.0] - 2021-03-15
@@ -25,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.13.0] - 2020-12-29
 - Upgraded `emacs` crate to [0.15.0](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.15.0) to improve performance on Emacs 27+.
-- Fixed the [highlighting error when exporting org as html](https://github.com/ubolonton/emacs-tree-sitter/issues/74), by removing the hack that allows `tree-sitter-hl` to work without (a major mode) setting up `font-lock-defaults`.
+- Fixed the [highlighting error when exporting org as html](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74), by removing the hack that allows `tree-sitter-hl` to work without (a major mode) setting up `font-lock-defaults`.
 
 ## [0.12.2] - 2020-12-15
 - Added warning after upgrading `tsc` if it requires a new version of the dynamic module `tsc-dyn`, but an older version was already loaded.
@@ -33,11 +33,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.12.1] - 2020-11-04
 - Fixed incorrect parsing when after-change's start position is not the same as before-change's start position. For example, this happens when calling `upcase-region` on a region whose first character is already upcased.
-- Upgraded `emacs` crate to [0.14.1](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.14.1) to fix the [compilation error on Rust 1.47](https://github.com/ubolonton/emacs-tree-sitter/issues/62).
-- Upgraded `tree-sitter` crate to 0.17.1 to [fix](https://github.com/tree-sitter/tree-sitter/issues/790) [handling of repeated field names in queries](https://github.com/ubolonton/emacs-tree-sitter/issues/67).
+- Upgraded `emacs` crate to [0.14.1](https://github.com/ubolonton/emacs-module-rs/releases/tag/0.14.1) to fix the [compilation error on Rust 1.47](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/62).
+- Upgraded `tree-sitter` crate to 0.17.1 to [fix](https://github.com/tree-sitter/tree-sitter/issues/790) [handling of repeated field names in queries](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/67).
 
 ## [0.12.0] - 2020-10-13
-- Moved the core APIs from `tree-sitter-core.el` into their own package `tsc`, to prepare for [distribution through MELPA](https://github.com/melpa/melpa/pull/7112). Also changed their prefix from `ts-` to `tsc-`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
+- Moved the core APIs from `tree-sitter-core.el` into their own package `tsc`, to prepare for [distribution through MELPA](https://github.com/melpa/melpa/pull/7112). Also changed their prefix from `ts-` to `tsc-`, to avoid [conflict with `ts.el`](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/35).
 
 ## [0.11.1] - 2020-10-03
 - Made `tree-sitter-hl-mode` a "no-op" when `tree-sitter-hl-default-patterns` is nil.
@@ -90,7 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed incorrect parsing caused by misunderstandings of Emacs's clumsy change tracking machinery.
 
 ## [0.6.0] - 2020-04-11
-- Renamed `ts-parse` into `ts-parse-chunks`, to avoid [conflict with `ts.el`](https://github.com/ubolonton/emacs-tree-sitter/issues/35).
+- Renamed `ts-parse` into `ts-parse-chunks`, to avoid [conflict with `ts.el`](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/35).
 - Added library `tree-sitter-query`, which enables interactively building queries.
 
 ## [0.5.0] - 2020-03-17
@@ -119,28 +119,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.1...HEAD
-[0.15.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.15.0...0.15.1
-[0.15.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.14.0...0.15.0
-[0.14.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.1...0.14.0
-[0.13.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.13.0...0.13.1
-[0.13.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.2...0.13.0
-[0.12.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.1...0.12.2
-[0.12.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.12.0...0.12.1
-[0.12.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.1...0.12.0
-[0.11.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.11.0...0.11.1
-[0.11.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.10.0...0.11.0
-[0.10.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.2...0.10.0
-[0.9.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.1...0.9.2
-[0.9.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.9.0...0.9.1
-[0.9.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.3...0.9.0
-[0.8.3]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.2...0.8.3
-[0.8.2]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.1...0.8.2
-[0.8.1]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.8.0...0.8.1
-[0.8.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.7.0...0.8.0
-[0.7.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.6.0...0.7.0
-[0.6.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.5.0...0.6.0
-[0.5.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.4.0...0.5.0
-[0.4.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.3.0...0.4.0
-[0.3.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.2.0...0.3.0
-[0.2.0]: https://github.com/ubolonton/emacs-tree-sitter/compare/0.1.0...0.2.0
+[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.1...HEAD
+[0.15.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.0...0.15.1
+[0.15.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.14.0...0.15.0
+[0.14.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.13.1...0.14.0
+[0.13.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.13.0...0.13.1
+[0.13.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.12.2...0.13.0
+[0.12.2]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.12.1...0.12.2
+[0.12.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.12.0...0.12.1
+[0.12.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.11.1...0.12.0
+[0.11.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.11.0...0.11.1
+[0.11.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.10.0...0.11.0
+[0.10.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.9.2...0.10.0
+[0.9.2]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.9.1...0.9.2
+[0.9.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.9.0...0.9.1
+[0.9.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.8.3...0.9.0
+[0.8.3]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.8.2...0.8.3
+[0.8.2]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.8.1...0.8.2
+[0.8.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.8.0...0.8.1
+[0.8.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.6.0...0.7.0
+[0.6.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.2.0...0.3.0
+[0.2.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.1.0...0.2.0
