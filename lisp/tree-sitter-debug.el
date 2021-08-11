@@ -76,6 +76,7 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   ;; TODO: Re-render only affected nodes.
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer
+      (buffer-disable-undo)
       (setq buffer-read-only t)
       (let (buffer-read-only)
         (erase-buffer)
