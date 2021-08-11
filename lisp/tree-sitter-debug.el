@@ -76,8 +76,10 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   ;; TODO: Re-render only affected nodes.
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer
-      (erase-buffer)
-      (tree-sitter-debug--display-node (tsc-root-node tree) 0))))
+      (setq buffer-read-only t)
+      (let (buffer-read-only)
+        (erase-buffer)
+        (tree-sitter-debug--display-node (tsc-root-node tree) 0)))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."
