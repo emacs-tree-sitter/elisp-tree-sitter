@@ -98,8 +98,8 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   "Tear down syntax tree debugging in the current buffer."
   (remove-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree :local)
   (when (buffer-live-p tree-sitter-debug--tree-buffer)
-     (kill-buffer tree-sitter-debug--tree-buffer)
-     (setq tree-sitter-debug--tree-buffer nil)))
+    (kill-buffer tree-sitter-debug--tree-buffer)
+    (setq tree-sitter-debug--tree-buffer nil)))
 
 ;;;###autoload
 (define-minor-mode tree-sitter-debug-mode
