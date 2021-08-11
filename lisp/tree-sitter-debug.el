@@ -77,7 +77,6 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   (when-let ((tree tree-sitter-tree))
     (with-current-buffer tree-sitter-debug--tree-buffer
       (buffer-disable-undo)
-      (setq buffer-read-only t)
       (let (buffer-read-only)
         (erase-buffer)
         (tree-sitter-debug--display-node (tsc-root-node tree) 0)))))
@@ -89,7 +88,8 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
           (get-buffer-create (format "tree-sitter-tree: %s" (buffer-name)))))
   (let ((source-buffer (current-buffer)))
     (with-current-buffer tree-sitter-debug--tree-buffer
-      (setq tree-sitter-debug--source-code-buffer source-buffer)))
+      (setq tree-sitter-debug--source-code-buffer source-buffer
+            buffer-read-only t)))
   (add-hook 'tree-sitter-after-change-functions #'tree-sitter-debug--display-tree nil :local)
   (add-hook 'kill-buffer-hook #'tree-sitter-debug--teardown nil :local)
   (display-buffer tree-sitter-debug--tree-buffer)
