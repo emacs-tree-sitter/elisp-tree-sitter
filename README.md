@@ -1,5 +1,5 @@
 # ELisp Tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
-[![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://ubolonton.github.io/emacs-tree-sitter/)
+[![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://emacs-tree-sitter.github.io/)
 [![Build Status](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
 
 This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library. It requires Emacs 25.1 or above, built with dynamic module support.
@@ -14,7 +14,7 @@ The author of tree-sitter articulated its merits a lot better in this [Strange L
 
 ## Installation
 
-See the [installation section](https://ubolonton.github.io/emacs-tree-sitter/installation/) in the documentation.
+See the [installation section](https://emacs-tree-sitter.github.io/installation/) in the documentation.
 
 If you want to hack on `emacs-tree-sitter` itself, see the next section instead.
 

@@ -81,7 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Made `tree-sitter-hl-mode` work without a major mode.
 - Add more highlighting faces to `tree-sitter-hl`.
 - Made `tree-sitter-core` automatically download `tree-sitter-dyn` binary when first compiled/loaded.
-- Added [documentation](https://ubolonton.github.io/emacs-tree-sitter/).
+- Added [documentation](https://emacs-tree-sitter.github.io/).
 
 ## [0.7.0] - 2020-05-02
 - Added `global-tree-sitter-mode`.
