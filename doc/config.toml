@@ -1,5 +1,5 @@
 # XXX: Hugo, or its themes/plugins don't work well with relativeURLs
-baseURL = "https://ubolonton.github.io/emacs-tree-sitter"
+baseURL = "https://emacs-tree-sitter.github.io"
 # relativeURLs = true
 
 languageCode = "en-us"
