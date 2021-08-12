@@ -1,7 +1,14 @@
 trigger:
-- master
-- ci
-- azure-pipelines
+  branches:
+    include:
+    - master
+    - ci
+    - azure-pipelines
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
+    - doc
 
 pr:
 - master
