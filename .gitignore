@@ -1,7 +1,2 @@
-/target
-**/*.rs.bk
 **/*.elc*
 **/.cask
-
-core/tsc-dyn.*
-core/DYN-VERSION
