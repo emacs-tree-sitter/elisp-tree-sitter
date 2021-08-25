@@ -10,7 +10,7 @@ core_root="$PROJECT_ROOT/core"
 (
     cd "$core_root"
 
-    target=${1:-debug}
+    target=${1:-release}
     case $target in
         (release)
             cargo build --all --release

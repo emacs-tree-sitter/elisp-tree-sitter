@@ -7,11 +7,11 @@ $core_root = "$project_root\core"
 Push-Location $core_root
 $target = $args[0]
 
-if ($target -eq "release") {
-    cargo build --all --release
-} else {
-    $target = "debug"
+if ($target -eq "debug") {
     cargo build --all
+} else {
+    $target = "release"
+    cargo build --all --release
 }
 
 Copy-Item "target\$target\${module_name}.dll" "${module_renamed}.dll"
