@@ -1,8 +1,8 @@
 [submodule "langs"]
 	path = langs
-	url = https://github.com/ubolonton/tree-sitter-langs
+	url = https://github.com/emacs-tree-sitter/tree-sitter-langs
 	ignore = all
 
 [submodule "doc/themes/docdock"]
 	path = doc/themes/docdock
-	url = https://github.com/ubolonton/hugo-theme-docdock
+	url = https://github.com/emacs-tree-sitter/hugo-theme-docdock
