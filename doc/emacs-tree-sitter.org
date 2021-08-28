@@ -104,7 +104,7 @@ To enable it for all supported major modes:
 
 For the full list of supported major modes, check the variable ~tree-sitter-major-mode-language-alist~.
 
-# ~tree-sitter-node-at-point~
+# ~tree-sitter-node-at-pos~
 # ~tree-sitter-save-excursion~
 
 ** Turn on Syntax Highlighting
@@ -593,14 +593,14 @@ As described in the previous section, the ~-named-~  variants of the functions i
 - ~tsc-get-nth-child~ /~node nth~/ :: <br>
 - ~tsc-get-nth-named-child~ /~node nth~/ :: Get a child node by its 0-based index (any, or named only).
     #+begin_src emacs-lisp
-      (let ((func (tree-sitter-node-at-point 'function_item)))
+      (let ((func (tree-sitter-node-at-pos 'function_item)))
         (tsc-get-nth-child func 0)        ; An "fn" node
         (tsc-get-nth-named-child func 0)) ; An 'identifier node
     #+end_src
 - ~tsc-get-child-by-field~ /~node field~/ :: Certain node types assign unique field names to specific child nodes. This function allows retrieving child nodes by their field names, instead of by their indexes. The field name should be specified as a keyword.
     #+begin_src emacs-lisp
       ;; Get name of the current function definition.
-      (let ((func (tree-sitter-node-at-point 'function_item)))
+      (let ((func (tree-sitter-node-at-pos 'function_item)))
         (tsc-node-text (tsc-get-child-by-field func :name)))
     #+end_src
     {{% notice info %}}In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#node-field-names][documentation]], due to the low-level nature of C and JSON, field names are specified as strings. Representing field names as keywords makes it more Lisp-idiomatic.{{% /notice %}}
@@ -671,7 +671,7 @@ TODO: Write this.
 - Variable: ~tree-sitter-major-mode-language-alist~ :: <br>
 - Variable: ~tree-sitter-language~ :: <br>
 - Variable: ~tree-sitter-tree~ :: <br>
-- Function: ~tree-sitter-node-at-point~ /~[node-type]~/ :: <br>
+- Function: ~tree-sitter-node-at-pos~ /~[node-type] [pos]~/ :: <br>
 
 ** Writing a Dependent Minor Mode
 See the docstring of ~tree-sitter--handle-dependent~.

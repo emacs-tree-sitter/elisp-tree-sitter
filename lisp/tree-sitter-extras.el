@@ -60,7 +60,7 @@ at roughly the same vertical screen position. If `pixel-scroll' is available and
 instead, to make this restoration exact."
   (declare (indent 0))
   `(let* ((p (point))
-          (old-node (tree-sitter-node-at-point))
+          (old-node (tree-sitter-node-at-pos))
           (steps (tsc--node-steps old-node))
           (delta (- p (tsc-node-start-position old-node)))
           (screen-line (- (count-screen-lines (window-start) p) 1))

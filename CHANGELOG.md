@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 - Reduced GC pressure by not making the text property `face` a list if there is only one face.
+- Recast `tree-sitter-node-at-point` as more general `tree-sitter-node-at-pos`, taking optional POS argument.
 
 ## [0.15.1] - 2021-03-20
 - Fixed some invalid query patterns [causing SIGABRT](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/125), by upgrading `tree-sitter` crate.
