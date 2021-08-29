@@ -429,7 +429,8 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
 (defun tree-sitter-hl--append-text-property (start end prop value &optional object)
   "Append VALUE to PROP of the text from START to END.
 This is similar to `font-lock-append-text-property', but deduplicates values. It
-also expects VALUE to be a single value, not a list."
+also expects VALUE to be a single value, not a list. Additionally, if PROP was
+previously nil, it will be set to VALUE, not (list VALUE)."
   (let (next prev)
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
@@ -444,7 +445,11 @@ also expects VALUE to be a single value, not a list."
         (setq prev (list prev)))
       (unless (memq value prev)
         (put-text-property start next prop
-                           (append prev (list value))
+                           ;; Reduce GC pressure by not making a list if it's
+                           ;; just a single face.
+                           (if prev
+                               (append prev (list value))
+                             value)
                            object))
       (setq start next))))
 

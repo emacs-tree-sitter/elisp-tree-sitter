@@ -67,6 +67,15 @@ If RESET is non-nil, also do another full parse and check again."
             (lambda () (should (not (null tree-sitter-tree)))))
   (tree-sitter-mode))
 
+(defun tsc--listify (x)
+  (if (listp x)
+      x
+    (list x)))
+
+(defun tsc--hl-at (pos face)
+  "Return t if text at POS is highlighted with FACE."
+  (memq face (tsc--listify (get-text-property pos 'face))))
+
 (defmacro tsc-test-with (lang-symbol var &rest body)
   "Eval BODY with VAR bound to a new parser for LANG-SYMBOL."
   (declare (indent 2))
@@ -410,8 +419,7 @@ tree is held (since nodes internally reference the tree)."
            (end (1+ beg)))
       (tree-sitter-hl--highlight-region beg end)
       (ert-info ("Highlighting a tiny region")
-        (should (memq 'tree-sitter-hl-face:function.macro
-                      (get-text-property beg 'face)))))))
+        (should (tsc--hl-at beg 'tree-sitter-hl-face:function.macro))))))
 
 (ert-deftest hl::hl-region-vs-query-region ()
   (tsc-test-lang-with-file 'javascript "lisp/test-files/hl-region-vs-query-region.js"
@@ -426,8 +434,7 @@ tree is held (since nodes internally reference the tree)."
         (setq id-beg (point)))
       (tree-sitter-hl--highlight-region 1 id-end)
       (ert-info ("Highlighting a region that cuts a pattern in halves")
-        (should (memq 'tree-sitter-hl-face:property.definition
-                      (get-text-property id-beg 'face)))
+        (should (tsc--hl-at id-beg 'tree-sitter-hl-face:property.definition))
         (should (eq (next-single-property-change id-beg 'face)
                     id-end))))))
 
@@ -447,7 +454,7 @@ tree is held (since nodes internally reference the tree)."
     (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
       (tree-sitter-hl-mode)
       (font-lock-ensure)
-      (should (memq 'tree-sitter-hl-face:keyword (get-text-property 1 'face)))))
+      (should (tsc--hl-at 1 'tree-sitter-hl-face:keyword))))
   (ert-info ("Keywords should not be highlighted if their capture name is disabled")
     (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
       ;; Disable keyword highlighting.
@@ -475,7 +482,7 @@ tree is held (since nodes internally reference the tree)."
     (tree-sitter-hl-mode)
     (font-lock-mode -1)
     (font-lock-ensure)
-    (should (memq 'tree-sitter-hl-face:function (get-text-property 6 'face)))))
+    (should (tsc--hl-at 6 'tree-sitter-hl-face:function))))
 
 (ert-deftest hl::bench ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
