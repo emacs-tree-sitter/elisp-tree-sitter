@@ -448,28 +448,6 @@ also expects VALUE to be a single value, not a list."
                            object))
       (setq start next))))
 
-(defun tree-sitter-hl--prepend-text-property (start end prop value &optional object)
-  "Prepend VALUE to PROP of the text from START to END.
-This is similar to `font-lock-prepend-text-property', but deduplicates values.
-It also expects VALUE to be a single value, not a list."
-  (let (next prev)
-    (while (/= start end)
-      (setq next (next-single-property-change start prop object end)
-            prev (get-text-property start prop object))
-      ;; Canonicalize old forms of face property.
-      (and (memq prop '(face font-lock-face))
-           (listp prev)
-           (or (keywordp (car prev))
-               (memq (car prev) '(foreground-color background-color)))
-           (setq prev (list prev)))
-      (unless (listp prev)
-        (setq prev (list prev)))
-      (unless (memq value prev)
-        (put-text-property start next prop
-                           (cons value prev)
-                           object))
-      (setq start next))))
-
 (defun tree-sitter-hl--highlight-capture (capture)
   "Highlight the given CAPTURE."
   (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
