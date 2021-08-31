@@ -228,7 +228,7 @@ If RESET is non-nil, also do another full parse and check again."
       (delete-region beg end)
       (tsc-test-tree-sexp orig-sexp :reset))))
 
-(ert-deftest minor-mode::node-at-point ()
+(ert-deftest minor-mode::node-at-pos ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
     (should (eq 'source_file (tsc-node-type (tree-sitter-node-at-pos 'source_file))))
     (should (eq 'identifier (tsc-node-type (tree-sitter-node-at-pos nil 370))))
