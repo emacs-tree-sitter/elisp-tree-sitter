@@ -230,7 +230,10 @@ If RESET is non-nil, also do another full parse and check again."
 
 (ert-deftest minor-mode::node-at-pos ()
   (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (should (eq 'use_declaration (tsc-node-type (tree-sitter-node-at-pos :named))))
     (should (eq 'source_file (tsc-node-type (tree-sitter-node-at-pos 'source_file))))
+    (should (equal "use" (tsc-node-type (tree-sitter-node-at-pos :anonymous))))
+    (should (null (tree-sitter-node-at-pos :anonymous (line-end-position))))
     (should (eq 'identifier (tsc-node-type (tree-sitter-node-at-pos nil 370))))
     (search-forward "erase_")
     (should (eq 'identifier (tsc-node-type (tree-sitter-node-at-pos))))
@@ -241,6 +244,8 @@ If RESET is non-nil, also do another full parse and check again."
     (should (null (tree-sitter-node-at-pos 'non-existing-node-type)))
     (search-forward "struc")
     (should (equal "struct" (tsc-node-type (tree-sitter-node-at-pos))))
+    (should (equal "struct" (tsc-node-type (tree-sitter-node-at-pos :anonymous))))
+    (should (eq 'struct_item (tsc-node-type (tree-sitter-node-at-pos :named))))
     (should (eq 'struct_item (tsc-node-type (tree-sitter-node-at-pos 'struct_item))))))
 
 (ert-deftest node::eq ()

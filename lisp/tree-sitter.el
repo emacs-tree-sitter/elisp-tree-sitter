@@ -274,20 +274,28 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
 ;;;###autoload
 (defun tree-sitter-node-at-pos (&optional node-type pos)
   "Return the smallest syntax node of type NODE-TYPE at POS.
-If NODE-TYPE is nil, return the smallest syntax node at POS.
-IF POS is nil, defaults to the point."
+NODE-TYPE may be a symbol, corresponding to a named syntax node; a string,
+corresponding to an anonymous node, or a keyword, holding a special value. For
+the special value `:named', return the smallest named node at POS. For the
+special value `:anonymous', return the smallest anonymous node at POS. IF POS is
+nil, POS defaults to the point. Whenever NODE-TYPE is non-nil (other than
+`:named'), it is possible for the function to return nil."
   (let* ((root (tsc-root-node tree-sitter-tree))
          (p (or pos (point)))
-         (node (tsc-get-descendant-for-position-range root p p)))
-    (if node-type
-        (let ((this node) result)
-          (while this
-            (if (equal node-type (tsc-node-type this))
-                (setq result this
-                      this nil)
-              (setq this (tsc-get-parent this))))
-          result)
-      node)))
+         (node (if (eq node-type :named)
+                   (tsc-get-named-descendant-for-position-range root p p)
+                 (tsc-get-descendant-for-position-range root p p))))
+    (pcase node-type
+      ('nil node)
+      (:named node)
+      (:anonymous (unless (tsc-node-named-p node) node))
+      (_ (let ((this node) result)
+           (while this
+             (if (equal node-type (tsc-node-type this))
+                 (setq result this
+                       this nil)
+               (setq this (tsc-get-parent this))))
+           result)))))
 
 (provide 'tree-sitter)
 ;;; tree-sitter.el ends here
