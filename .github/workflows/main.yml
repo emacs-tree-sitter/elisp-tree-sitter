@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - github-actions          # To test changes related to GitHub Actions.
+      - ci                      # To test all CI changes.
+    paths-ignore:
+      - '*.md'
+      - doc/**
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '*.md'
+      - doc/**
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-10.15
+          # - ubuntu-18.04
+          - ubuntu-20.04
+        emacs-version:
+          # - '25.3'
+          # - '26.3'
+          - '27.2'
+        include:
+          # # Older Emacs binaries for Windows don't have dynamic modules enabled.
+          # - os: windows-2016
+          #   emacs-version: '27.2'
+          - os: windows-2019
+            emacs-version: '27.2'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Rust
+        run: |
+          rustup install stable
+          rustc -Vv
+          cargo -V
+
+      - name: Set up LLVM
+        if: runner.os == 'Windows'
+        run: |
+          choco install llvm --version 8.0.0
+          echo "LIBCLANG_PATH=$env:SystemDrive\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - uses: purcell/setup-emacs@v3.0
+        if: runner.os != 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+      - uses: jcs090218/setup-emacs-windows@v4
+        if: runner.os == 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - name: Set up cask
+        if: runner.os != 'Windows'
+        run: |
+          git clone -b github-actions https://github.com/ubolonton/cask "$HOME"/.cask
+          echo "$HOME/.cask/bin" >> $GITHUB_PATH
+      - name: Set up cask (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git clone -b github-actions https://github.com/ubolonton/cask "$env:UserProfile\.cask"
+          echo "$env:UserProfile\.cask\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - run: bin/setup
+      - run: bin/build
+
+      - name: Check binaries
+        if: runner.os == 'Linux'
+        run: ldd tsc-dyn.so
+        working-directory: core
+        continue-on-error: true
+      - name: Check binaries
+        if: runner.os == 'macOS'
+        run: otool -L tsc-dyn.dylib
+        working-directory: core
+        continue-on-error: true
+
+      - name: Install tree-sitter CLI
+        run: npm install -g tree-sitter-cli@0.19.3
+      - run: bin/test
