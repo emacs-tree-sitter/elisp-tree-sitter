@@ -271,15 +271,24 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
 ;;;###autoload
 (define-obsolete-function-alias 'tree-sitter-node-at-point 'tree-sitter-node-at-pos "2021-08-30")
 
+(define-error 'tree-sitter-invalid-node-type "No such node-type")
+
 ;;;###autoload
-(defun tree-sitter-node-at-pos (&optional node-type pos)
+(defun tree-sitter-node-at-pos (&optional node-type pos ignore-invalid-type)
   "Return the smallest syntax node of type NODE-TYPE at POS.
 NODE-TYPE may be a symbol, corresponding to a named syntax node; a string,
 corresponding to an anonymous node, or a keyword, holding a special value. For
 the special value `:named', return the smallest named node at POS. For the
 special value `:anonymous', return the smallest anonymous node at POS. IF POS is
-nil, POS defaults to the point. Whenever NODE-TYPE is non-nil (other than
-`:named'), it is possible for the function to return nil."
+nil, POS defaults to the point. Unless IGNORE-INVALID-TYPE is non-nil, signal an
+error when a specified named NODE-TYPE does not exist in the current grammar.
+Whenever NODE-TYPE is non-nil (other than `:named'), it is possible for the
+function to return nil."
+  (when (and (not ignore-invalid-type)
+             node-type
+             (not (keywordp node-type)))
+    (when (= 0 (tsc-lang-node-type-id tree-sitter-language node-type))
+      (signal 'tree-sitter-invalid-node-type (list node-type))))
   (let* ((root (tsc-root-node tree-sitter-tree))
          (p (or pos (point)))
          (node (if (eq node-type :named)
