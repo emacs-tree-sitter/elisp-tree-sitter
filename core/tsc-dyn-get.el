@@ -17,7 +17,8 @@
 (require 'compile)
 
 (eval-when-compile
-  (require 'subr-x))
+  (require 'subr-x)
+  (require 'cl-lib))
 
 (eval-when-compile
   ;; Version string set by `tsc-dyn' when it's loaded.
@@ -43,6 +44,16 @@ Example setting:
 \(setq tsc-dyn-dir (expand-file-name \"tree-sitter/\" user-emacs-directory))"
   :group 'tsc
   :type 'directory)
+
+(defcustom tsc-dyn-get-from '(:github :compilation)
+  "Where the dynamic module binary should come from, in order of priority.
+
+For pre-built binaries, it attempts to get the requested version.
+
+For local compilation, a version mismatch only results in a warning."
+  :group 'tsc
+  :type '(set (const :tag "Binary from GitHub" :github)
+              (const :tag "Local Compilation" :compilation)))
 
 ;; TODO: Handle systems with no pre-built binaries better.
 (defun tsc-dyn-get--dir ()
@@ -71,7 +82,7 @@ Example setting:
                 (_ "libtsc_dyn"))))
     (format "%s.%s" base (tsc-dyn-get--ext))))
 
-(defun tsc-dyn-get--download (version)
+(defun tsc-dyn-get--github (version)
   "Download the pre-compiled VERSION of `tsc-dyn' module."
   (let* ((bin-dir (tsc-dyn-get--dir))
          (default-directory bin-dir)
@@ -93,6 +104,8 @@ Example setting:
       (let ((coding-system-for-write 'utf-8))
         (insert version)))))
 
+(define-error 'tsc-compile-error "Could not compile `tsc-dyn'")
+
 (defmacro tsc-dyn-get--compilation-to-stdout (condition &rest body)
   "Eval BODY forms with compilation output conditionally redirected to `princ'."
   (declare (indent 1))
@@ -106,8 +119,30 @@ Example setting:
     `(progn ,@body)))
 
 (defun tsc-dyn-get--build (&optional dir)
-  "Build the dynamic module `tsc-dyn' from source."
+  "Build the dynamic module `tsc-dyn' from source.
+
+When called during an attempt to load `tsc', or in batch mode, this blocks until
+compilation finishes.
+
+In other situations, this runs in the background, and prompts user for further
+action when done. If `tsc' has not been loaded, offers to load it. If it has
+already been loaded, offers to restart Emacs to be able to load the newly built
+`tsc-dyn'.
+
+On Windows, if `tsc-dyn' has already been loaded, compilation will fail because
+Windows doesn't allow overwriting opened dynamically-loaded libraries."
   (unless dir (setq dir tsc-dyn-dir))
+  (while (not (executable-find "cargo"))
+    (if noninteractive
+        (signal 'tsc-compile-error "Could not find `cargo' executable")
+      ;; TODO: Make a better prompt.
+      (unless (y-or-n-p
+               (format "Could not find `cargo' executable.
+Please press '%s' after installing the Rust toolchain (e.g. from https://rustup.rs/).
+Press '%s' to cancel. "
+                       (propertize "y" 'face 'bold)
+                       (propertize "n" 'face 'error)))
+        (signal 'tsc-compile-error "Compilation was cancelled"))))
   (tsc-dyn-get--compilation-to-stdout noninteractive
     (let* ((default-directory dir)
            proc
@@ -125,7 +160,8 @@ Example setting:
         (add-hook 'compilation-finish-functions
           (lambda (_buffer status)
             (unless (string= status "finished\n")
-              (error "Compiling tsc-dyn failed with status: %s" status))
+              (signal 'tsc-compile-error
+                      (list (format "Compilation failed with status: %s" status))))
             (message "Cleaning up")
             ;; TODO: Ask if the file exists.
             (let ((file (tsc-dyn-get--file)))
@@ -141,6 +177,8 @@ Example setting:
               (lambda () (ansi-color-apply-on-region ;; compilation-filter-start
                      (point-min)
                      (point-max)))))))
+      ;; TODO: If invoked during an attempt to load `tsc-dyn', block until done. Otherwise, execute
+      ;; in the background, and when done, ask user what to do: loading the module, or restart.
       (when noninteractive
         (while (not (memq (process-status proc) '(exit failed signal)))
           (sleep-for 0.1))))))
@@ -176,6 +214,87 @@ Example setting:
                   (tsc--try-load-dyn full-name)))
               load-path)))
 
+(defun tsc-dyn-get-ensure-1 (requested)
+  (let* ((default-directory (tsc-dyn-get--dir))
+         (recorded (when (file-exists-p
+                          tsc-dyn-get--version-file)
+                     (with-temp-buffer
+                       (let ((coding-system-for-read 'utf-8))
+                         (insert-file-contents
+                          tsc-dyn-get--version-file)
+                         (buffer-string)))))
+         (loaded (and (featurep 'tsc-dyn) tsc-dyn--version))
+         (load-path (nconc `(,tsc-dyn-dir) load-path))
+         (retrieve (lambda (source)
+                   (pcase source
+                     (:github (tsc-dyn-get--github requested))
+                     (:compilation (tsc-dyn-get--build))
+                     (_ (error "Don't know how to get `tsc-dyn' from source %s" source))))))
+    (cl-block nil
+      (dolist (source tsc-dyn-get-from)
+        (message "Trying to get `tsc-dyn' from %s (:loaded %s :recorded %s :requested %s)"
+                 source loaded recorded requested)
+        (with-demoted-errors "Could not get `tsc-dyn': %s"
+          (cond
+           (loaded (unless (version<= requested loaded)
+                     ;; TODO: On Windows, refuse to continue and ask user to set the requested version and
+                     ;; restart instead.
+                     (funcall retrieve source)
+                     ;; TODO: Ask user to restart.
+                     ))
+           (recorded (unless (and (version<= requested recorded)
+                                  (tsc-dyn--try-load))
+                       (funcall retrieve source)
+                       (tsc-dyn--try-load))))
+          ;; (pcase source
+          ;;   (:github (tsc-dyn-get-try-github version recorded loaded))
+          ;;   (:compilation (tsc-dyn-get-try-compilation version recorded loaded)))
+          )
+        (when (featurep 'tsc-dyn)
+          (cl-return))))))
+
+;;; TODO: Rename this and `tsc--try-load-dyn'.
+(defun tsc-dyn--try-load ()
+  (if (featurep 'tsc-dyn)
+      t
+    (when (eq system-type 'darwin)
+      (tsc--mac-load-dyn))
+    (require 'tsc-dyn nil :noerror)
+    (featurep 'tsc-dyn)))
+
+(defun tsc-dyn-get-try-github (requested recorded loaded)
+  (cl-block nil
+    (when loaded
+      (if (version<= requested loaded)
+          (cl-return)
+        ;; TODO: On Windows, refuse to download and ask user to set the requested version and
+        ;; restart instead.
+        (tsc-dyn-get--github requested)
+        ;; TODO: Ask user to restart.
+        ))
+    (when recorded
+      (unless (and (version<= requested recorded)
+                   (tsc-dyn--try-load))
+        (tsc-dyn-get--github requested)
+        (tsc-dyn--try-load)))))
+
+(defun tsc-dyn-get-try-compilation (requested recorded loaded)
+  (cl-block nil
+    (when loaded
+      (if (version<= requested loaded)
+          (cl-return)
+        ;; TODO: On Windows, refuse to compile and ask user to set the requested version and restart
+        ;; instead.
+        (tsc-dyn-get--build)
+        ;; TODO: Warn if built version < requested.
+        ;; TODO: Ask user to restart.
+        ))
+    (when recorded
+      (unless (and (version<= requested recorded)
+                   (tsc-dyn--try-load))
+        (tsc-dyn-get--build)
+        (tsc-dyn--try-load)))))
+
 (defun tsc-dyn-get-ensure (version)
   "Try to load a specific VERSION of  `tsc-dyn'.
 If it's not found, try to download it."
@@ -196,7 +315,7 @@ If it's not found, try to download it."
     (unless (string= current-version "LOCAL")
       (when (or (not current-version)
                 (version< current-version version))
-        (tsc-dyn-get--download version))))
+        (tsc-dyn-get--github version))))
   (let ((load-path (nconc `(,tsc-dyn-dir) load-path)))
     ;; XXX: We wanted a universal package containing binaries for all platforms,
     ;; so we used a unique extension for each. On macOS, we use`.dylib', which
@@ -207,7 +326,7 @@ If it's not found, try to download it."
     ;; If we could not load it (e.g. when the dynamic module was deleted, but the
     ;; version file was not), try downloading again.
     (unless (require 'tsc-dyn nil :noerror)
-      (tsc-dyn-get--download version))
+      (tsc-dyn-get--github version))
     ;; We should have the binary by now. Try to load for real.
     (unless (featurep 'tsc-dyn)
       (when (eq system-type 'darwin)
