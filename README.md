@@ -19,85 +19,58 @@ See the [installation section](https://emacs-tree-sitter.github.io/installation/
 If you want to hack on `emacs-tree-sitter` itself, see the next section instead.
 
 ## Setup for Development
+**Note**: On Windows, use Powershell instead of Bash or cmd.exe.
 
 - Clone this repo with the `--recursive` flag.
 - Add 3 of its directories to `load-path`: `core/`, `lisp/` and `langs/`.
 - Install [cask](https://cask.readthedocs.io).
-- Run `./bin/setup` (`.\bin\setup` on Windows).
+- Run `bin/setup`.
 
 If you want to hack on the high-level features (in Lisp) only:
 - Make changes to the `.el` files.
-- Add tests to `tree-sitter-tests.el` and run them with `./bin/test` (`.\bin\test` on Windows).
+- Add tests to `tree-sitter-tests.el` and run them with `bin/test`.
 
 If you want to build additional (or all) grammars from source, or work on the core dynamic module, see the next 2 sections.
 
 ### Building grammars from source
 
+**Note**: If you are only interested in building the grammar binaries, not the dynamic module, check out [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs#building-grammars-from-source).
+
 - Install NodeJS. It is needed to generate the grammar code from the JavaScript DSL. The recommended tool to manage NodeJS is [volta](https://volta.sh/).
-- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).)
+- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).) **Note: version 0.20+ cannot be used, as they introduced [a breaking change](https://github.com/tree-sitter/tree-sitter/pull/1157) in binary storage location.**
     ```bash
-    # XXX: CLI versions 0.20+ cannot currently be used yet, due to this breaking change https://github.com/tree-sitter/tree-sitter/pull/1157.
     # For yarn user
     yarn global add tree-sitter-cli@0.19.3
 
     # For npm user
     npm install -g tree-sitter-cli@0.19.3
     ```
-- Run:
+- Run `langs/script/compile`. For example:
     ```bash
-    # macOS/Linux: make ensure/<lang-name>
-    make ensure/rust
+    langs/script/compile rust
     ```
-    ```powershell
-    # Windows: .\bin\ensure-lang <lang-name>
-    .\bin\ensure-lang rust
-    ```
-- You can modify`tree-sitter-langs-repos` if the language you need is not declared there.
 
 ### Working on the dynamic module
 
 - Install the [Rust toolchain](https://rustup.rs/).
-- Install `clang`, to generate the raw Rust binding for `emacs-module.h`.
+- Install `clang`, to generate the raw Rust binding for `emacs-module.h`. On Windows, set `LIBCLANG_PATH` as well. For example:
+    ```powershell
+    $env:LIBCLANG_PATH = "$(scoop prefix llvm)\bin"
+    ```
 - Build:
     ```bash
-    # macOS/Linux
-    make build
-    ```
-    ```powershell
-    # Windows
-    .\bin\build
+    bin/build
     ```
 - Test:
     ```bash
-    # macOS/Linux
-    make test
-    ```
-    ```powershell
-    # Windows
-    .\bin\test
+    bin/test
     ```
 - Continuously rebuild and test on change (requires [cargo-watch](https://github.com/passcod/cargo-watch)):
     ```bash
-    # macOS/Linux
-    make watch
-    ```
-    ```powershell
-    # Windows
-    .\bin\test watch
+    bin/test watch
     ```
 
 To test against a different version of Emacs, set the environment variable `EMACS` (e.g. `EMACS=/snap/bin/emacs make test`).
-
-## Overall Plan
-
-Targeting lib authors:
-- Write a guide on using the tree-sitter APIs.
-
-Targeting end users:
-- Pick a language, make a "killer" minor mode that extends its major mode in multiple ways.
-- Make minor modes for most common languages.
-- Extract common patterns from the language minor modes into helper language-diagnostic minor modes.
-- Get a language major mode to use tree-sitter for optional features.
 
 ## Alternative
 
