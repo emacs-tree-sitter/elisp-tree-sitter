@@ -4,7 +4,7 @@ $project_root = (Get-Item $here).Parent.FullName
 if ($args[0] -eq "watch") {
     Push-Location "$project_root\core"
     try {
-        cargo watch -s "powershell ..\bin\build.ps1" -s "powershell ..\bin\test.ps1"
+        cargo watch -s "powershell -noprofile ..\bin\build.ps1" -s "powershell -noprofile ..\bin\test.ps1"
     } finally {
         Pop-Location
     }
