@@ -8,8 +8,8 @@ source "$here/env.bash"
 echo "[!!] Using Emacs binary from $(which $EMACS) version: $($EMACS --version)"
 if [[ $* == "watch" ]]; then
     (
-        cd "$PROJECT_ROOT"
-        cargo watch -s bin/build -s bin/test
+        cd "$PROJECT_ROOT/core"
+        cargo watch -s ../bin/build -s ../bin/test
     )
 else
     (
