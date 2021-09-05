@@ -3,8 +3,11 @@ $project_root = (Get-Item $here).Parent.FullName
 
 if ($args[0] -eq "watch") {
     Push-Location "$project_root\core"
-    cargo watch -s "powershell ..\bin\build.ps1" -s "powershell ..\bin\test.ps1"
-    Pop-Location
+    try {
+        cargo watch -s "powershell ..\bin\build.ps1" -s "powershell ..\bin\test.ps1"
+    } finally {
+        Pop-Location
+    }
 } else {
     # XXX: It seems that Emacs writes to stderr, so PowerShell thinks it's an error. Redirecting to
     # stdout alone doesn't help, because it's the processed stderr, which contain error records, not
@@ -21,12 +24,15 @@ if ($args[0] -eq "watch") {
     $ErrorActionPreference = 'Continue'
     emacs --version
     Push-Location $project_root
-    cask emacs --batch `
-      --directory "$project_root\core" `
-      --directory "$project_root\lisp" `
-      --directory "$project_root\langs" `
-      -l ert `
-      -l tree-sitter-tests.el `
-      -f ert-run-tests-batch-and-exit
-    Pop-Location
+    try {
+        cask emacs --batch `
+          --directory "$project_root\core" `
+          --directory "$project_root\lisp" `
+          --directory "$project_root\langs" `
+          -l ert `
+          -l tree-sitter-tests.el `
+          -f ert-run-tests-batch-and-exit
+    } finally {
+        Pop-Location
+    }
 }
