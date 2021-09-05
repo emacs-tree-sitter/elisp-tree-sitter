@@ -1,6 +1,7 @@
 # ELisp Tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
 [![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://emacs-tree-sitter.github.io/)
-[![Build Status](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
+[![Azure Pipelines](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
+[![GitHub Actions](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml/badge.svg)](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml)
 
 This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library. It requires Emacs 25.1 or above, built with dynamic module support.
 
