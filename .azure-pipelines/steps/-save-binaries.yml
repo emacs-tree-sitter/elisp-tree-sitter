@@ -1,6 +1,0 @@
-steps:
-- task: PublishPipelineArtifact@1
-  displayName: Save tsc-dyn.$(DYN_EXT)
-  inputs:
-    targetPath: core/tsc-dyn.$(DYN_EXT)
-    artifactName: tsc-dyn.$(DYN_EXT)

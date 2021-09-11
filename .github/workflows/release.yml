@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: macos-10.15
+            emacs-version: '27.2'
+            ext: dylib
+          - os: ubuntu-18.04
+            emacs-version: '27.2'
+            ext: so
+          - os: windows-2019
+            emacs-version: '27.2'
+            ext: dll
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Rust
+        run: |
+          rustup install stable
+          rustc -Vv
+          cargo -V
+
+      - uses: purcell/setup-emacs@v3.0
+        if: runner.os != 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+      - uses: jcs090218/setup-emacs-windows@v4
+        if: runner.os == 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - run: .github/script/setup-llvm
+      - run: .github/script/setup-cask
+
+      - run: bin/setup
+      - run: bin/build
+
+      - name: Inspect binary (Linux)
+        if: runner.os == 'Linux'
+        run: ldd tsc-dyn.so
+        working-directory: core
+        continue-on-error: true
+      - name: Inspect binary (macOS)
+        if: runner.os == 'macOS'
+        run: otool -L tsc-dyn.dylib
+        working-directory: core
+        continue-on-error: true
+      # Disabled because I don't know how to reliably determine MSVC toolchain paths.
+      # - name: Inspect binary (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: dumpbin /dependents tsc-dyn.dll
+      #   working-directory: core
+      #   continue-on-error: true
+
+      - name: Install tree-sitter CLI
+        run: npm install -g tree-sitter-cli@0.19.3
+      - run: bin/test
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: tsc-dyn
+          path: core/tsc-dyn.${{ matrix.ext }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: tsc-dyn
+
+      - run: ls -R
+
+      # TODO: Compute release notes from CHANGELOG.md.
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: |
+            tsc-dyn.*
