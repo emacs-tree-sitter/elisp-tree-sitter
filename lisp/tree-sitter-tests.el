@@ -238,10 +238,10 @@ If RESET is non-nil, also do another full parse and check again."
     (search-forward "erase_")
     (should (eq 'identifier (tsc-node-type (tree-sitter-node-at-pos))))
     (should (eq 'function_item (tsc-node-type (tree-sitter-node-at-pos 'function_item))))
-    (should (null (tree-sitter-node-at-pos "function_item")))
+    (should-error (tree-sitter-node-at-pos "function_item"))
     (should (null (tree-sitter-node-at-pos 'impl_item)))
-    ;; FIX: Signal an error for non-existing node types.
-    (should (null (tree-sitter-node-at-pos 'non-existing-node-type)))
+    (should (null (tree-sitter-node-at-pos 'non-existing-node-type nil 'ignore-invalid-type)))
+    (should-error (tree-sitter-node-at-pos 'non-existing-node-type nil))
     (search-forward "struc")
     (should (equal "struct" (tsc-node-type (tree-sitter-node-at-pos))))
     (should (equal "struct" (tsc-node-type (tree-sitter-node-at-pos :anonymous))))
