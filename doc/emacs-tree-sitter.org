@@ -93,8 +93,11 @@ The minor mode ~tree-sitter-mode~ provides a buffer-local syntax tree, which is 
 It can be toggled in a buffer by the command ~tree-sitter-mode~, or enabled through major mode hooks:
 
 #+begin_src emacs-lisp
+  (require 'tree-sitter-langs)
   (add-hook 'rust-mode-hook #'tree-sitter-mode)
 #+end_src
+
+The ~(require 'tree-sitter-langs)~ is needed for a number of variables to get initialized, such as ~tree-sitter-major-mode-language-alist~.
 
 To enable it for all supported major modes:
 
