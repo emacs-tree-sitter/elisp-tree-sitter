@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Print the release notes of a specific version. If a version is not explicitly specified, use the
+# latest annotated tag.
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+source "$here/env.bash"
+
+(
+    cd "$PROJECT_ROOT"
+    version=${1:-$(git describe --abbrev=0)}
+    emacs --batch --load bin/dev.el --eval "(princ (:release-notes \"$version\"))"
+)
