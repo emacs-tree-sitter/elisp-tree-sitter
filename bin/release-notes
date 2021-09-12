@@ -9,6 +9,6 @@ source "$here/env.bash"
 
 (
     cd "$PROJECT_ROOT"
-    version=${1:-$(git describe --abbrev=0)}
+    version=${1:-$(git describe --tags --abbrev=0)}
     emacs --batch --load bin/dev.el --eval "(princ (:release-notes \"$version\"))"
 )

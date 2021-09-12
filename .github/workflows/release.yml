@@ -83,14 +83,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: tsc-dyn
-
       - run: ls -R
 
-      # TODO: Compute release notes from CHANGELOG.md.
+      - uses: purcell/setup-emacs@v3.0
+        with:
+          version: '27.2'
+      - uses: actions/checkout@v2
+      - name: Generate release notes
+        run: bin/release-notes > RELEASE-NOTES
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           draft: true
+          body_path: RELEASE-NOTES
           files: |
             tsc-dyn.*
