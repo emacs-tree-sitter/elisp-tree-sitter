@@ -16,6 +16,7 @@
 (eval-when-compile
   (require 'subr-x))
 
+;;;###autoload
 (defun tree-sitter-cli-directory ()
   "Return tree-sitter CLI's directory, including the ending separator.
 This is the directory where the CLI tool keeps compiled lang definitions, among
@@ -27,6 +28,7 @@ other data."
         dir
       "~/.tree-sitter"))))
 
+;;;###autoload
 (defun tree-sitter-cli-bin-directory ()
   "Return the directory used by tree-sitter CLI to store compiled grammars."
   (file-name-as-directory

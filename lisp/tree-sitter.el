@@ -49,6 +49,7 @@ Use this to enable other minor modes that depends on the syntax tree."
   :type 'hook
   :group 'tree-sitter)
 
+;;;###autoload
 (defcustom tree-sitter-major-mode-language-alist nil
   "Alist that maps major modes to tree-sitter language names."
   :group 'tree-sitter

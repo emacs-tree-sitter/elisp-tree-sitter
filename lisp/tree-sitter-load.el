@@ -25,6 +25,7 @@
   "An alist of mappings from language name symbols to language objects.
 See `tree-sitter-require'.")
 
+;;;###autoload
 (defvar tree-sitter-load-path (list (tree-sitter-cli-bin-directory))
   "List of directories to search for shared libraries that define languages.")
 
