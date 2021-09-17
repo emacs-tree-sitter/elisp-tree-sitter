@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - '*.*.*'
+      - '!melpa-stable*'
 
 jobs:
   build:
