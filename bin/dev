@@ -1,0 +1,108 @@
+#! /bin/sh
+":"; exec emacs -Q --script "$0" -- "$@" # -*-emacs-lisp-*-
+
+;;; This file contains convenient dev commands that only need to work in macOS/Linux. (They may work
+;;; in Windows, but that'would be incidental.)
+;;;
+;;; Usage:
+;;;
+;;; script/dev release-notes
+;;; script/dev release-notes Unreleased
+;;;
+;;; script/dev current-version
+;;; script/dev bump-version
+
+(eval-when-compile
+  (require 'subr-x)
+  (require 'cl-lib))
+
+(defconst Cargo.toml "core/Cargo.toml")
+(defconst Cargo.lock "core/Cargo.lock")
+(defconst tsc.el "core/tsc.el")
+(defconst tree-sitter.el "lisp/tree-sitter.el")
+(defconst CHANGELOG.md "CHANGELOG.md")
+
+(defmacro -with-file-edits (file &rest body)
+  (declare (indent 1))
+  `(with-temp-file ,file
+     (message "Updating %s" ,file)
+     (insert-file-contents ,file)
+     ,@body))
+
+(defmacro -with-file-contents (file &rest body)
+  (declare (indent 1))
+  `(with-temp-buffer
+     (insert-file-contents ,file)
+     ,@body))
+
+(defun -release-notes (&optional version)
+  (let ((version (or version "Unreleased")))
+    (string-trim
+     (-with-file-contents CHANGELOG.md
+       (re-search-forward (format "## .*%s.*" version))
+       (forward-line)
+       (beginning-of-line)
+       (let ((start (point)))
+         (re-search-forward "^##")
+         (buffer-substring-no-properties start (1- (match-beginning 0))))))))
+
+(defun -current-version ()
+  (-with-file-contents tree-sitter.el
+    (re-search-forward "Version: \\(.*\\)")
+    (match-string 1)))
+
+(defun -next-version (v)
+  (let ((v (version-to-list v)))
+    (cl-incf (caddr v))
+    (apply #'format "%s.%s.%s" v)))
+
+(defun -modify-regexp (regexp text)
+  (re-search-forward regexp)
+  (replace-match text nil nil nil 1))
+
+(defun cmd:release-notes (&optional version)
+  "Print VERSION's release notes, defaulting to 'Unreleased'."
+  (princ (-release-notes version)))
+
+(defun cmd:bump-version (&optional next)
+  "Increase the patch version. This does not create a git tag."
+  (let* ((rel-notes (-release-notes))
+         (current (-current-version))
+         (next (or next (-next-version current)))
+         (time (decode-time (current-time)))
+         (date (format "%d-%02d-%02d" (nth 5 time) (nth 4 time) (nth 3 time))))
+    (unless (version< current next)
+      (error "Next version must be greater than current, got '%s' -> '%s'" current next))
+    (unless (= 3 (length (version-to-list next)))
+      (error "Next version must have the format <major>.<minor>.<patch>, got '%s'" next))
+    (if (string-empty-p rel-notes)
+        (warn "Release notes are empty!")
+      (message "Release notes:\n%s\n" rel-notes))
+    (message " Bumping version %s -> %s" current next)
+    (-with-file-edits Cargo.toml
+      (-modify-regexp "version *= *\"\\(.*\\)\"" next))
+    (-with-file-edits Cargo.lock
+      (search-forward "name = \"emacs-tree-sitter\"")
+      (-modify-regexp "version *= *\"\\(.*\\)\"" next))
+    (-with-file-edits tsc.el
+      (-modify-regexp "Version: *\\(.*\\)" next)
+      (-modify-regexp "tsc--dyn-version.*\"\\(.*\\)\"" next))
+    (-with-file-edits tree-sitter.el
+      (-modify-regexp "Version: *\\(.*\\)" next)
+      (-modify-regexp "Package-Requires:.*\(tsc *\"\\(.*\\)\"" next))
+    (-with-file-edits CHANGELOG.md
+      (search-forward "Unreleased")
+      (end-of-line)
+      (insert (format "\n\n## %s - %s" next date)))    ))
+
+(defun cmd:current-version ()
+  "Print the current version."
+  (princ (-current-version)))
+
+(defun -main (&rest args)
+  (when-let* ((cmd (car args))
+              (func (intern (format "cmd:%s" cmd))))
+    (apply func (cdr args))))
+
+(when (string= "--" (car argv))
+  (apply #'-main (cdr argv)))
