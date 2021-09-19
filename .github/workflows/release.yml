@@ -48,7 +48,7 @@ jobs:
       - run: bin/setup
       - run: bin/build
 
-      - run: script/inspect-binaries
+      - run: bin/inspect-binaries
         continue-on-error: true
 
       - name: Install tree-sitter CLI
