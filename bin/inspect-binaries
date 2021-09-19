@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+PROJECT_ROOT=$(cd "$here/.."; pwd)
+
+(
+    cd "$PROJECT_ROOT"
+    system=$(uname)
+
+    case $system in
+        (Linux)
+            ldd core/tsc-dyn.so
+            echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ldd "$(which emacs)"
+            ;;
+        (Darwin)
+            otool -L core/tsc-dyn.dylib
+            echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            otool -L "$(which emacs)"
+            ;;
+        (*)
+            echo "Unknown system $system"
+    esac
+)

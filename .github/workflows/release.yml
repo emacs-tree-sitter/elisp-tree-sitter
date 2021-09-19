@@ -48,22 +48,8 @@ jobs:
       - run: bin/setup
       - run: bin/build
 
-      - name: Inspect binary (Linux)
-        if: runner.os == 'Linux'
-        run: ldd tsc-dyn.so
-        working-directory: core
+      - run: script/inspect-binaries
         continue-on-error: true
-      - name: Inspect binary (macOS)
-        if: runner.os == 'macOS'
-        run: otool -L tsc-dyn.dylib
-        working-directory: core
-        continue-on-error: true
-      # Disabled because I don't know how to reliably determine MSVC toolchain paths.
-      # - name: Inspect binary (Windows)
-      #   if: runner.os == 'Windows'
-      #   run: dumpbin /dependents tsc-dyn.dll
-      #   working-directory: core
-      #   continue-on-error: true
 
       - name: Install tree-sitter CLI
         run: npm install -g tree-sitter-cli@0.19.3
