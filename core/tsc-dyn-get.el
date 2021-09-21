@@ -106,17 +106,110 @@ For local compilation, a version mismatch only results in a warning."
 
 (define-error 'tsc-compile-error "Could not compile `tsc-dyn'")
 
+(defun tsc-dyn-get--log (face &rest args)
+  (let ((str (propertize (apply #'format args) 'face face 'font-lock-face face))
+        (inhibit-read-only t))
+    (if noninteractive
+        (progn (princ str) (princ "\n"))
+      (insert str)
+      (insert "\n"))))
+
 (defmacro tsc-dyn-get--compilation-to-stdout (condition &rest body)
   "Eval BODY forms with compilation output conditionally redirected to `princ'."
   (declare (indent 1))
-  (if condition
-      (let ((print-stdout (make-symbol "print-stdout")))
-        `(let ((,print-stdout (lambda (_proc string) (princ string))))
+  (let ((print-stdout (make-symbol "print-stdout")))
+    `(if ,condition
+         (let ((,print-stdout (lambda (_proc string) (princ string))))
            (advice-add 'compilation-filter :override ,print-stdout)
            (unwind-protect
                (progn ,@body)
-             (advice-remove 'compilation-filter ,print-stdout))))
-    `(progn ,@body)))
+             (advice-remove 'compilation-filter ,print-stdout)))
+       ,@body)))
+
+(defun tsc-dyn-get--build-cleanup (dir)
+  ;; TODO: Ask if the file exists.
+  (let ((default-directory dir)
+        (file (tsc-dyn-get--file)))
+    (when (file-exists-p file)
+      (delete-file file))
+    (rename-file (format "target/release/%s" (tsc-dyn-get--out-file))
+                 file)
+    (delete-directory "target" :recursive)))
+
+(defun tsc-dyn-get--build-sync-1 (dir)
+  (if noninteractive
+      (tsc-dyn-get--compilation-to-stdout t
+        (let ((proc (tsc-dyn-get--build-async dir)))
+          (condition-case s
+              (while (accept-process-output proc))
+            (quit (interrupt-process proc)
+                  (signal (car s) (cdr s))))))
+    (ignore-errors
+      (kill-buffer "*tsc-dyn compilation*"))
+    (let ((comp-buffer (get-buffer-create "*tsc-dyn compilation*")))
+      (if-let ((window (get-buffer-window comp-buffer)))
+          (select-window window)
+        (pop-to-buffer comp-buffer))
+      (with-current-buffer comp-buffer
+        (let ((default-directory dir))
+          (condition-case s
+              (progn
+                (insert (propertize "Compiling tsc-dyn\n" 'face 'compilation-info))
+                (call-process "cargo"
+                              nil (if noninteractive
+                                      '(:file "/dev/stdout")
+                                    t) :redisplay
+                              "build" "--release")
+                (goto-char (point-max))
+                (insert (propertize "Cleaning up\n" 'face 'compilation-info))
+                (tsc-dyn-get--build-cleanup dir)
+                (insert (propertize "Done!" 'face 'success)))
+            (quit (insert (propertize "Cancelled!" 'face 'error))
+                  (signal (car s) (cdr s)))))))))
+
+;; XXX: We don't use `call-process' because the process it creates is not killed
+;; when Emacs exits in batch mode. That's probably an Emacs's bug.
+(defun tsc-dyn-get--build-sync (dir)
+  (tsc-dyn-get--compilation-to-stdout noninteractive
+    (let ((proc (tsc-dyn-get--build-async dir)))
+      (condition-case s
+          (while (accept-process-output proc)
+            (unless noninteractive
+              (redisplay)))
+        (quit (interrupt-process proc)
+              (with-current-buffer (process-buffer proc)
+                (tsc-dyn-get--log 'error "Cancelled"))
+              (signal (car s) (cdr s)))))))
+
+(defun tsc-dyn-get--build-async (dir)
+  (let* ((default-directory dir)
+         proc
+         (compilation-start-hook (lambda (p) (setq proc p)))
+         (compilation-auto-jump-to-first-error nil)
+         (compilation-scroll-output t)
+         (comp-buffer (compilation-start
+                       "cargo build --release"
+                       nil (lambda (_) "*tsc-dyn compilation*"))))
+    (with-current-buffer comp-buffer
+      (setq-local compilation-error-regexp-alist nil)
+      (add-hook 'compilation-finish-functions
+        (lambda (_buffer status)
+          (unless (string= status "finished\n")
+            (signal 'tsc-compile-error
+                    (list (format "Compilation failed with status: %s" status))))
+          (tsc-dyn-get--log 'compilation-info "Cleaning up")
+          (tsc-dyn-get--build-cleanup dir)
+          (tsc-dyn-get--log 'success "Done"))
+        nil :local)
+      (unless noninteractive
+        (when (functionp 'ansi-color-apply-on-region)
+          (add-hook 'compilation-filter-hook
+            (lambda () (ansi-color-apply-on-region ;; compilation-filter-start
+                   (point-min)
+                   (point-max)))))))
+    proc))
+
+(defvar tsc-dyn--sync nil)
 
 (defun tsc-dyn-get--build (&optional dir)
   "Build the dynamic module `tsc-dyn' from source.
@@ -143,48 +236,15 @@ Press '%s' to cancel. "
                        (propertize "y" 'face 'bold)
                        (propertize "n" 'face 'error)))
         (signal 'tsc-compile-error "Compilation was cancelled"))))
-  (tsc-dyn-get--compilation-to-stdout noninteractive
-    (let* ((default-directory dir)
-           proc
-           (compilation-start-hook (lambda (p) (setq proc p)))
-           (compilation-auto-jump-to-first-error nil)
-           (compilation-scroll-output t)
-           (comp-buffer (compilation-start
-                         "cargo build --release"
-                         nil (lambda (_) "*tsc-dyn compilation*"))))
-      (if-let ((window (get-buffer-window comp-buffer)))
-          (select-window window)
-        (pop-to-buffer comp-buffer))
-      (with-current-buffer comp-buffer
-        (setq-local compilation-error-regexp-alist nil)
-        (add-hook 'compilation-finish-functions
-          (lambda (_buffer status)
-            (unless (string= status "finished\n")
-              (signal 'tsc-compile-error
-                      (list (format "Compilation failed with status: %s" status))))
-            (message "Cleaning up")
-            ;; TODO: Ask if the file exists.
-            (let ((file (tsc-dyn-get--file)))
-              (when (file-exists-p file)
-                (delete-file file))
-              (rename-file (format "target/release/%s" (tsc-dyn-get--out-file))
-                           file))
-            (delete-directory "target" :recursive))
-          nil :local)
-        (unless noninteractive
-          (when (functionp 'ansi-color-apply-on-region)
-            (add-hook 'compilation-filter-hook
-              (lambda () (ansi-color-apply-on-region ;; compilation-filter-start
-                     (point-min)
-                     (point-max)))))))
-      ;; TODO: If invoked during an attempt to load `tsc-dyn', block until done. Otherwise, execute
-      ;; in the background, and when done, ask user what to do: loading the module, or restart.
-      (when noninteractive
-        (while (not (memq (process-status proc) '(exit failed signal)))
-          (sleep-for 0.1))))))
+  (if (or noninteractive
+          (not (featurep 'tsc-dyn))
+          tsc-dyn--sync)
+      (tsc-dyn-get--build-sync dir)
+    (tsc-dyn-get--build-async dir)))
 
-(defun tsc--try-load-dyn (file)
-  "Try loading `tsc-dyn' from FILE. Return nil if the file does not exist."
+(defun tsc--module-load-noerror (file)
+  "Try loading `tsc-dyn' from FILE.
+Return nil if the file does not exist, or is not a loadable shared library."
   (or (featurep 'tsc-dyn)
       (condition-case _
           (module-load file)
@@ -197,22 +257,26 @@ Press '%s' to cancel. "
 ;; value as variable is void: Ïúíþ".
 ;;
 ;; Therefore, we need to search for the file and use `module-load' directly.
-(defun tsc--mac-load-dyn ()
+(defun tsc-dyn--try-load-mac ()
   "Search and load the dynamic module on macOS."
   (let ((file "tsc-dyn.dylib"))
-    ;; Try directory containing `load-file-name'. Typical case.
+    ;; Try directory containing `load-file-name'. Typical case. TODO: Remove
+    ;; this special case.
     (when load-file-name
-      (tsc--try-load-dyn (concat (file-name-directory load-file-name)
+      (tsc--module-load-noerror (concat (file-name-directory load-file-name)
                                  file)))
-    ;; Try working directory (e.g. when invoked by `cask').
-    (tsc--try-load-dyn file)
+    ;; Try working directory (e.g. when invoked by `cask'). TODO: Modifying load
+    ;; path when using `cask' instead.
+    (tsc--module-load-noerror file)
     ;; Fall back to `load-path'.
     (seq-find (lambda (dir)
                 (let ((full-name (concat (file-name-as-directory
                                           (expand-file-name dir))
                                          file)))
-                  (tsc--try-load-dyn full-name)))
+                  (tsc--module-load-noerror full-name)))
               load-path)))
+
+(defvar tsc-dyn--loading nil)
 
 (defun tsc-dyn-get-ensure-1 (requested)
   (let* ((default-directory (tsc-dyn-get--dir))
@@ -225,50 +289,44 @@ Press '%s' to cancel. "
                          (buffer-string)))))
          (loaded (and (featurep 'tsc-dyn) tsc-dyn--version))
          (load-path (nconc `(,tsc-dyn-dir) load-path))
-         (retrieve (lambda (source)
-                   (pcase source
-                     (:github (tsc-dyn-get--github requested))
-                     (:compilation (tsc-dyn-get--build))
-                     (_ (error "Don't know how to get `tsc-dyn' from source %s" source))))))
+         retrieve)
     (cl-block nil
       (dolist (source tsc-dyn-get-from)
         (message "Trying to get `tsc-dyn' from %s (:loaded %s :recorded %s :requested %s)"
                  source loaded recorded requested)
+        (setq retrieve (pcase source
+                         (:github (lambda () (tsc-dyn-get--github requested)))
+                         (:compilation (lambda () (tsc-dyn-get--build)))
+                         (_ (error "Don't know how to get `tsc-dyn' from source %s" source))))
         (with-demoted-errors "Could not get `tsc-dyn': %s"
           (cond
            (loaded (unless (version<= requested loaded)
-                     ;; TODO: On Windows, refuse to continue and ask user to set the requested version and
-                     ;; restart instead.
-                     (funcall retrieve source)
+                     ;; TODO: On Windows, refuse to continue and ask user to set
+                     ;; the requested version and restart instead.
+                     (funcall retrieve)
                      ;; TODO: Ask user to restart.
                      ))
            (recorded (unless (and (version<= requested recorded)
                                   (tsc-dyn--try-load))
-                       (funcall retrieve source)
-                       (tsc-dyn--try-load))))
-          ;; (pcase source
-          ;;   (:github (tsc-dyn-get-try-github version recorded loaded))
-          ;;   (:compilation (tsc-dyn-get-try-compilation version recorded loaded)))
-          )
+                       (funcall retrieve)
+                       (tsc-dyn--try-load)))))
         (when (featurep 'tsc-dyn)
-          (cl-return))))))
+          (cl-return t))))))
 
-;;; TODO: Rename this and `tsc--try-load-dyn'.
 (defun tsc-dyn--try-load ()
   (if (featurep 'tsc-dyn)
       t
     (when (eq system-type 'darwin)
-      (tsc--mac-load-dyn))
-    (require 'tsc-dyn nil :noerror)
-    (featurep 'tsc-dyn)))
+      (tsc-dyn--try-load-mac))
+    (require 'tsc-dyn nil :noerror)))
 
 (defun tsc-dyn-get-try-github (requested recorded loaded)
   (cl-block nil
     (when loaded
       (if (version<= requested loaded)
           (cl-return)
-        ;; TODO: On Windows, refuse to download and ask user to set the requested version and
-        ;; restart instead.
+        ;; TODO: On Windows, refuse to download and ask user to set the
+        ;; requested version and restart instead.
         (tsc-dyn-get--github requested)
         ;; TODO: Ask user to restart.
         ))
@@ -283,8 +341,8 @@ Press '%s' to cancel. "
     (when loaded
       (if (version<= requested loaded)
           (cl-return)
-        ;; TODO: On Windows, refuse to compile and ask user to set the requested version and restart
-        ;; instead.
+        ;; TODO: On Windows, refuse to compile and ask user to set the requested
+        ;; version and restart instead.
         (tsc-dyn-get--build)
         ;; TODO: Warn if built version < requested.
         ;; TODO: Ask user to restart.
@@ -322,7 +380,7 @@ If it's not found, try to download it."
     ;; is more sensible than `.so' anyway.
     (unless (featurep 'tsc-dyn)
       (when (eq system-type 'darwin)
-        (tsc--mac-load-dyn)))
+        (tsc-dyn--try-load-mac)))
     ;; If we could not load it (e.g. when the dynamic module was deleted, but the
     ;; version file was not), try downloading again.
     (unless (require 'tsc-dyn nil :noerror)
@@ -330,7 +388,7 @@ If it's not found, try to download it."
     ;; We should have the binary by now. Try to load for real.
     (unless (featurep 'tsc-dyn)
       (when (eq system-type 'darwin)
-        (tsc--mac-load-dyn))
+        (tsc-dyn--try-load-mac))
       (require 'tsc-dyn)))
   ;; Check if and older version was already loaded.
   (unless (string= version tsc-dyn--version)
