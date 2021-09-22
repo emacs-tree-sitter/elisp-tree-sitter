@@ -47,6 +47,7 @@ fn _make_query(language: Language, source: String, tag_assigner: Value) -> Resul
             QueryErrorKind::Capture => error::tsc_query_invalid_capture,
             QueryErrorKind::Predicate => error::tsc_query_invalid_predicate,
             QueryErrorKind::Structure => error::tsc_query_invalid_structure,
+            QueryErrorKind::Language => error::tsc_lang_abi_error,
         };
         let byte_pos: BytePos = err.offset.into();
         let point: Point = tree_sitter::Point { row: err.row, column: err.column }.into();
