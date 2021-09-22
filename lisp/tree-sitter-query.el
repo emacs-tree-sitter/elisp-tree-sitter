@@ -37,6 +37,11 @@
   "Face for highlight captures in matches."
   :group 'tree-sitter-query)
 
+(defun tree-sitter--echo (&rest args)
+  "Display a transient message, without logging it in the `*Messages*' buffer."
+  (let (message-log-max)
+    (apply #'message args)))
+
 (defun tree-sitter-query--highlight-capture (capture)
   "Highlight CAPTURE in the current buffer."
   (pcase-let* ((`(,capture-symbol . ,captured-node) capture)
@@ -62,15 +67,15 @@
               ((tsc-query-invalid-node-type
                 tsc-query-invalid-field
                 tsc-query-invalid-capture)
-               (message "%s: %s" (get (car err) 'error-message) (cadr err))
+               (tree-sitter--echo "%s: %s" (get (car err) 'error-message) (cadr err))
                nil)
               (tsc-query-invalid
-               (message "%s" (get (car err) 'error-message))
+               (tree-sitter--echo "%s" (get (car err) 'error-message))
                nil)))
            (root-node (tsc-root-node tree-sitter-tree))
            (captures (tsc-query-captures query root-node #'tsc--buffer-substring-no-properties)))
         (if (= (length captures) 0)
-            (message "No captures found")
+            (tree-sitter--echo "No captures found")
           (mapc #'tree-sitter-query--highlight-capture captures))))))
 
 (defun tree-sitter-query--after-change (&rest _args)
