@@ -426,31 +426,38 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
     (goto-char (cdr query-region))
     (setcdr query-region (line-beginning-position 2))))
 
-(defun tree-sitter-hl--append-text-property (start end prop value &optional object)
-  "Append VALUE to PROP of the text from START to END.
-This is similar to `font-lock-append-text-property', but deduplicates values. It
-also expects VALUE to be a single value, not a list. Additionally, if PROP was
-previously nil, it will be set to VALUE, not (list VALUE)."
+;; TODO: Allow certain faces to be the "base face", which can be appended.
+(defvar tree-sitter-hl--composable-faces nil)
+
+(defun tree-sitter-hl--append-face (start end face)
+  "Append FACE to the `face' property of the text from START to END.
+This is a simplified version of `font-lock-append-text-property', with several
+differences:
+- It expects FACE to be a single value, not a list.
+- If `face' is currently nil, it will be set to FACE, not (list FACE).
+- If `face' is currently non-nil, FACE will not be appended, unless
+  `tree-sitter-hl--composable-faces' is non nil."
   (let (next prev)
     (while (/= start end)
-      (setq next (next-single-property-change start prop object end)
-            prev (get-text-property start prop object))
+      (setq next (next-single-property-change start 'face nil end)
+            prev (get-text-property start 'face))
       ;; Canonicalize old forms of face property.
-      (and (memq prop '(face font-lock-face))
-           (listp prev)
+      (and (listp prev)
            (or (keywordp (car prev))
                (memq (car prev) '(foreground-color background-color)))
            (setq prev (list prev)))
-      (unless (listp prev)
-        (setq prev (list prev)))
-      (unless (memq value prev)
-        (put-text-property start next prop
-                           ;; Reduce GC pressure by not making a list if it's
-                           ;; just a single face.
-                           (if prev
-                               (append prev (list value))
-                             value)
-                           object))
+      (if tree-sitter-hl--composable-faces
+          (progn
+            (unless (listp prev)
+              (setq prev (list prev)))
+            (unless (memq face prev)
+              (put-text-property start next 'face
+                                 ;; Reduce GC pressure by not making a list if
+                                 ;; it's just a single face.
+                                 (if prev
+                                     (append prev (list face))
+                                   face))))
+        (put-text-property start next 'face (or prev face)))
       (setq start next))))
 
 (defun tree-sitter-hl--highlight-capture (capture)
@@ -458,9 +465,9 @@ previously nil, it will be set to VALUE, not (list VALUE)."
   (pcase-let ((`(,face . (,beg-byte . ,end-byte)) capture))
     ;; TODO: If it's a function, call it with (BEG END).
     (when (facep face)
-      (tree-sitter-hl--append-text-property
+      (tree-sitter-hl--append-face
        (byte-to-position beg-byte)
-       (byte-to-position end-byte) 'face face))))
+       (byte-to-position end-byte) face))))
 
 ;;; TODO: Handle embedded DSLs (injections).
 (defun tree-sitter-hl--highlight-region (beg end &optional loudly)
