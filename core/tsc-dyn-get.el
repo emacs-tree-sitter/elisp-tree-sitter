@@ -82,6 +82,9 @@ For local compilation, a version mismatch only results in a warning."
                 (_ "libtsc_dyn"))))
     (format "%s.%s" base (tsc-dyn-get--ext))))
 
+(defun tsc-dyn-get--log (format-string &rest args)
+  (apply #'message (concat "tsc-dyn-get: " format-string) args))
+
 (defun tsc-dyn-get--github (version)
   "Download the pre-compiled VERSION of `tsc-dyn' module."
   (let* ((bin-dir (tsc-dyn-get--dir))
@@ -92,7 +95,7 @@ For local compilation, a version mismatch only results in a warning."
          (uncompressed? (version< "0.7.0" version))
          (url (format "https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases/download/%s/%s"
                       version (if uncompressed? dyn-file gz-file))))
-    (message "Downloading %s" url)
+    (tsc-dyn-get--log "Downloading %s" url)
     ;; TODO: Handle HTTP errors.
     (if uncompressed?
         (url-copy-file url dyn-file :ok-if-already-exists)
@@ -274,8 +277,8 @@ Return nil if the file does not exist, or is not a loadable shared library."
          get-new)
     (cl-block nil
       (dolist (source tsc-dyn-get-from)
-        (message "Trying to get `tsc-dyn' from %s (:loaded %s :recorded %s :requested %s)"
-                 source loaded recorded requested)
+        (tsc-dyn-get--log "Trying to get from %s (:loaded %s :recorded %s :requested %s)"
+                          source loaded recorded requested)
         (setq get-new (pcase source
                         (:github (lambda () (tsc-dyn-get--github requested)))
                         (:compilation (lambda () (tsc-dyn-get--build)))
@@ -283,21 +286,21 @@ Return nil if the file does not exist, or is not a loadable shared library."
         (with-demoted-errors "Could not get `tsc-dyn': %s"
           (cond
            (loaded (if (version<= requested loaded)
-                       (message "Loaded version already satisfies requested")
+                       (tsc-dyn-get--log "Loaded version already satisfies requested")
                      ;; TODO: On Windows, refuse to continue and ask user to set
                      ;; the requested version and restart instead.
-                     (message "Loaded version is older than requested -> getting new")
+                     (tsc-dyn-get--log "Loaded version is older than requested -> getting new")
                      (funcall get-new)
                      ;; TODO: Ask user to restart.
                      ))
            (recorded (if (version<= requested recorded)
                          (progn
-                           (message "Recorded version already satifies requested -> loading")
+                           (tsc-dyn-get--log "Recorded version already satifies requested -> loading")
                            (unless (tsc-dyn--try-load)
-                             (message "Could not load -> getting new")
+                             (tsc-dyn-get--log "Could not load -> getting new")
                              (funcall get-new)
                              (tsc-dyn--try-load)))
-                       (message "Recorded version is older than requested -> getting new")
+                       (tsc-dyn-get--log "Recorded version is older than requested -> getting new")
                        (funcall get-new)
                        (tsc-dyn--try-load)))))
         (when (featurep 'tsc-dyn)
