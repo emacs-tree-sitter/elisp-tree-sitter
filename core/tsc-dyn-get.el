@@ -314,7 +314,9 @@ Return nil if the file does not exist, or is not a loadable shared library."
                              (tsc-dyn--try-load)))
                        (tsc-dyn-get--log "Recorded version is older than requested -> getting new")
                        (funcall get-new)
-                       (tsc-dyn--try-load))))
+                       (tsc-dyn--try-load)))
+           (t (funcall get-new)
+              (tsc-dyn--try-load)))
           (when (featurep 'tsc-dyn)
             (cl-return t)))))))
 
