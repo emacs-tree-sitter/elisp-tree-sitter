@@ -85,6 +85,19 @@ For local compilation, a version mismatch only results in a warning."
 (defun tsc-dyn-get--log (format-string &rest args)
   (apply #'message (concat "tsc-dyn-get: " format-string) args))
 
+(defun tsc-dyn-get--check-http (&rest _args)
+  (when-let ((status (bound-and-true-p url-http-response-status)))
+    (when (>= status 400)
+      (error "Got HTTP status code %s" status))))
+
+;; TODO: Find a better way to make `url-copy-file' handle bad HTTP status codes.
+(defun tsc-dyn-get--url-copy-file (&rest args)
+  "A wrapper around `url-copy-file' that signals errors for bad HTTP statuses."
+  (advice-add 'mm-dissect-buffer :before #'tsc-dyn-get--check-http)
+  (unwind-protect
+      (apply #'url-copy-file args)
+    (advice-remove 'mm-dissect-buffer #'tsc-dyn-get--check-http)))
+
 (defun tsc-dyn-get--github (version)
   "Download the pre-compiled VERSION of `tsc-dyn' module."
   (let* ((bin-dir (tsc-dyn-get--dir))
@@ -96,10 +109,9 @@ For local compilation, a version mismatch only results in a warning."
          (url (format "https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases/download/%s/%s"
                       version (if uncompressed? dyn-file gz-file))))
     (tsc-dyn-get--log "Downloading %s" url)
-    ;; TODO: Handle HTTP errors.
     (if uncompressed?
-        (url-copy-file url dyn-file :ok-if-already-exists)
-      (url-copy-file url gz-file)
+        (tsc-dyn-get--url-copy-file url dyn-file :ok-if-already-exists)
+      (tsc-dyn-get--url-copy-file url gz-file)
       (when (file-exists-p dyn-file)
         (delete-file dyn-file))
       ;; XXX: Uncompressing with `dired-compress-file' doesn't work on Windows.
