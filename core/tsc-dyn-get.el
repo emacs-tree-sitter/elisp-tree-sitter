@@ -86,6 +86,20 @@ For local compilation, a version mismatch only results in a warning."
 (defun tsc-dyn-get--log (format-string &rest args)
   (apply #'message (concat "tsc-dyn-get: " format-string) args))
 
+(defun tsc-dyn-get--warn (&rest args)
+  (display-warning 'tsc-dyn-get (apply #'format args) :emergency))
+
+(defun tsc-dyn-get--recorded-version ()
+  (let ((default-directory (tsc-dyn-get--dir)))
+    (when (file-exists-p tsc-dyn-get--version-file)
+      (with-temp-buffer
+        (let ((coding-system-for-read 'utf-8))
+          (insert-file-contents tsc-dyn-get--version-file)
+          (buffer-string))))))
+
+(defun tsc-dyn-get--loaded-version ()
+  (and (featurep 'tsc-dyn) (bound-and-true-p tsc-dyn--version)))
+
 (defun tsc-dyn-get--check-http (&rest _args)
   (when-let ((status (bound-and-true-p url-http-response-status)))
     (when (>= status 400)
@@ -234,7 +248,7 @@ already been loaded, offers to restart Emacs to be able to load the newly built
 
 On Windows, if `tsc-dyn' has already been loaded, compilation will fail because
 Windows doesn't allow overwriting opened dynamically-loaded libraries."
-  (unless dir (setq dir tsc-dyn-dir))
+  (unless dir (setq dir tsc--dir))
   (while (not (executable-find "cargo"))
     (if noninteractive
         (signal 'tsc-compile-error "Could not find `cargo' executable")
@@ -260,6 +274,8 @@ Return nil if the file does not exist, or is not a loadable shared library."
           (module-load file)
         (module-open-failed nil))))
 
+;; On macOS, we use`.dylib', which is more sensible than `.so'.
+;;
 ;; XXX: Using `require' after setting`module-file-suffix' to `.dylib' results in
 ;; "Cannot open load file: No such file or directory, tsc-dyn".
 ;;
@@ -293,22 +309,16 @@ Return nil if the file does not exist, or is not a loadable shared library."
       (tsc-dyn--try-load-mac))
     (require 'tsc-dyn nil :noerror)))
 
-(defun tsc-dyn-get-ensure-1 (requested)
+(defun tsc-dyn-get-ensure (requested)
   (let* ((default-directory (tsc-dyn-get--dir))
-         (recorded (when (file-exists-p
-                          tsc-dyn-get--version-file)
-                     (with-temp-buffer
-                       (let ((coding-system-for-read 'utf-8))
-                         (insert-file-contents
-                          tsc-dyn-get--version-file)
-                         (buffer-string)))))
-         (loaded (and (featurep 'tsc-dyn) tsc-dyn--version))
-         (load-path (nconc `(,tsc-dyn-dir) load-path))
+         (recorded (tsc-dyn-get--recorded-version))
+         (loaded (tsc-dyn-get--loaded-version))
+         (load-path (cons (tsc-dyn-get--dir) load-path))
          (tsc-dyn-get--force-sync t)
          get-new)
     (cl-block nil
       (dolist (source tsc-dyn-get-from)
-        (tsc-dyn-get--log "Trying to get from %s (:loaded %s :recorded %s :requested %s)"
+        (tsc-dyn-get--log "Using source %s (:loaded %s :recorded %s :requested %s)"
                           source loaded recorded requested)
         (setq get-new (pcase source
                         (:github (lambda () (tsc-dyn-get--github requested)))
@@ -317,7 +327,7 @@ Return nil if the file does not exist, or is not a loadable shared library."
         (with-demoted-errors "Could not get `tsc-dyn': %s"
           (cond
            (loaded (if (version<= requested loaded)
-                       (tsc-dyn-get--log "Loaded version already satisfies requested")
+                       (tsc-dyn-get--log "Loaded version already satisfies requested -> skipping")
                      ;; TODO: On Windows, refuse to continue and ask user to set
                      ;; the requested version and restart instead.
                      (tsc-dyn-get--log "Loaded version is older than requested -> getting new")
@@ -328,6 +338,7 @@ Return nil if the file does not exist, or is not a loadable shared library."
                          (progn
                            (tsc-dyn-get--log "Recorded version already satifies requested -> loading")
                            (unless (tsc-dyn--try-load)
+                             ;; The version file may have been accidentally deleted.
                              (tsc-dyn-get--log "Could not load -> getting new")
                              (funcall get-new)
                              (tsc-dyn--try-load)))
@@ -337,9 +348,18 @@ Return nil if the file does not exist, or is not a loadable shared library."
            (t (funcall get-new)
               (tsc-dyn--try-load)))
           (when (featurep 'tsc-dyn)
-            (cl-return t)))))))
+            (cl-return)))))
+    (if (and loaded (version< loaded requested))
+        (tsc-dyn-get--warn "Version %s is requested, but %s was already loaded. Please try restarting Emacs."
+                           requested loaded)
+      (if-let ((loaded (tsc-dyn-get--loaded-version)))
+          (when (version< loaded requested)
+            (tsc-dyn-get--warn "Version %s is requested, but actual version after loading is %s."
+                               requested loaded))
+        (tsc-dyn-get--warn "Failed to get requested version %s." requested)))
+    (tsc-dyn-get--loaded-version)))
 
-(defun tsc-dyn-get-ensure (version)
+(defun tsc-dyn-get-ensure-0 (version)
   "Try to load a specific VERSION of  `tsc-dyn'.
 If it's not found, try to download it."
   ;; On Windows, we cannot overwrite the old dll file while it's opened
@@ -360,7 +380,7 @@ If it's not found, try to download it."
       (when (or (not current-version)
                 (version< current-version version))
         (tsc-dyn-get--github version))))
-  (let ((load-path (nconc `(,tsc-dyn-dir) load-path)))
+  (let ((load-path (nconc `(tsc-dyn-dir) load-path)))
     ;; XXX: We wanted a universal package containing binaries for all platforms,
     ;; so we used a unique extension for each. On macOS, we use`.dylib', which
     ;; is more sensible than `.so' anyway.
