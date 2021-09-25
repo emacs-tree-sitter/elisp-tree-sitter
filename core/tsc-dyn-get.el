@@ -352,6 +352,7 @@ Return nil if the file does not exist, or is not a loadable shared library."
     (if (and loaded (version< loaded requested))
         (tsc-dyn-get--warn "Version %s is requested, but %s was already loaded. Please try restarting Emacs."
                            requested loaded)
+      (tsc-dyn--try-load)
       (if-let ((loaded (tsc-dyn-get--loaded-version)))
           (when (version< loaded requested)
             (tsc-dyn-get--warn "Version %s is requested, but actual version after loading is %s."
