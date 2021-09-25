@@ -24,7 +24,8 @@
   ;; Version string set by `tsc-dyn' when it's loaded.
   (defvar tsc-dyn--version))
 
-(defconst tsc-dyn-get--version-file "DYN-VERSION")
+(defconst tsc-dyn-get--version-file "DYN-VERSION"
+  "File that records the version after getting the binary from a source.")
 
 (defconst tsc--dir (file-name-directory (or (locate-library "tsc.el") ""))
   "The directory where the library `tsc' is located.")
@@ -123,6 +124,7 @@ For local compilation, a version mismatch only results in a warning."
 (define-error 'tsc-compile-error "Could not compile `tsc-dyn'")
 
 (defun tsc-dyn-get--output (face &rest args)
+  (declare (indent 1))
   (let ((str (propertize (apply #'format args) 'face face 'font-lock-face face))
         (inhibit-read-only t))
     (if noninteractive
@@ -142,15 +144,39 @@ For local compilation, a version mismatch only results in a warning."
              (advice-remove 'compilation-filter ,print-stdout)))
        ,@body)))
 
-(defun tsc-dyn-get--build-cleanup (dir)
-  ;; TODO: Ask if the file exists.
-  (let ((default-directory dir)
-        (file (tsc-dyn-get--file)))
-    (when (file-exists-p file)
-      (delete-file file))
-    (rename-file (format "target/release/%s" (tsc-dyn-get--out-file))
-                 file)
-    (delete-directory "target" :recursive)))
+(defun tsc-dyn-get--build-version ()
+  (thread-first (shell-command-to-string "cargo pkgid")
+    string-trim
+    (split-string "\[#:\]")
+    last car))
+
+(defun tsc-dyn-get--build-cleanup (comp-buffer status)
+  (with-current-buffer comp-buffer
+    (let* ((file (tsc-dyn-get--file))
+           (out-name (tsc-dyn-get--out-file))
+           (out-file (format "target/release/%s" out-name)))
+      (unless (string= status "finished\n")
+        (signal 'tsc-compile-error
+                (list (format "Compilation failed with status: %s" status))))
+      (tsc-dyn-get--output 'compilation-info
+        "Moving binary %s from build dir" out-name)
+      (condition-case _
+          (rename-file out-file file)
+        (file-already-exists
+         (delete-file file)
+         (rename-file out-file file)))
+      (tsc-dyn-get--output 'compilation-info
+        "Removing build dir")
+      (delete-directory "target" :recursive)
+      (tsc-dyn-get--output 'compilation-info
+        "Recording built version in %s" tsc-dyn-get--version-file)
+      (with-temp-file tsc-dyn-get--version-file
+        (let ((coding-system-for-write 'utf-8))
+          (insert (tsc-dyn-get--build-version))
+          ;; This is so that the built version is considered newer. TODO:
+          ;; Consider using `tsc-dyn-get-from' instead.
+          (insert ".1")))
+      (tsc-dyn-get--output 'success "Done"))))
 
 ;; XXX: We don't use `call-process' because the process it creates is not killed
 ;; when Emacs exits in batch mode. That's probably an Emacs's bug.
@@ -184,20 +210,13 @@ For local compilation, a version mismatch only results in a warning."
          (proc (get-buffer-process comp-buffer)))
     (with-current-buffer comp-buffer
       (setq-local compilation-error-regexp-alist nil)
-      (add-hook 'compilation-finish-functions
-        (lambda (_buffer status)
-          (unless (string= status "finished\n")
-            (signal 'tsc-compile-error
-                    (list (format "Compilation failed with status: %s" status))))
-          (tsc-dyn-get--output 'compilation-info "Cleaning up")
-          ;; TODO: Write DYN-VERSION.
-          (tsc-dyn-get--build-cleanup dir)
-          (tsc-dyn-get--output 'success "Done"))
-        nil :local)
+      (add-hook 'compilation-finish-functions #'tsc-dyn-get--build-cleanup
+                nil :local)
       (unless noninteractive
         (when (functionp 'ansi-color-apply-on-region)
           (add-hook 'compilation-filter-hook
-            (lambda () (ansi-color-apply-on-region (point-min) (point-max)))))))
+            (lambda () (ansi-color-apply-on-region (point-min) (point-max)))
+            nil :local))))
     proc))
 
 (defvar tsc-dyn-get--force-sync nil)
