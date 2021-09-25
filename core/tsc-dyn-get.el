@@ -186,10 +186,7 @@ For local compilation, a version mismatch only results in a warning."
         "Recording built version in %s" tsc-dyn-get--version-file)
       (with-temp-file tsc-dyn-get--version-file
         (let ((coding-system-for-write 'utf-8))
-          (insert (tsc-dyn-get--build-version))
-          ;; This is so that the built version is considered newer. TODO:
-          ;; Consider using `tsc-dyn-get-from' instead.
-          (insert ".1")))
+          (insert (tsc-dyn-get--build-version))))
       (tsc-dyn-get--output 'success "Done"))))
 
 ;; XXX: We don't use `call-process' because the process it creates is not killed

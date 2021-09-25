@@ -11,6 +11,7 @@
 
 ;;; Code:
 
+(setq tsc-dyn-get-from nil)
 (require 'tree-sitter)
 (require 'tree-sitter-debug)
 
