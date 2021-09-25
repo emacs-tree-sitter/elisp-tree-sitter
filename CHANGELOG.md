@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Added customization option `tsc-dyn-get-from`, which is a list of sources to get the dynamic module `tsc-dyn` from. Its default value is `(:github :compilation)`.
 
 ## [0.16.1] - 2021-12-11
 - Modified CI pipelines to publish additional pre-built dynamic modules. Their filenames include the platform they are built for. The files without platform in name will eventually be deprecated.

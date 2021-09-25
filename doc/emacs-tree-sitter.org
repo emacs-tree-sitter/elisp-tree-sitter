@@ -40,6 +40,8 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
 The methods below download pre-compiled binaries, so they only work for macOS, Linux and Windows, on x86_64 machines. For other systems, you will have to build from source.
 {{% /notice %}}
 
+# TODO: Document ~tsc-dyn-get-from~ and local compilation.
+
 ** Installing from MELPA
 - Run ~M-x package-refresh-contents~.
 - Install ~tree-sitter~ and ~tree-sitter-langs~ packages.

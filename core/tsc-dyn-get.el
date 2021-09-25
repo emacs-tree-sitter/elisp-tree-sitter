@@ -49,14 +49,19 @@ Example setting:
 (defcustom tsc-dyn-get-from '(:github :compilation)
   "Where the dynamic module binary should come from, in order of priority.
 
-For pre-built binaries, it attempts to get the requested version.
+For pre-built binaries, it attempts to download the requested version.
 
-For local compilation, a version mismatch only results in a warning."
+For local compilation, the Rust toolchain is required.
+
+If you want to manually get the dynamic module through another mechanism,
+instead of letting `tsc-dyn-get' automatically try to download/build it, set
+this to nil."
   :group 'tsc
   :type '(set (const :tag "Binary from GitHub" :github)
               (const :tag "Local Compilation" :compilation)))
 
-;; TODO: Handle systems with no pre-built binaries better.
+(defvar tsc-dyn-get--force-sync nil)
+
 (defun tsc-dyn-get--dir ()
   "Return the directory to put `tsc-dyn' module in."
   (or tsc-dyn-dir
@@ -75,14 +80,6 @@ For local compilation, a version mismatch only results in a warning."
   "Return the dynamic module filename, which is system-dependent."
   (format "tsc-dyn.%s" (tsc-dyn-get--ext)))
 
-;; TODO: Remove this when cargo allows specifying output file name.
-(defun tsc-dyn-get--out-file ()
-  "Return cargo's output filename, which is system-dependent."
-  (let ((base (pcase system-type
-                ('windows-nt "tsc_dyn")
-                (_ "libtsc_dyn"))))
-    (format "%s.%s" base (tsc-dyn-get--ext))))
-
 (defun tsc-dyn-get--log (format-string &rest args)
   (apply #'message (concat "tsc-dyn-get: " format-string) args))
 
@@ -90,6 +87,8 @@ For local compilation, a version mismatch only results in a warning."
   (display-warning 'tsc-dyn-get (apply #'format args) :emergency))
 
 (defun tsc-dyn-get--recorded-version ()
+  "Return the `tsc-dyn' version recorded in the manifest
+`tsc-dyn-get--version-file'."
   (let ((default-directory (tsc-dyn-get--dir)))
     (when (file-exists-p tsc-dyn-get--version-file)
       (with-temp-buffer
@@ -98,7 +97,11 @@ For local compilation, a version mismatch only results in a warning."
           (buffer-string))))))
 
 (defun tsc-dyn-get--loaded-version ()
+  "Return the currently loaded version of `tsc-dyn'."
   (and (featurep 'tsc-dyn) (bound-and-true-p tsc-dyn--version)))
+
+;;; ----------------------------------------------------------------------------
+;;; Pre-built binaries downloaded through HTTP.
 
 (defun tsc-dyn-get--check-http (&rest _args)
   (when-let ((status (bound-and-true-p url-http-response-status)))
@@ -114,7 +117,9 @@ For local compilation, a version mismatch only results in a warning."
     (advice-remove 'mm-dissect-buffer #'tsc-dyn-get--check-http)))
 
 (defun tsc-dyn-get--github (version)
-  "Download the pre-compiled VERSION of `tsc-dyn' module."
+  "Download the pre-compiled VERSION of `tsc-dyn' from GitHub.
+This function records the downloaded version in the manifest
+`tsc-dyn-get--version-file'."
   (let* ((bin-dir (tsc-dyn-get--dir))
          (default-directory bin-dir)
          (_ (unless (file-directory-p bin-dir) (make-directory bin-dir)))
@@ -135,9 +140,12 @@ For local compilation, a version mismatch only results in a warning."
       (let ((coding-system-for-write 'utf-8))
         (insert version)))))
 
+;;; ----------------------------------------------------------------------------
+;;; Local compilation.
+
 (define-error 'tsc-compile-error "Could not compile `tsc-dyn'")
 
-(defun tsc-dyn-get--output (face &rest args)
+(defun tsc-dyn-get--build-output (face &rest args)
   (declare (indent 1))
   (let ((str (propertize (apply #'format args) 'face face 'font-lock-face face))
         (inhibit-read-only t))
@@ -159,12 +167,25 @@ For local compilation, a version mismatch only results in a warning."
        ,@body)))
 
 (defun tsc-dyn-get--build-version ()
+  "Return the dynamic module's version after asking 'cargo'."
   (thread-first (shell-command-to-string "cargo pkgid")
     string-trim
     (split-string "\[#:\]")
     last car))
 
+;; TODO: Remove this when cargo allows specifying output file name.
+(defun tsc-dyn-get--out-file ()
+  "Return cargo's output filename, which is system-dependent."
+  (let ((base (pcase system-type
+                ('windows-nt "tsc_dyn")
+                (_ "libtsc_dyn"))))
+    (format "%s.%s" base (tsc-dyn-get--ext))))
+
 (defun tsc-dyn-get--build-cleanup (comp-buffer status)
+  "Clean up after compiling the dynamic module `tsc-dyn'.
+This function copies the built binary to the appropriate location, delete the
+build directory, and record the built version in the manifest
+`tsc-dyn-get--version-file'."
   (with-current-buffer comp-buffer
     (let* ((file (tsc-dyn-get--file))
            (out-name (tsc-dyn-get--out-file))
@@ -172,26 +193,27 @@ For local compilation, a version mismatch only results in a warning."
       (unless (string= status "finished\n")
         (signal 'tsc-compile-error
                 (list (format "Compilation failed with status: %s" status))))
-      (tsc-dyn-get--output 'compilation-info
+      (tsc-dyn-get--build-output 'compilation-info
         "Moving binary %s from build dir" out-name)
       (condition-case _
           (rename-file out-file file)
         (file-already-exists
          (delete-file file)
          (rename-file out-file file)))
-      (tsc-dyn-get--output 'compilation-info
+      (tsc-dyn-get--build-output 'compilation-info
         "Removing build dir")
       (delete-directory "target" :recursive)
-      (tsc-dyn-get--output 'compilation-info
+      (tsc-dyn-get--build-output 'compilation-info
         "Recording built version in %s" tsc-dyn-get--version-file)
       (with-temp-file tsc-dyn-get--version-file
         (let ((coding-system-for-write 'utf-8))
           (insert (tsc-dyn-get--build-version))))
-      (tsc-dyn-get--output 'success "Done"))))
+      (tsc-dyn-get--build-output 'success "Done"))))
 
 ;; XXX: We don't use `call-process' because the process it creates is not killed
 ;; when Emacs exits in batch mode. That's probably an Emacs's bug.
 (defun tsc-dyn-get--build-sync (dir)
+  "Build the dynamic module `tsc-dyn' and put it in DIR, blocking until done."
   ;; FIX: Figure out how to print the progress bar when run synchronously.
   (tsc-dyn-get--compilation-to-stdout noninteractive
     (let ((proc (tsc-dyn-get--build-async dir)))
@@ -203,13 +225,14 @@ For local compilation, a version mismatch only results in a warning."
                 (set-process-query-on-exit-flag proc nil)
                 (interrupt-process proc)
                 (with-current-buffer buf
-                  (tsc-dyn-get--output 'error "Cancelled")
+                  (tsc-dyn-get--build-output 'error "Cancelled")
                   ;; TODO: Don't wait for a fixed amount of time.
                   (sit-for 1)
                   (kill-buffer)))
               (signal (car s) (cdr s)))))))
 
 (defun tsc-dyn-get--build-async (dir)
+  "Build the dynamic module `tsc-dyn' and put it in DIR, asynchrounously."
   (let* ((default-directory dir)
          (compilation-auto-jump-to-first-error nil)
          (compilation-scroll-output t)
@@ -230,21 +253,17 @@ For local compilation, a version mismatch only results in a warning."
             nil :local))))
     proc))
 
-(defvar tsc-dyn-get--force-sync nil)
-
 (defun tsc-dyn-get--build (&optional dir)
   "Build the dynamic module `tsc-dyn' from source.
 
 When called during an attempt to load `tsc', or in batch mode, this blocks until
-compilation finishes.
+compilation finishes. In other situations, it runs in the background.
 
-In other situations, this runs in the background, and prompts user for further
-action when done. If `tsc' has not been loaded, offers to load it. If it has
-already been loaded, offers to restart Emacs to be able to load the newly built
-`tsc-dyn'.
+This function records the built version in the manifest
+`tsc-dyn-get--version-file'.
 
 On Windows, if `tsc-dyn' has already been loaded, compilation will fail because
-Windows doesn't allow overwriting opened dynamically-loaded libraries."
+the OS doesn't allow overwriting opened dynamically-loaded libraries."
   (unless dir (setq dir tsc--dir))
   (while (not (executable-find "cargo"))
     (if noninteractive
@@ -261,7 +280,13 @@ Press '%s' to cancel. "
           (not (featurep 'tsc-dyn))
           tsc-dyn-get--force-sync)
       (tsc-dyn-get--build-sync dir)
+    ;; TODO: Notify user for further actions. If `tsc' has not been loaded,
+    ;; offer to load it. If it has already been loaded, offer to restart Emacs
+    ;; to be able to load the newly built `tsc-dyn'.
     (tsc-dyn-get--build-async dir)))
+
+;;; ----------------------------------------------------------------------------
+;;; Generic mechanism.
 
 (defun tsc--module-load-noerror (file)
   "Try loading `tsc-dyn' from FILE.
@@ -300,13 +325,23 @@ Return nil if the file does not exist, or is not a loadable shared library."
               load-path)))
 
 (defun tsc-dyn--try-load ()
+  "Try loading `tsc-dyn' without signaling an error.
+Return t on success, nil otherwise."
   (if (featurep 'tsc-dyn)
       t
     (when (eq system-type 'darwin)
       (tsc-dyn--try-load-mac))
     (require 'tsc-dyn nil :noerror)))
 
+;; TODO: Add tests for this.
 (defun tsc-dyn-get-ensure (requested)
+  "Try to get and load the REQUESTED (or later) version of `tsc-dyn'.
+
+If this function cannot find a suitable version on `load-path', it tries to get
+the dynamic module from sources listed in `tsc-dyn-get-from'.
+
+NOTE: Emacs cannot unload dynamic modules, so if `tsc-dyn' was already loaded,
+you will need to restart Emacs to load the new version."
   (let* ((default-directory (tsc-dyn-get--dir))
          (recorded (tsc-dyn-get--recorded-version))
          (loaded (tsc-dyn-get--loaded-version))
@@ -328,9 +363,7 @@ Return nil if the file does not exist, or is not a loadable shared library."
                      ;; TODO: On Windows, refuse to continue and ask user to set
                      ;; the requested version and restart instead.
                      (tsc-dyn-get--log "Loaded version is older than requested -> getting new")
-                     (funcall get-new)
-                     ;; TODO: Ask user to restart.
-                     ))
+                     (funcall get-new)))
            (recorded (if (version<= requested recorded)
                          (progn
                            (tsc-dyn-get--log "Recorded version already satifies requested -> loading")
@@ -349,6 +382,7 @@ Return nil if the file does not exist, or is not a loadable shared library."
     (if (and loaded (version< loaded requested))
         (tsc-dyn-get--warn "Version %s is requested, but %s was already loaded. Please try restarting Emacs."
                            requested loaded)
+      ;; Even if none of the sources worked, the module may still be there.
       (tsc-dyn--try-load)
       (if-let ((loaded (tsc-dyn-get--loaded-version)))
           (when (version< loaded requested)
@@ -356,50 +390,6 @@ Return nil if the file does not exist, or is not a loadable shared library."
                                requested loaded))
         (tsc-dyn-get--warn "Failed to get requested version %s." requested)))
     (tsc-dyn-get--loaded-version)))
-
-(defun tsc-dyn-get-ensure-0 (version)
-  "Try to load a specific VERSION of  `tsc-dyn'.
-If it's not found, try to download it."
-  ;; On Windows, we cannot overwrite the old dll file while it's opened
-  ;; (loaded), so we'll have to do the version check before loading the module,
-  ;; through a version file.
-  (let* ((default-directory (tsc-dyn-get--dir))
-         (current-version (when (file-exists-p
-                                 tsc-dyn-get--version-file)
-                            (with-temp-buffer
-                              (let ((coding-system-for-read 'utf-8))
-                                (insert-file-contents
-                                 tsc-dyn-get--version-file)
-                                (buffer-string))))))
-    ;; This is also run on CI, after we've built the binaries, but before
-    ;; publishing them. Downloading at that time doesn't make sense, so we
-    ;; disable it with a special version string.
-    (unless (string= current-version "LOCAL")
-      (when (or (not current-version)
-                (version< current-version version))
-        (tsc-dyn-get--github version))))
-  (let ((load-path (nconc `(tsc-dyn-dir) load-path)))
-    ;; XXX: We wanted a universal package containing binaries for all platforms,
-    ;; so we used a unique extension for each. On macOS, we use`.dylib', which
-    ;; is more sensible than `.so' anyway.
-    (unless (featurep 'tsc-dyn)
-      (when (eq system-type 'darwin)
-        (tsc-dyn--try-load-mac)))
-    ;; If we could not load it (e.g. when the dynamic module was deleted, but the
-    ;; version file was not), try downloading again.
-    (unless (require 'tsc-dyn nil :noerror)
-      (tsc-dyn-get--github version))
-    ;; We should have the binary by now. Try to load for real.
-    (unless (featurep 'tsc-dyn)
-      (when (eq system-type 'darwin)
-        (tsc-dyn--try-load-mac))
-      (require 'tsc-dyn)))
-  ;; Check if and older version was already loaded.
-  (unless (string= version tsc-dyn--version)
-    (display-warning 'tree-sitter
-                     (format "Version %s of tsc-dyn was already loaded. Please restart Emacs to load the requested version %s"
-                             tsc-dyn--version version)
-                     :emergency)))
 
 (provide 'tsc-dyn-get)
 ;;; tsc-dyn-get.el ends here
