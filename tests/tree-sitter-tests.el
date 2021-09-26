@@ -1,6 +1,6 @@
 ;;; tree-sitter-tests.el --- Tests for tree-sitter.el -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019  Tuấn-Anh Nguyễn
+;; Copyright (C) 2019-2021  Tuấn-Anh Nguyễn
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; SPDX-License-Identifier: MIT
@@ -45,9 +45,8 @@
 
 (defun tsc-test-full-path (relative-path)
   "Return full path from project RELATIVE-PATH."
-  (concat (file-name-directory
-           (directory-file-name
-            (file-name-directory (locate-library "tree-sitter.el")))) relative-path))
+  (concat (file-name-directory (locate-library "tree-sitter-tests.el"))
+          relative-path))
 
 (defun tsc-test-tree-sexp (sexp &optional reset)
   "Check that the current syntax tree's sexp representation is SEXP.
@@ -80,7 +79,7 @@ If RESET is non-nil, also do another full parse and check again."
 (defmacro tsc-test-with (lang-symbol var &rest body)
   "Eval BODY with VAR bound to a new parser for LANG-SYMBOL."
   (declare (indent 2))
-  `(let ((,var (tsc-test-make-parser ,lang-symbol)))
+  `(let ((,var (tsc-test-make-parser ',lang-symbol)))
      ,@body))
 
 (defmacro tsc-test-with-file (relative-path &rest body)
@@ -96,7 +95,7 @@ If RESET is non-nil, also do another full parse and check again."
 `tree-sitter-mode' is turned on, using the given language LANG-SYMBOL."
   (declare (indent 2))
   `(tsc-test-with-file ,relative-path
-     (tsc-test-use-lang ,lang-symbol)
+     (tsc-test-use-lang ',lang-symbol)
      ,@body))
 
 (defmacro tsc-test-with-advice (symbol where function &rest body)
@@ -120,7 +119,7 @@ If RESET is non-nil, also do another full parse and check again."
       (should (eq lang-symbol (tsc--lang-symbol language))))))
 
 (ert-deftest language::equality ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     ;; XXX: `equal' seems to return nil even if 2 `user-ptr' objects have the same pointer and
     ;; finalizer. That's broken. Report a bug to emacs-devel.
     (should (equal (format "%s" (tsc-parser-language parser))
@@ -158,7 +157,7 @@ If RESET is non-nil, also do another full parse and check again."
       (should (null (tsc-lang-field language (1+ field-count)))))))
 
 (ert-deftest parsing::rust-string ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (let ((tree (tsc-parse-string parser "fn foo() {}")))
       (should (equal (read (tsc-tree-to-sexp tree))
                      '(source_file
@@ -173,8 +172,8 @@ If RESET is non-nil, also do another full parse and check again."
     (should-error (tsc-parse-string parser "fn foo() {}") :type 'rust-panic)))
 
 (ert-deftest parsing::rust-buffer ()
-  (tsc-test-with 'rust parser
-    (tsc-test-with-file "lisp/test-files/types.rs"
+  (tsc-test-with rust parser
+    (tsc-test-with-file "data/types.rs"
       (tsc--without-restriction
         (let* ((tree) (old-tree)
                (initial (benchmark-run
@@ -189,8 +188,8 @@ If RESET is non-nil, also do another full parse and check again."
             (should (> (car initial) (car reparse)))))))))
 
 (ert-deftest parsing::bench ()
-  (tsc-test-with 'c parser
-    (tsc-test-with-file "lisp/test-files/types.rs"
+  (tsc-test-with c parser
+    (tsc-test-with-file "data/types.rs"
       (let ((n 0))
         (while (<= n 4)
           (let ((tsc--buffer-input-chunk-size (* 1024 (expt 2 n))))
@@ -221,7 +220,7 @@ If RESET is non-nil, also do another full parse and check again."
                     _beg-point old-end-point new-end-point &rest _)
              (should (= old-end-byte new-end-byte))
              (should (equal old-end-point new-end-point))))
-    (tsc-test-lang-with-file 'rust "lisp/test-files/change-case-region.rs"
+    (tsc-test-lang-with-file rust "data/change-case-region.rs"
       (tsc-test-with-advice 'tsc-edit-tree :before #'assert-same-range
         (let* ((orig-sexp (read (tsc-tree-to-sexp tree-sitter-tree)))
                (end (re-search-forward "this text"))
@@ -234,7 +233,7 @@ If RESET is non-nil, also do another full parse and check again."
           (tsc-test-tree-sexp orig-sexp :reset))))))
 
 (ert-deftest minor-mode::incremental:delete-non-ascii-text ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/delete-non-ascii-text.rs"
+  (tsc-test-lang-with-file rust "data/delete-non-ascii-text.rs"
     (let* ((orig-sexp (read (tsc-tree-to-sexp tree-sitter-tree)))
            (end (re-search-forward "ấấấấấấấấ"))
            (beg (match-beginning 0)))
@@ -242,7 +241,7 @@ If RESET is non-nil, also do another full parse and check again."
       (tsc-test-tree-sexp orig-sexp :reset))))
 
 (ert-deftest minor-mode::node-at-pos ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+  (tsc-test-lang-with-file rust "data/types.rs"
     (should (eq 'use_declaration (tsc-node-type (tree-sitter-node-at-pos :named))))
     (should (eq 'source_file (tsc-node-type (tree-sitter-node-at-pos 'source_file))))
     (should (equal "use" (tsc-node-type (tree-sitter-node-at-pos :anonymous))))
@@ -262,7 +261,7 @@ If RESET is non-nil, also do another full parse and check again."
     (should (eq 'struct_item (tsc-node-type (tree-sitter-node-at-pos 'struct_item))))))
 
 (ert-deftest node::eq ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (let* ((tree (tsc-parse-string parser "fn foo() {}"))
            (node1 (tsc-root-node tree))
            (node2 (tsc-root-node tree)))
@@ -272,7 +271,7 @@ If RESET is non-nil, also do another full parse and check again."
 (ert-deftest node::using-without-tree ()
   "Test that a tree's nodes are still usable after no direct reference to the
 tree is held (since nodes internally reference the tree)."
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (let ((node (tsc-root-node
                  (tsc-parse-string parser "fn foo() {}"))))
       (garbage-collect)
@@ -280,7 +279,7 @@ tree is held (since nodes internally reference the tree)."
     (garbage-collect)))
 
 (ert-deftest node::types ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (ert-info ("Error nodes")
       (let* ((root (tsc-root-node (tsc-parse-string parser "fn")))
              (err (tsc-get-nth-child root 0)))
@@ -304,7 +303,7 @@ tree is held (since nodes internally reference the tree)."
         (should (tsc-node-missing-p semi))))))
 
 (ert-deftest cursor::walk ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (let* ((tree (tsc-parse-string parser "fn foo() {}"))
            (node (tsc-root-node tree)))
       (ert-info ("Should be able to get a cursor from either a tree or a node")
@@ -312,7 +311,7 @@ tree is held (since nodes internally reference the tree)."
         (should (tsc-cursor-p (tsc-make-cursor node)))))))
 
 (ert-deftest cursor::reset ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+  (tsc-test-lang-with-file rust "data/types.rs"
     (let* ((node (tsc-root-node tree-sitter-tree))
            (cursor (tsc-make-cursor node)))
       (tsc-goto-first-child cursor)
@@ -321,14 +320,14 @@ tree is held (since nodes internally reference the tree)."
       (should (equal (tsc-node-type (tsc-current-node cursor)) 'source_file)))))
 
 (ert-deftest cursor::using-without-tree ()
-  (tsc-test-with 'rust parser
+  (tsc-test-with rust parser
     (let ((cursor (tsc-make-cursor (tsc-parse-string parser "fn foo() {}"))))
       (garbage-collect)
       (should (tsc-goto-first-child cursor)))
     (garbage-collect)))
 
 (ert-deftest conversion::position<->tsc-point ()
-  (tsc-test-with-file "lisp/tree-sitter-tests.el"
+  (tsc-test-with-file "tree-sitter-tests.el"
     (ert-info ("Testing buffer boundaries")
       (let ((min (point-min))
             (max (point-max)))
@@ -348,7 +347,7 @@ tree is held (since nodes internally reference the tree)."
 
 ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
 (ert-deftest buffer-input::narrowing ()
-  (tsc-test-with-file "bin/build"
+  (tsc-test-with-file "data/narrowing.bash"
     (sh-mode)
     (tree-sitter-mode)
     (call-interactively #'mark-whole-buffer)
@@ -368,7 +367,7 @@ tree is held (since nodes internally reference the tree)."
                  2)))))
 
 (ert-deftest query::basic ()
-  (tsc-test-lang-with-file 'rust "core/src/query.rs"
+  (tsc-test-lang-with-file rust "data/query.rs"
     ;; This is to make sure it works correctly with narrowing.
     (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-debug-query
@@ -391,7 +390,7 @@ tree is held (since nodes internally reference the tree)."
 
 (ert-deftest query::range-restriction ()
   ;; https://github.com/tree-sitter/tree-sitter/issues/685
-  (tsc-test-lang-with-file 'c "lisp/test-files/range-restriction-and-early-termination.c"
+  (tsc-test-lang-with-file c "data/range-restriction-and-early-termination.c"
     (let ((cursor (tsc-make-query-cursor))
           (query (tsc-make-query tree-sitter-language
                                 [(call_expression
@@ -429,7 +428,7 @@ tree is held (since nodes internally reference the tree)."
 ;;; Highlighting tests.
 
 (ert-deftest hl::extend-region ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/extend-region.rs"
+  (tsc-test-lang-with-file rust "data/extend-region.rs"
     (tree-sitter-hl-mode)
     (let* ((beg (save-excursion
                   (re-search-forward "^abc")
@@ -441,7 +440,7 @@ tree is held (since nodes internally reference the tree)."
         (should (tsc--hl-at beg 'tree-sitter-hl-face:function.macro))))))
 
 (ert-deftest hl::hl-region-vs-query-region ()
-  (tsc-test-lang-with-file 'javascript "lisp/test-files/hl-region-vs-query-region.js"
+  (tsc-test-lang-with-file javascript "data/hl-region-vs-query-region.js"
     (tree-sitter-hl-mode)
     (let ((tree-sitter-hl--extend-region-limit 16)
           id-end id-beg)
@@ -459,7 +458,7 @@ tree is held (since nodes internally reference the tree)."
 
 (ert-deftest hl::face-mapping ()
   (ert-info ("Keywords should not be highlighted if their capture name is disabled")
-    (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (tsc-test-lang-with-file rust "data/types.rs"
       ;; Disable keyword highlighting.
       (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
                     (lambda (capture-name)
@@ -470,12 +469,12 @@ tree is held (since nodes internally reference the tree)."
       (ert-info ("Other elements should still be highlighted")
         (should-not (null (next-single-property-change 1 'face))))))
   (ert-info ("Keywords should be highlighted by default")
-    (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (tsc-test-lang-with-file rust "data/types.rs"
       (tree-sitter-hl-mode)
       (font-lock-ensure)
       (should (tsc--hl-at 1 'tree-sitter-hl-face:keyword))))
   (ert-info ("Keywords should not be highlighted if their capture name is disabled")
-    (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (tsc-test-lang-with-file rust "data/types.rs"
       ;; Disable keyword highlighting.
       (add-function :before-while (local 'tree-sitter-hl-face-mapping-function)
                     (lambda (capture-name)
@@ -486,7 +485,7 @@ tree is held (since nodes internally reference the tree)."
       (ert-info ("Other elements should still be highlighted")
         (should-not (null (next-single-property-change 1 'face))))))
   (ert-info ("Nothing should be highlighted if all capture names are disabled")
-    (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+    (tsc-test-lang-with-file rust "data/types.rs"
       (add-function :override (local 'tree-sitter-hl-face-mapping-function)
                     (lambda (capture-name) nil))
       (tree-sitter-hl-mode)
@@ -497,14 +496,14 @@ tree is held (since nodes internally reference the tree)."
 
 (ert-deftest hl::with-font-lock-mode-disabled ()
   ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74
-  (with-current-buffer (find-file (tsc-test-full-path "lisp/test-files/hl.py"))
+  (with-current-buffer (find-file (tsc-test-full-path "data/hl.py"))
     (tree-sitter-hl-mode)
     (font-lock-mode -1)
     (font-lock-ensure)
     (should (tsc--hl-at 6 'tree-sitter-hl-face:function))))
 
 (ert-deftest hl::bench ()
-  (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+  (tsc-test-lang-with-file rust "data/types.rs"
     (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
     (require 'rust-mode)
     (rust-mode)
@@ -522,7 +521,7 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest debug::jump ()
   "Test if the first button takes us to the beginning of the file.
 We know it should since it is the `source_file' node."
-  (tsc-test-lang-with-file 'rust "lisp/test-files/types.rs"
+  (tsc-test-lang-with-file rust "data/types.rs"
     (let ((buf-name (buffer-name)))
     (setq tree-sitter-debug-jump-buttons t)
     (tree-sitter-debug-mode)

@@ -18,6 +18,7 @@ else
              --directory "$PROJECT_ROOT/core" \
              --directory "$PROJECT_ROOT/lisp" \
              --directory "$PROJECT_ROOT/langs" \
+             --directory "$PROJECT_ROOT/tests" \
              -l ert \
              -l tree-sitter-tests.el \
              -f ert-run-tests-batch-and-exit

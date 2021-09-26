@@ -29,6 +29,7 @@ if ($args[0] -eq "watch") {
           --directory "$project_root\core" `
           --directory "$project_root\lisp" `
           --directory "$project_root\langs" `
+          --directory "$project_root\tests" `
           -l ert `
           -l tree-sitter-tests.el `
           -f ert-run-tests-batch-and-exit
