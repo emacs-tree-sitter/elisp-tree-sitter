@@ -6,6 +6,7 @@ on:
       - master
       - github-actions          # To test changes related to GitHub Actions.
       - ci                      # To test all CI changes.
+      - macos-11
     paths-ignore:
       - '*.md'
       - doc/**
@@ -22,19 +23,20 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-10.15
+          - macos-11
+          # - macos-10.15
           # - ubuntu-18.04
-          - ubuntu-20.04
+          # - ubuntu-20.04
         emacs-version:
           # - '25.3'
           # - '26.3'
           - '27.2'
-        include:
-          # # Older Emacs binaries for Windows don't have dynamic modules enabled.
-          # - os: windows-2016
-          #   emacs-version: '27.2'
-          - os: windows-2019
-            emacs-version: '27.2'
+        # include:
+        #   # # Older Emacs binaries for Windows don't have dynamic modules enabled.
+        #   # - os: windows-2016
+        #   #   emacs-version: '27.2'
+        #   - os: windows-2019
+        #     emacs-version: '27.2'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -60,11 +62,17 @@ jobs:
       - run: .github/script/setup-cask
 
       - run: bin/setup
-      - run: bin/build
 
-      - run: bin/inspect-binaries
-        continue-on-error: true
+      - uses: mxschmitt/action-tmate@v3
+        name: Setup tmate session
+        with:
+          limit-access-to-actor: true
 
-      - name: Install tree-sitter CLI
-        run: npm install -g tree-sitter-cli@0.19.3
-      - run: bin/test
+      # - run: bin/build
+
+      # - run: bin/inspect-binaries
+      #   continue-on-error: true
+
+      # - name: Install tree-sitter CLI
+      #   run: npm install -g tree-sitter-cli@0.19.3
+      # - run: bin/test
