@@ -9,6 +9,11 @@ if ($args[0] -eq "watch") {
         Pop-Location
     }
 } else {
+    if ($args[0] -eq "integ") {
+        $test_mod = "tsc-dyn-get-tests.el"
+    } else {
+        $test_mod = "tree-sitter-tests.el"
+    }
     # XXX: It seems that Emacs writes to stderr, so PowerShell thinks it's an error. Redirecting to
     # stdout alone doesn't help, because it's the processed stderr, which contain error records, not
     # the original stderr. Piping at the end to convert these error records into strings doesn't
@@ -31,7 +36,7 @@ if ($args[0] -eq "watch") {
           --directory "$project_root\langs" `
           --directory "$project_root\tests" `
           -l ert `
-          -l tree-sitter-tests.el `
+          -l "$test_mod" `
           -f ert-run-tests-batch-and-exit
     } finally {
         Pop-Location
