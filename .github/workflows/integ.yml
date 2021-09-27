@@ -1,0 +1,40 @@
+name: Integ
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        required: true
+        default: 'master'
+
+jobs:
+  integ:
+    needs: publish-binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-10.15
+          - ubuntu-18.04
+          - windows-2019
+        emacs-version:
+          - '27.2'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: purcell/setup-emacs@v3.0
+        if: runner.os != 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+      - uses: jcs090218/setup-emacs-windows@v4
+        if: runner.os == 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.revision }}
+
+      - run: .github/script/setup-cask
+      - run: bin/setup
+
+      - run: bin/test integ
