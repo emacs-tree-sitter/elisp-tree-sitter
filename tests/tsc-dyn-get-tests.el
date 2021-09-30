@@ -92,7 +92,6 @@ This is mainly needed because we use `tree-sitter''s env, which depends on
                  '(tsc . 1))))
 
 (ert-deftest tsc-dyn-get:only-compilation ()
-  (ert-skip "?")
   (should (equal (-with-fresh-tsc
                    (setq tsc-dyn-get-from '(:compilation))
                    (-with-call-count 'tsc-dyn-get--build

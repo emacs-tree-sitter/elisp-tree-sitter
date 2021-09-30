@@ -9,7 +9,6 @@ on:
 
 jobs:
   integ:
-    needs: publish-binaries
     strategy:
       fail-fast: false
       matrix:
