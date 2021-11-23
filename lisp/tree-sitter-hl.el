@@ -134,7 +134,7 @@
 
 ;;; TODO: Define a more sensible default.
 (defface tree-sitter-hl-face:property
-  '((default :inherit font-lock-constant-face :slant italic))
+  '((default :inherit font-lock-constant-face))
   "Face for properties."
   :group 'tree-sitter-hl-faces)
 
