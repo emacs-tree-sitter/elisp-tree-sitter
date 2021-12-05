@@ -84,7 +84,7 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   "Set up syntax tree debugging in the current buffer."
   (unless (buffer-live-p tree-sitter-debug--tree-buffer)
     (setq tree-sitter-debug--tree-buffer
-          (get-buffer-create (format "tree-sitter-tree: %s" (buffer-name)))))
+          (get-buffer-create (format "*tree-sitter-tree: %s*" (buffer-name)))))
   (let ((source-buffer (current-buffer)))
     (with-current-buffer tree-sitter-debug--tree-buffer
       (buffer-disable-undo)
