@@ -111,10 +111,14 @@
 ;;; ------------------------------------
 ;;; Variables, properties.
 
-;;; TODO: Add variable.use?
 (defface tree-sitter-hl-face:variable
   '((default :inherit font-lock-variable-name-face))
   "Face for variable declarations, definitions, bindings and mutations."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:variable.use
+  '((default :inherit default))
+  "Face for variable uses/references."
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:variable.parameter
