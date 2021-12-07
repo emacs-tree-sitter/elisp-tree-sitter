@@ -42,7 +42,6 @@ jobs:
         with:
           submodules: true
 
-      - run: .github/script/setup-llvm
       - run: .github/script/setup-cask
 
       - run: bin/setup
