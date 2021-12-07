@@ -33,10 +33,21 @@ jobs:
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
-      - uses: jcs090218/setup-emacs-windows@v4
+      # Seems like the Emacs archive from GNU's FTP uses its own outdated bundle of CA certs, which
+      # wouldn't include the new LetsEncrypt's root CA cert, which is used by MELPA, among others.
+      # So we use mingw64's Emacs instead. TODO: Switch back whenever possible.
+      - name: Install Emacs (Windows)
         if: runner.os == 'Windows'
-        with:
-          version: ${{ matrix.emacs-version }}
+        run: |
+          $env:MSYS_PATH = "$env:CD\ci-tools\msys2"
+          choco install msys2 --params="/InstallDir:$env:MSYS_PATH /NoPath"
+          $env:PATH = "$env:MSYS_PATH\usr\bin;" + $env:PATH
+          pacman -S --noconfirm --needed mingw-w64-x86_64-emacs
+          echo "$env:MSYS_PATH\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf-8 -Append
+      # - uses: jcs090218/setup-emacs-windows@v4
+      #   if: runner.os == 'Windows'
+      #   with:
+      #     version: ${{ matrix.emacs-version }}
 
       - uses: actions/checkout@v2
         with:
