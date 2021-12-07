@@ -69,9 +69,10 @@ If you want to build additional (or all) grammars from source, or work on the co
 
 To test against a different version of Emacs, set the environment variable `EMACS` (e.g. `EMACS=/snap/bin/emacs make test`).
 
-## Alternative
+## Alternatives
 
-Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el
+- Tree-sitter in Emacs's core: https://github.com/casouri/emacs (the future)
+- Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el (dormant)
 
 ## Contribution
 
