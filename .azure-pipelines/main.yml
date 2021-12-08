@@ -15,11 +15,9 @@ pr:
 
 strategy:
   matrix:
-    vs2017-win2016:
-      IMAGE_NAME: 'vs2017-win2016'
     # Sometimes fails.
-    # windows-2019:
-    #   IMAGE_NAME: 'windows-2019'
+    windows-2019:
+      IMAGE_NAME: 'windows-2019'
 
     # Always fails: ValueError: Could not determine the version of Emacs at emacs
     # macos-10.15-emacs-25.3:
