@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## 0.16.0 - 2021-12-08
 - Upgraded `tree-sitter` crate to 0.20.0, which:
   + Changed the semantics of range-restricted query to report matches that intersect the range, instead of only fully-contained matches. See [tree-sitter#1130](https://github.com/tree-sitter/tree-sitter/pull/1130).
   + Fixed [an issue](https://github.com/tree-sitter/tree-sitter/pull/1372#issuecomment-924958513) where multiple patterns with the same capture names can result in the first capture being omitted.
-- Disabled query-region extension, to improve performance. Added a flag to turn it back on: `tree-sitter-hl-enable-query-region-extension`.
+- Improved performance:
+  + Disabled query-region extension. Added a flag to turn it back on: `tree-sitter-hl-enable-query-region-extension`.
+  + Increased default chunk size for parsing from 1024 to 4096.
 
 ## [0.15.2] - 2021-09-12
 - Reduced GC pressure by not making the text property `face` a list if there is only one face.
