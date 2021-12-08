@@ -88,6 +88,8 @@ A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
 
 ;;; Extracting buffer's text.
 
+(defvar tsc--buffer-input-chunk-size 4096)
+
 (defun tsc--buffer-input (bytepos _line-number _byte-column)
   "Return a portion of the current buffer's text, starting from BYTEPOS.
 BYTEPOS is automatically clamped to the range valid for the current buffer.
@@ -96,8 +98,7 @@ This function must be called with narrowing disabled, e.g. within a
 `tsc--without-restriction' block."
   (let* ((max-pos (point-max))
          (beg-byte (max 1 bytepos))
-         ;; ;; TODO: Don't hard-code read length.
-         (end-byte (+ 1024 beg-byte))
+         (end-byte (+ tsc--buffer-input-chunk-size beg-byte))
          ;; nil means > max-pos, since we already made sure they are non-negative.
          (beg-pos (or (byte-to-position beg-byte) max-pos))
          (end-pos (or (byte-to-position end-byte) max-pos)))

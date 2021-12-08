@@ -187,6 +187,18 @@ If RESET is non-nil, also do another full parse and check again."
           (ert-info ("Incremental parsing should be faster than initial")
             (should (> (car initial) (car reparse)))))))))
 
+(ert-deftest parsing::bench ()
+  (tsc-test-with 'c parser
+    (tsc-test-with-file "lisp/test-files/types.rs"
+      (let ((n 0))
+        (while (<= n 4)
+          (let ((tsc--buffer-input-chunk-size (* 1024 (expt 2 n))))
+            (garbage-collect)
+            (message "tsc-parse-chunks %6d %s" tsc--buffer-input-chunk-size
+                     (benchmark-run 10
+                         (tsc-parse-chunks parser #'tsc--buffer-input nil)))
+            (cl-incf n)))))))
+
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
     (tsc-test-use-lang 'rust)
@@ -497,17 +509,14 @@ tree is held (since nodes internally reference the tree)."
     (rust-mode)
     (font-lock-mode)
     (font-lock-set-defaults)
-    (tree-sitter-hl-mode)
-    (garbage-collect)
-    (message "tree-sitter-hl  1 %s" (benchmark-run (font-lock-ensure)))
-    (garbage-collect)
-    (message "tree-sitter-hl 10 %s" (benchmark-run 10 (font-lock-ensure)))
-    (tree-sitter-hl-mode -1)
-    (font-lock-ensure)
-    (garbage-collect)
-    (message "     font-lock  1 %s" (benchmark-run (font-lock-ensure)))
-    (garbage-collect)
-    (message "     font-lock 10 %s" (benchmark-run 10 (font-lock-ensure)))))
+    (dolist (n '(1 10 100))
+      (tree-sitter-hl-mode)
+      (garbage-collect)
+      (message "tree-sitter-hl %2d %s" n (eval `(benchmark-run ,n (font-lock-ensure))))
+      (tree-sitter-hl-mode -1)
+      (font-lock-ensure)
+      (garbage-collect)
+      (message "     font-lock %2d %s" n (eval `(benchmark-run ,n (font-lock-ensure)))))))
 
 (ert-deftest debug::jump ()
   "Test if the first button takes us to the beginning of the file.
