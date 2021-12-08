@@ -276,8 +276,9 @@ the following code disables keyword highlighting:
   "Default syntax highlighting patterns.
 This should be set by major modes that want to integrate with `tree-sitter-hl'.
 It plays a similar role to `font-lock-defaults'.
-It is a string used to query tree sitter.  The format is described at
-https://tree-sitter.github.io/tree-sitter/syntax-highlighting#highlights.")
+
+It is either a string, or a vector of S-expressions. For more details on the
+syntax, see https://emacs-tree-sitter.github.io/syntax-highlighting/queries/.")
 
 (defvar tree-sitter-hl--patterns-alist nil
   "Additional language-specific syntax highlighting patterns.
