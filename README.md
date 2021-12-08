@@ -54,10 +54,6 @@ If you want to build additional (or all) grammars from source, or work on the co
 ### Working on the dynamic module
 
 - Install the [Rust toolchain](https://rustup.rs/).
-- Install `clang`, to generate the raw Rust binding for `emacs-module.h`. On Windows, set `LIBCLANG_PATH` as well. For example:
-    ```powershell
-    $env:LIBCLANG_PATH = "$(scoop prefix llvm)\bin"
-    ```
 - Build:
     ```bash
     bin/build
