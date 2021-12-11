@@ -35,6 +35,10 @@ jobs:
           #   emacs-version: '27.2'
           - os: windows-2019
             emacs-version: '27.2'
+          - os: macos-11
+            emacs-version: '27.2'
+            # Cross build
+            target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -42,6 +46,10 @@ jobs:
           rustup install stable
           rustc -Vv
           cargo -V
+      - name: Set up Rust's cross-build target
+        if: matrix.target
+        run: |
+          rustup target add ${{ matrix.target }}
 
       - uses: purcell/setup-emacs@v3.0
         if: runner.os != 'Windows'
@@ -70,11 +78,13 @@ jobs:
       - run: .github/script/setup-cask
 
       - run: bin/setup
-      - run: bin/build
+      - run: bin/build -target "${{ matrix.target }}"
 
       - run: bin/inspect-binaries
         continue-on-error: true
 
       - name: Install tree-sitter CLI
+        if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@0.19.3
       - run: bin/test
+        if: ${{ !matrix.target }}

@@ -10,13 +10,21 @@ PROJECT_ROOT=$(cd "$here/.."; pwd)
 
     case $system in
         (Linux)
+            echo ┌─────────────────────────────────────────────────────────────────────
+            echo └ Dynamic module:
+            file core/tsc-dyn.so
             ldd core/tsc-dyn.so
-            echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            echo ┌─────────────────────────────────────────────────────────────────────
+            echo └ Emacs:
             ldd "$(which emacs)"
             ;;
         (Darwin)
+            echo ┌─────────────────────────────────────────────────────────────────────
+            echo └ Dynamic module:
+            file core/tsc-dyn.dylib
             otool -L core/tsc-dyn.dylib
-            echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            echo ┌─────────────────────────────────────────────────────────────────────
+            echo └ Emacs:
             otool -L "$(which emacs)"
             ;;
         (*)

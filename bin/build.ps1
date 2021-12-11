@@ -8,6 +8,7 @@ $module_name = "tsc_dyn"
 $module_renamed = $module_name.replace("_", "-")
 $core_root = "$project_root\core"
 
+echo "!! Building the dynamic module"
 Push-Location $core_root
 try {
     switch ($profile) {
@@ -24,6 +25,7 @@ try {
     Pop-Location
 }
 
+echo "!! Building Lisp code"
 Push-Location $project_root
 try {
     cask build

@@ -48,7 +48,7 @@ case $profile_ in
     (debug)
         ;;
     (*)
-        echo "Unknown profile $profile_"
+        echo "!! Unknown profile $profile_"
         exit 1
 esac
 case $target in
@@ -59,11 +59,12 @@ case $target in
     ('')
         ;;
     (*)
-        echo "Unsupport cross-build target $target"
+        echo "!! Unsupport cross-build target $target"
         exit 1
         ;;
 esac
 
+echo "!! Building the dynamic module"
 (
     cd "$core_root"
     cargo build --all "${extra_args[@]}"
@@ -71,6 +72,15 @@ esac
     cp -f "$target_dir/$profile_/$MODULE_ORIGINAL" "$MODULE_RENAMED"
     version=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2)
     echo "$version".1 | tr -d $'\n' > DYN-VERSION
+)
+
+echo "!! Building Lisp code"
+if [[ $target != '' ]]; then
+    echo "!! Will skip building Lisp since this is a cross build"
+    exit 0
+fi
+(
+    cd "$core_root"
     cask build
 )
 (
