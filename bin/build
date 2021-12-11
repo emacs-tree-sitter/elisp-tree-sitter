@@ -7,11 +7,27 @@ source "$here/env.bash"
 
 core_root="$PROJECT_ROOT/core"
 
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        (-profile)
+            profile_="$2"
+            shift
+            shift
+            ;;
+        (*)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+profile_=${profile_:-release}
+
 (
     cd "$core_root"
-
-    target=${1:-release}
-    case $target in
+    case $profile_ in
         (release)
             cargo build --all --release
             ;;
@@ -19,11 +35,11 @@ core_root="$PROJECT_ROOT/core"
             cargo build --all
             ;;
         (*)
-            echo "Unknown target $target"
+            echo "Unknown profile $profile_"
             exit 1
     esac
 
-    cp -f target/"$target/$MODULE_ORIGINAL" "$MODULE_RENAMED"
+    cp -f target/"$profile_/$MODULE_ORIGINAL" "$MODULE_RENAMED"
     version=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2)
     echo "$version".1 | tr -d $'\n' > DYN-VERSION
     cask build
