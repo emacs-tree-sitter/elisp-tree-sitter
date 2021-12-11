@@ -5,7 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## 0.16.0 - 2021-12-08
+## [0.16.1] - 2021-12-11
+- Modified CI pipelines to publish additional pre-built dynamic modules. Their filenames include the platform they are built for. The files without platform in name will eventually be deprecated.
+  + `tsc-dyn.x86_64-apple-darwin.dylib` (same as `tsc-dyn.dylib`)
+  + `tsc-dyn.x86_64-unknown-linux-gnu.so` (same as `tsc-dyn.so`)
+  + `tsc-dyn.x86_64-pc-windows-msvc.dll` (same as `tsc-dyn.dll`)
+  + `tsc-dyn.aarch64-apple-darwin.dylib` (new, for Apple Silicon)
+
+## [0.16.0] - 2021-12-08
 - Upgraded `tree-sitter` crate to 0.20.0, which:
   + Changed the semantics of range-restricted query to report matches that intersect the range, instead of only fully-contained matches. See [tree-sitter#1130](https://github.com/tree-sitter/tree-sitter/pull/1130).
   + Fixed [an issue](https://github.com/tree-sitter/tree-sitter/pull/1372#issuecomment-924958513) where multiple patterns with the same capture names can result in the first capture being omitted.
@@ -132,7 +139,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.2...HEAD
+[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...HEAD
+[0.16.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.0...0.16.1
+[0.16.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.2...0.16.0
 [0.15.2]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.1...0.15.2
 [0.15.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.0...0.15.1
 [0.15.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.14.0...0.15.0
