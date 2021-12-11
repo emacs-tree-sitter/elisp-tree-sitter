@@ -29,7 +29,7 @@ jobs:
           rustc -Vv
           cargo -V
 
-      - uses: purcell/setup-emacs@v3.0
+      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
@@ -76,7 +76,7 @@ jobs:
     needs: build
     runs-on: ubuntu-18.04
     steps:
-      - uses: purcell/setup-emacs@v3.0
+      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
         with:
           version: '27.2'
       - uses: actions/checkout@v2

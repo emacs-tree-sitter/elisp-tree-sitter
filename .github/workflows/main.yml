@@ -51,7 +51,8 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: purcell/setup-emacs@v3.0
+      # Using a specific commit hash to fix this https://github.com/purcell/setup-emacs/issues/24.
+      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
