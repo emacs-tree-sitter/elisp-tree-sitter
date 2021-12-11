@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# bin/build [-profile {release,debug}] [-target aarch64-apple-darwin]
+#
+# Params:
+#     - profile: Defaults to release.
+#     - target: To specify a cross build. Defaults to empty.
+#
 
 set -euo pipefail
 
@@ -7,25 +14,73 @@ source "$here/env.bash"
 
 core_root="$PROJECT_ROOT/core"
 
-(
-    cd "$core_root"
-
-    target=${1:-release}
-    case $target in
-        (release)
-            cargo build --all --release
+# Parse named parameters.
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        (-profile)
+            profile_="$2"
+            shift
+            shift
             ;;
-        (debug)
-            cargo build --all
+        (-target)
+            target="$2"
+            shift
+            shift
             ;;
         (*)
-            echo "Unknown target $target"
-            exit 1
+            POSITIONAL+=("$1")
+            shift
+            ;;
     esac
+done
+profile_=${profile_:-release}
+target=${target:-''}
 
-    cp -f target/"$target/$MODULE_ORIGINAL" "$MODULE_RENAMED"
+# Construct arguments to cargo.
+extra_args=()
+target_dir=target
+case $profile_ in
+    (release)
+        extra_args+=(--release)
+        ;;
+    (debug)
+        ;;
+    (*)
+        echo "!! Unknown profile $profile_"
+        exit 1
+esac
+case $target in
+    (aarch64-apple-darwin)
+        extra_args+=(--target "$target")
+        target_dir="target/$target"
+        ;;
+    ('')
+        ;;
+    (*)
+        echo "!! Unsupport cross-build target $target"
+        exit 1
+        ;;
+esac
+
+echo "!! Building the dynamic module"
+(
+    cd "$core_root"
+    cargo build --all "${extra_args[@]}"
+
+    cp -f "$target_dir/$profile_/$MODULE_ORIGINAL" "$MODULE_RENAMED"
     version=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2)
     echo "$version".1 | tr -d $'\n' > DYN-VERSION
+)
+
+echo "!! Building Lisp code"
+if [[ $target != '' ]]; then
+    echo "!! Will skip building Lisp since this is a cross build"
+    exit 0
+fi
+(
+    cd "$core_root"
     cask build
 )
 (

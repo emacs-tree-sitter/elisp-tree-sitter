@@ -12,15 +12,23 @@ jobs:
       fail-fast: true
       matrix:
         include:
+          # TODO: Get host platform from rustc instead of specifying it explicitly.
           - os: macos-10.15
             emacs-version: '27.2'
             ext: dylib
+            host: x86_64-apple-darwin
+          - os: macos-11
+            emacs-version: '27.2'
+            ext: dylib
+            target: aarch64-apple-darwin
           - os: ubuntu-18.04
             emacs-version: '27.2'
             ext: so
+            host: x86_64-unknown-linux-gnu
           - os: windows-2019
             emacs-version: '27.2'
             ext: dll
+            host: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -28,8 +36,12 @@ jobs:
           rustup install stable
           rustc -Vv
           cargo -V
+      - name: Set up Rust's cross-build target
+        if: matrix.target
+        run: |
+          rustup target add ${{ matrix.target }}
 
-      - uses: purcell/setup-emacs@v3.0
+      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
@@ -56,27 +68,39 @@ jobs:
       - run: .github/script/setup-cask
 
       - run: bin/setup
-      - run: bin/build
+      - run: bin/build -target "${{ matrix.target }}"
 
       - run: bin/inspect-binaries
         continue-on-error: true
 
       - name: Install tree-sitter CLI
+        if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@0.19.3
       - run: bin/test
+        if: ${{ !matrix.target }}
+
+      - name: Rename cross-build's binary
+        if: matrix.target
+        run: |
+          mv core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.target }}.${{ matrix.ext }}
+      - name: Make a target-explicit copy of native-build's binary
+        if: ${{ !matrix.target && matrix.host }}
+        shell: bash
+        run: |
+          cp core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.host }}.${{ matrix.ext }}
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
         with:
           name: tsc-dyn
-          path: core/tsc-dyn.${{ matrix.ext }}
+          path: core/tsc-dyn.*${{ matrix.ext }}
           if-no-files-found: error
 
   publish:
     needs: build
     runs-on: ubuntu-18.04
     steps:
-      - uses: purcell/setup-emacs@v3.0
+      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
         with:
           version: '27.2'
       - uses: actions/checkout@v2
