@@ -72,27 +72,71 @@ This can also be used to selectively disable certain capture names."
 ;; TODO: tree-sitter-imenu-add-patterns
 
 ;;; ----------------------------------------------------------------------------
-;;; Index function
+;;; Index function & helpers
+
+(defun tree-sitter-imenu--captures-leaf-node (captures)
+  "Return a node in an entry, CAPTURES, from `tsc--query-cursor-matches'."
+  (cdr (aref (cdr captures) (1- (length (cdr captures))))))
+
+(defun tree-sitter-imenu--captures ()
+  "Execute variable `tree-sitter-imenu--query' and fetch unique matches.
+Returns a value of the form [(PATTERN-INDEX . [CAPTURE...])], that
+is a vector of all captures grouped by the pattern index."
+  (thread-first
+    (tsc--query-cursor-matches
+     (tsc-make-query-cursor)
+     (tree-sitter-imenu--query)
+     (tsc-root-node tree-sitter-tree)
+     #'tsc--buffer-substring-no-properties)
+    (cl-stable-sort #'< :key #'car)
+    ;; TODO: Write custom duplicate remover, `cl-delete-duplicates'
+    ;; seems to work by overwriting earlier values matching later
+    ;; values with those later values, which is why we double reverse
+    ;; here to ensure the order of the original sequence is maintained.
+    (nreverse)
+    (cl-delete-duplicates
+     :key #'tree-sitter-imenu--captures-leaf-node
+     :test #'tsc-node-eq)
+    (nreverse)))
+
+(defun tree-sitter-imenu--stream (captures)
+  "Convert each tree-sitter match in CAPTURES to a list of nodes.
+Each node in the return-value is a string except for the final node
+which is a cons of the form (\"NAME\" . POINT)."
+  (cl-loop for (_ . it) across captures
+           with len  = nil do (setq len  (length it))
+           with leaf = nil do (setq leaf (aref it (1- len)))
+           collect
+           (append (list (car leaf))
+                   (mapcar #'tsc-node-text
+                           (mapcar #'cdr (cl-subseq it 0 (1- len))))
+                   (cons (tsc-node-text (cdr leaf))
+                         (tsc-node-start-position (cdr leaf))))))
+
+(defun tree-sitter-imenu--group-stream (stream)
+  "Group STREAM into a tree of nodes as expected by `imenu'."
+  (let ((mem (make-hash-table :test 'equal :size (length stream)))
+        leaves)
+    (dolist (it stream)
+      (if (numberp (cdr it))
+          (push it leaves)
+        (if-let ((val (gethash (car it) mem)))
+            (puthash (car it) (append val (list (cdr it))) mem)
+          (puthash (car it) (list (cdr it)) mem))))
+    (maphash
+     (lambda (key sub-stream)
+       (setq leaves
+             (append leaves
+                     (list (cons key (tree-sitter-imenu--group-stream sub-stream))))))
+     mem)
+    leaves))
 
 (defun tree-sitter-imenu-index-function ()
-  (thread-last (cl-delete-duplicates
-                (tsc--query-cursor-captures
-                 (tsc-make-query-cursor)
-                 (tree-sitter-imenu--query)
-                 (tsc-root-node tree-sitter-tree)
-                 #'tsc--buffer-substring-no-properties)
-                :key #'cdr
-                :test #'tsc-node-eq)
-               ;; Group each match by its capture within imenu.
-               (seq-group-by
-                (lambda (capture) (car capture)))
-               ;; Convert each capture response into an imenu node.
-               (seq-map (lambda (captures)
-                          (cons (car captures)
-                                (cl-loop for (type . node) in (cdr captures)
-                                         collect
-                                         (cons (ts-node-text node)
-                                               (ts-node-start-position node))))))))
+  "Tree-sittters `imenu-create-index-function'."
+  (thread-first
+    (tree-sitter-imenu--captures)
+    (tree-sitter-imenu--stream)
+    (tree-sitter-imenu--group-stream)))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Setup and teardown.
