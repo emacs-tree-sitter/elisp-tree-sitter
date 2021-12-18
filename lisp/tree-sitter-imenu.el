@@ -75,11 +75,14 @@ This can also be used to selectively disable certain capture names."
 ;;; Index function
 
 (defun tree-sitter-imenu-index-function ()
-  (thread-last (tsc--query-cursor-captures
-                nil
-                (tree-sitter-imenu--query)
-                (tsc-root-node tree-sitter-tree)
-                #'tsc--buffer-substring-no-properties)
+  (thread-last (cl-delete-duplicates
+                (tsc--query-cursor-captures
+                 (tsc-make-query-cursor)
+                 (tree-sitter-imenu--query)
+                 (tsc-root-node tree-sitter-tree)
+                 #'tsc--buffer-substring-no-properties)
+                :key #'cdr
+                :test #'tsc-node-eq)
                ;; Group each match by its capture within imenu.
                (seq-group-by
                 (lambda (capture) (car capture)))
