@@ -96,7 +96,7 @@ jobs:
           path: core/tsc-dyn.*${{ matrix.ext }}
           if-no-files-found: error
 
-  publish:
+  publish-binaries:
     needs: build
     runs-on: ubuntu-18.04
     steps:
@@ -122,3 +122,64 @@ jobs:
           body_path: RELEASE-NOTES
           files: |
             tsc-dyn.*
+
+  integ:
+    needs: publish-binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-10.15
+            emacs-version: '27.2'
+          - os: ubuntu-18.04
+            emacs-version: '27.2'
+          # XXX: Fails on CI, but not locally (Windows 10) with
+          # :value 2 :fail-reason "did not signal an error"
+          # and
+          # (different-types 443 (tsc . 1))
+          #
+          # - os: windows-2019
+          #   emacs-version: '27.2'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: purcell/setup-emacs@v3.0
+        if: runner.os != 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+      - uses: jcs090218/setup-emacs-windows@v4
+        if: runner.os == 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - uses: actions/checkout@v2
+
+      - run: .github/script/setup-cask
+      - run: bin/setup
+
+      - run: bin/test integ
+
+  publish-melpa:
+    needs: integ
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Set release version
+        run: |
+          echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      - name: Greenlight releasing to MELPA
+        run: |
+          git push origin ${{ env.RELEASE_VERSION }}:refs/heads/release
+        continue-on-error: true
+
+      # We don't want this to trigger workflows, so we don't use a personal access token.
+      - name: Greenlight releasing to MELPA Stable
+        uses: actions/github-script@v4
+        with:
+          script: |
+            github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/melpa-stable/v${{ env.RELEASE_VERSION }}",
+              sha: context.sha
+            })
+        continue-on-error: true

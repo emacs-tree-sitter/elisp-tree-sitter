@@ -37,7 +37,11 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
 #+end_src
 
 {{% notice note %}}
-The methods below download pre-compiled binaries, so they only work for macOS, Linux and Windows, on x86_64 machines. For other systems, you will have to build from source.
+Upon byte compilation and first load, the package ~tree-sitter~ (~tsc~) will try to obtain the dynamic module using 2 mechanisms:
+- Downloading a pre-compiled binary from GitHub. This only works for macOS/Linux/Windows, on x86_64 machines.
+- Compiling the binary from the Rust source. This requires the [[https://rustup.rs/][Rust toolchain]].
+
+This behavior can be customized by setting the variable ~tsc-dyn-get-from~, *before tree-sitter (tsc) is byte-compiled/loaded*. Its default value is ~(:github :compilation)~. For example, on Apple Silicon, you should set it to ~(:compilation)~.
 {{% /notice %}}
 
 ** Installing from MELPA

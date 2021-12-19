@@ -5,4 +5,5 @@
 (source melpa)
 
 (development
- (depends-on "rust-mode"))
+ (depends-on "rust-mode")
+ (depends-on "async"))
