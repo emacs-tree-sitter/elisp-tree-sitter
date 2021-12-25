@@ -134,7 +134,10 @@
 
 ;;; TODO: Define a more sensible default.
 (defface tree-sitter-hl-face:property
-  '((default :inherit font-lock-constant-face :slant italic))
+  '((default :inherit font-lock-constant-face)
+    ;; XXX: `(supports :slant italic)' doesn't seem to work correctly in terminals.
+    (((type nil)) :inherit font-lock-constant-face)
+    (t :inherit font-lock-constant-face :slant italic))
   "Face for properties."
   :group 'tree-sitter-hl-faces)
 
