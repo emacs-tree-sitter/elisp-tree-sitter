@@ -558,16 +558,21 @@ OLD-TREE is the tree before the edit."
       (when (eq tree-sitter-hl-use-font-lock-keywords :except-font-lock-defaults)
         ;; XXX: Check whether this covers all the edge cases of the interaction
         ;; between `font-lock-eval-keywords' and `font-lock-remove-keywords'.
-        (let* ((keywords-spec (car font-lock-defaults))
-               ;; The spec can be a list, corresponding to multiple levels of
-               ;; fontification. We want to disable all of them.
-               (keywords-list (if (and (listp keywords-spec)
-                                       (symbolp (car keywords-spec)))
-                                  keywords-spec
-                                (list keywords-spec))))
-          (dolist (keywords keywords-list)
-            (font-lock-remove-keywords
-             nil (font-lock-eval-keywords keywords))))))))
+        (font-lock-remove-keywords
+         nil (font-lock-eval-keywords
+              (font-lock-choose-keywords (nth 0 font-lock-defaults)
+                                         font-lock-maximum-decoration)))
+        ;; (let* ((keywords-spec (car font-lock-defaults))
+        ;;        ;; The spec can be a list, corresponding to multiple levels of
+        ;;        ;; fontification. We want to disable all of them.
+        ;;        (keywords-list (if (and (listp keywords-spec)
+        ;;                                (symbolp (car keywords-spec)))
+        ;;                           keywords-spec
+        ;;                         (list keywords-spec))))
+        ;;   (dolist (keywords keywords-list)
+        ;;     (font-lock-remove-keywords
+        ;;      nil (font-lock-eval-keywords keywords))))
+        ))))
 
 (defun tree-sitter-hl--restore-font-lock-keywords ()
   "Undo the hack done by `tree-sitter-hl--minimize-font-lock-keywords'."
@@ -613,8 +618,10 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; value of `font-lock-ensure-function', calling `font-lock-ensure' will
     ;; signal an error. For example, this happens when org-mode's code blocks
     ;; are highlighted). Therefore, we disabled that hack. See
-    ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74
-    ))
+    ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+    (when font-lock-mode
+      (unless font-lock-defaults
+        (setq font-lock-defaults '(nil))))))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
