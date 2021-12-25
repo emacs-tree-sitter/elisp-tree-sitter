@@ -246,6 +246,11 @@
   "Face for attributes markup languages."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:nil
+  '((default :inherit default))
+  ""
+  :group 'tree-sitter-hl-faces)
+
 ;;; ----------------------------------------------------------------------------
 ;;; Interfaces for modes and end users.
 
