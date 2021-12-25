@@ -208,6 +208,27 @@ defun_node_props! {
     "count-named-children" fn named_child_count -> usize
 }
 
+#[defun]
+fn node_field(node: &RNode) -> Result<Option<&GlobalRef>> {
+    let node = node.inner;
+    match node.parent() {
+        None => Ok(None),
+        Some(parent) => {
+            let mut cursor = parent.walk();
+            for child in parent.children(&mut cursor) {
+                if child == node {
+                    match cursor.field_id() {
+                        None => return Ok(None),
+                        Some(field_id) =>
+                            Ok(Some(Language::from(node.language()).info().field_name(field_id)))
+                    }
+                }
+            }
+            Ok(None)
+        }
+    }
+}
+
 /// Return NODE's (START-BYTEPOS . END-BYTEPOS).
 #[defun]
 fn node_byte_range<'e>(env: &'e Env, node: &RNode) -> Result<Value<'e>> {
