@@ -22,7 +22,7 @@ It aims to be the foundation for a new breed of Emacs packages that understand c
 - Structural editing (like Paredit, or even better) for non-Lisp code.
 - More informative indexing for imenu.
 
-The author of Tree-sitter articulated its merits a lot better in this [Strange Loop talk](https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html).
+The author of Tree-sitter articulated its merits a lot better in this [[https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html][Strange Loop talk]].
 
 * Installation
 :PROPERTIES:
@@ -167,11 +167,11 @@ The variable ~tree-sitter-load-path~ is a list of directories that the function 
   (tree-sitter-require 'rust)
 #+end_src
 
-The package ~tree-sitter-langs~ is a language bundle that contains shared libraries for some languages (as well as syntax highlighting queries). When it is loaded, its shared libraries are prioritized over the CLI's directory.
+The package [[https://github.com/emacs-tree-sitter/tree-sitter-langs][tree-sitter-langs]] is a language bundle that contains shared libraries for some languages (as well as syntax highlighting queries). When it is loaded, its shared libraries are prioritized over the CLI's directory.
 
 Syntax-aware language-agnostic mechanisms are meant to be defined by ~tree-sitter-mode~ and its dependent minor modes. They determine the language object to use by consulting the variable ~tree-sitter-major-mode-language-alist~. This list is empty by default, and gets populated by ~tree-sitter-langs~ when it is loaded, and by language major modes that are ~tree-sitter~-aware.
 
-Language major modes use these generic mechanisms to provide functionalities specific to their languages. Currently, there are *not many language major modes* built on top of ~tree-sitter~. An example is [[https://github.com/emacs-csharp/csharp-mode/][csharp-mode]].
+Language major modes can use these generic mechanisms to provide functionalities specific to their languages. Currently, there are *not many language major modes* built on top of ~tree-sitter~. An example is [[https://github.com/emacs-csharp/csharp-mode/][csharp-mode]].
 
 For the full list of languages bundled by ~tree-sitter-langs~, see the submodules under its [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/repos][repos/]] directory.
 
@@ -461,6 +461,7 @@ When a node matches multiple patterns in a highlighting query, earlier patterns 
 {{% /notice %}}
 
 # TODO: Describe how to find and make changes to highlighting queries defined by tree-sitter-langs.
+*** Overriding All Patterns
 
 ** Interface for Modes
 :PROPERTIES:
@@ -686,3 +687,7 @@ See the docstring of ~tree-sitter--handle-dependent~.
 *** Main Package tree-sitter
 *** Grammar Bundle tree-sitter-langs
 ** Creating a Language Grammar
+
+* FAQs
+** Core libraries vs. high-level packages and tree-sitter-langs
+https://github.com/ubolonton/emacs-tree-sitter/issues/143#issuecomment-886034407
