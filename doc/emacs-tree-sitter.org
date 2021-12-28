@@ -191,7 +191,7 @@ If, for some reason, you cannot update, the older binaries can be downloaded fro
 :EXPORT_TITLE: Syntax Highlighting
 :END:
 
-Syntax highlighting is provided by the minor mode ~tree-sitter-hl-mode~. It overrides the regex-based highlighting provided by ~font-lock-mode~, using the syntax tree provided by ~tree-sitter-mode~. It is based on *tree queries*, a system for pattern-matching on Tree-sitter's syntax trees.
+Syntax highlighting is provided by the minor mode ~tree-sitter-hl-mode~. It overrides the regex-based highlighting provided by ~font-lock-mode~, using the syntax tree provided by ~tree-sitter-mode~. It is based on [[* Queries][*tree queries*]], a system for pattern-matching on Tree-sitter's syntax trees.
 
 It can be toggled in a buffer by the command ~tree-sitter-hl-mode~, or enabled through major mode hooks:
 #+begin_src emacs-lisp
@@ -203,25 +203,22 @@ To enable it whenever possible (assuming the language major modes were already i
   (global-tree-sitter-mode)
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
+*** tree-sitter-langs
+The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][queries]] for some languages.
 
-The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][queries]] for some languages:
-- C
-- C++
-- *CSS*
-- Go
-- HTML
-- Java
-- *JavaScript*
-- PHP
-- *Python*
-- Ruby
-- *Rust*
-- *TypeScript*
+Most of them are *intentionally different* from those from upstream repositories, which are more geared towards /GitHub's use cases/. We try to be more consistent with /Emacs's existing conventions/. The general principles are:
+- Definitions and uses should be differentiated:
+   + ~@function~ vs. ~@function.call~.
+   + ~@method~ vs. ~@method.call~.
+   + ~@type.parameter~ vs. ~@type.argument~.
+- ~@variable~ and ~@variable.parameter~ should be applied only to declarations/definitions/bindings/mutations (/writes/), not usage (/reads/).
+- Special faces should have high priority (placed earlier in the pattern list): ~@function.macro~, ~@type.builtin~, ~@variable.special~.
+- Patterns whose internals may be highlighted should have low priority (placed towards the end). Example: strings with interpolation.
 
 {{% notice info %}}
-Most of the [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][highlighting queries]] in the bundle are very basic, as they are copies of those included in the [[https://github.com/tree-sitter][grammar repositories]]. Queries for languages written in bold have received additional work to leverage more of the querying system's expressiveness.
+For some languages, the highlighting patterns are similar to those from upstream [[https://github.com/tree-sitter][grammar repositories]], instead of extensively following the above principles. They should be considered WIP.
 
-Contributions to highlighting queries are welcome.
+Contributions to improve them are welcome.
 {{% /notice %}}
 
 ** Queries
