@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 - Added customization option `tsc-dyn-get-from`, which is a list of sources to get the dynamic module `tsc-dyn` from. Its default value is `(:github :compilation)`.
+- Made `tree-sitter-hl`'s region-fontification function fall back to the underlying non-tree-sitter function when called outside of `tree-sitter-hl-mode`. This fixes an issue where `jupyter-repl-mode`'s [input cells are not highlighted](https://github.com/nnicandro/emacs-jupyter/issues/363).
 
 ## [0.16.1] - 2021-12-11
 - Modified CI pipelines to publish additional pre-built dynamic modules. Their filenames include the platform they are built for. The files without platform in name will eventually be deprecated.

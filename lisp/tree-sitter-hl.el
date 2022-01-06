@@ -520,6 +520,18 @@ If LOUDLY is non-nil, print debug messages."
         ;; HL-REGION.
         `(jit-lock-bounds ,beg . ,end)))))
 
+(defun tree-sitter-hl--highlight-region-with-fallback (old-fontify-fn beg end &optional loudly)
+  "Highlight the region (BEG . END).
+
+This is a wrapper around `tree-sitter-hl--highlight-region' that falls back to
+OLD-FONTIFY-FN when the current buffer doesn't have `tree-sitter-hl-mode'
+enabled. An example is `jupyter-repl-mode', which copies and uses other major
+modes' fontification functions to highlight its input cells. See
+https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/78#issuecomment-1005987817."
+  (if tree-sitter-hl--query
+      (tree-sitter-hl--highlight-region beg end loudly)
+    (funcall old-fontify-fn beg end loudly)))
+
 (defun tree-sitter-hl--invalidate (&optional old-tree)
   "Mark regions of text to be rehighlighted after a text change.
 Installed on `tree-sitter-after-change-functions'.
@@ -590,8 +602,8 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; highlighting without setting `font-lock-defaults'. At the moment,
     ;; `font-lock-mode' somehow helps with making sure that fontification is
     ;; updated in-time, instead of eventually.
-    (add-function :override (local 'font-lock-fontify-region-function)
-                  #'tree-sitter-hl--highlight-region)
+    (add-function :around (local 'font-lock-fontify-region-function)
+                  #'tree-sitter-hl--highlight-region-with-fallback)
     (tree-sitter-hl--minimize-font-lock-keywords)
     ;; XXX: We used to have a hack that calls`font-lock-turn-on-thing-lock',
     ;; which allows turning on tree-based syntax highlighting by temporarily
@@ -611,7 +623,7 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
   (remove-function (local 'font-lock-fontify-region-function)
-                   #'tree-sitter-hl--highlight-region)
+                   #'tree-sitter-hl--highlight-region-with-fallback)
   (remove-hook 'tree-sitter-after-change-functions
                #'tree-sitter-hl--invalidate
                :local)
