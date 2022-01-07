@@ -494,8 +494,8 @@ If LOUDLY is non-nil, print debug messages."
         (tree-sitter-hl--extend-regions hl-region query-region)
         (setf `(,beg . ,end) hl-region)
         (tsc--query-cursor-set-byte-range tree-sitter-hl--query-cursor
-                                         (position-bytes (car query-region))
-                                         (position-bytes (cdr query-region))))
+                                          (position-bytes (car query-region))
+                                          (position-bytes (cdr query-region))))
       (let* ((root-node (tsc-root-node tree-sitter-tree))
              (captures  (tsc--query-cursor-captures-1
                          tree-sitter-hl--query-cursor
@@ -531,6 +531,74 @@ https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/78#issuecomment-10
   (if tree-sitter-hl--query
       (tree-sitter-hl--highlight-region beg end loudly)
     (funcall old-fontify-fn beg end loudly)))
+
+(defun tree-sitter-hl-propertize (string lang-symbol)
+  "Return a copy of STRING propertized by LANG-SYMBOL's highlighting patterns."
+  (with-current-buffer
+      (get-buffer-create (format " tree-sitter-hl-propertize:%s" lang-symbol))
+    (delete-region (point-min) (point-max))
+    (insert string)
+    (unless tree-sitter-mode
+      (setq tree-sitter-language (tree-sitter-require lang-symbol))
+      (tree-sitter-mode))
+    (unless tree-sitter-hl-mode
+      (tree-sitter-hl-mode))
+    (tree-sitter-hl--highlight-region (point-min) (point-max))
+    (buffer-string)))
+
+(defun tree-sitter-hl-highlight-region-1 (lang-symbol beg end)
+  "Highlight the region between BEG and END with LANG-SYMBOL's highlighting patterns.
+This is intended to be used for one-off highlighting needs, not as a value for
+`font-lock-fontify-region-function'."
+  (let ((buffer (current-buffer)))
+    (with-current-buffer
+        (get-buffer-create (format " tree-sitter-hl-highlight-region:%s" lang-symbol))
+      (delete-region (point-min) (point-max))
+      (insert-buffer-substring-no-properties buffer beg end)
+      (unless tree-sitter-mode
+        (setq tree-sitter-language (tree-sitter-require lang-symbol))
+        (tree-sitter-mode))
+      (unless tree-sitter-hl-mode
+        (tree-sitter-hl-mode))
+      (tree-sitter-hl--highlight-region (point-min) (point-max))
+      (tree-sitter-hl--copy-faces-to-buffer
+       buffer (point-min) (point-max) beg))))
+
+(defun tree-sitter-hl-highlight-region (lang-symbol beg end)
+  "Highlight the region between BEG and END with LANG-SYMBOL's highlighting patterns.
+This is intended to be used for one-off highlighting needs, not as a value for
+`font-lock-fontify-region-function'."
+  (let ((buffer (current-buffer)))
+    (with-temp-buffer
+      (insert-buffer-substring-no-properties buffer beg end)
+      (setq tree-sitter-language (tree-sitter-require lang-symbol))
+      (tree-sitter-mode)
+      (tree-sitter-hl-mode)
+      (when tree-sitter-hl--query-cursor
+        (tree-sitter-hl--highlight-region (point-min) (point-max)))
+      (tree-sitter-hl--copy-faces-to-buffer
+       buffer (point-min) (point-max) beg))))
+
+(defun tree-sitter-hl--copy-faces-to-buffer (buffer beg end to-beg)
+  "Copy current buffer's faces between BEG and END to BUFFER.
+The faces are copied to the target buffer starting from TO-BEG."
+  (let ((pos beg)
+        next)
+    (with-current-buffer buffer
+      (remove-text-properties to-beg (+ to-beg (- end beg))
+                              '(fontified nil)))
+    (while (and (< pos end)
+                (setq next (next-single-property-change pos 'face)))
+      (when (> next end)
+        (setq next end))
+      (let ((face (get-text-property pos 'face)))
+        ;; TODO: What if face is nil?
+        (when face
+          (put-text-property
+           (+ to-beg (- pos beg))
+           (+ to-beg (- next beg))
+           'face face buffer))
+        (setq pos next)))))
 
 (defun tree-sitter-hl--invalidate (&optional old-tree)
   "Mark regions of text to be rehighlighted after a text change.
@@ -595,8 +663,8 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; work, we need to make sure `tree-sitter--after-change' runs before
     ;; `jit-lock-after-change'.
     (add-hook 'tree-sitter-after-change-functions
-              #'tree-sitter-hl--invalidate
-              nil :local)
+      #'tree-sitter-hl--invalidate
+      nil :local)
     ;; TODO: Figure out how to properly integrate with `jit-lock-mode' directly,
     ;; without relying on `font-lock-mode'. Among other things, it would enable
     ;; highlighting without setting `font-lock-defaults'. At the moment,
