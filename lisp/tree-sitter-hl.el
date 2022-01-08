@@ -577,26 +577,34 @@ This is intended to be used for one-off highlighting needs, not as a value for
       (when tree-sitter-hl--query-cursor
         (tree-sitter-hl--highlight-region (point-min) (point-max)))
       (tree-sitter-hl--copy-faces-to-buffer
-       buffer (point-min) (point-max) beg))))
+       buffer (point-min) (point-max) beg))
+    `(jit-lock-bounds ,beg . ,end)))
 
-(defun tree-sitter-hl--copy-faces-to-buffer (buffer beg end to-beg)
+(defun tree-sitter-hl--copy-faces-to-buffer (buffer beg end new-beg)
   "Copy current buffer's faces between BEG and END to BUFFER.
-The faces are copied to the target buffer starting from TO-BEG."
-  (let ((pos beg)
+In the target buffer, the faces are pasted starting from NEW-BEG."
+  (let (;; (inhibit-point-motion-hooks t)
+        (pos beg)
         next)
     (with-current-buffer buffer
-      (remove-text-properties to-beg (+ to-beg (- end beg))
-                              '(fontified nil)))
-    (while (and (< pos end)
-                (setq next (next-single-property-change pos 'face)))
-      (when (> next end)
+      (remove-text-properties
+       new-beg (+ new-beg (- end beg))
+       (list 'fontified nil)))
+    (while (< pos end)
+      ;; Determine the end of the current contiguous block...
+      (setq next (next-single-property-change pos 'face))
+      ;; ... which should be capped to END.
+      (when (or (null next)
+                (> next end))
         (setq next end))
+      ;; Apply the face to the same-size contiguous block in the target buffer.
       (let ((face (get-text-property pos 'face)))
         ;; TODO: What if face is nil?
         (when face
           (put-text-property
-           (+ to-beg (- pos beg))
-           (+ to-beg (- next beg))
+           (+ new-beg (- pos beg))
+           (+ new-beg (- next beg))
+           ;; TODO: 'face or 'font-lock-face?
            'face face buffer))
         (setq pos next)))))
 
