@@ -531,6 +531,37 @@ We know it should since it is the `source_file' node."
     (tree-sitter-debug--button-node-lookup (button-at 1))
     (should (= (point) (point-min))))))
 
+(ert-deftest debug::bench ()
+  (tsc-test-lang-with-file rust "data/types.rs"
+    (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
+    (require 'rust-mode)
+    (rust-mode)
+    (dolist (n '(1 10 100))
+      (tree-sitter-debug-mode -1)
+      (garbage-collect)
+      (message "    brute %2d %s" n
+               (eval `(benchmark-run ,n
+                        (let ((tree-sitter-debug-traverse-function
+                               #'tsc-traverse-depth-first-brute))
+                          (progn (tree-sitter-debug-mode -1)
+                                 (tree-sitter-debug-mode))))))
+      (tree-sitter-debug-mode -1)
+      (garbage-collect)
+      (message "recursive %2d %s" n
+               (eval `(benchmark-run ,n
+                        (let ((tree-sitter-debug-traverse-function
+                               #'tsc-traverse-depth-first-recursive))
+                          (progn (tree-sitter-debug-mode -1)
+                                 (tree-sitter-debug-mode))))))
+      (tree-sitter-debug-mode -1)
+      (garbage-collect)
+      (message "iterative %2d %s" n
+               (eval `(benchmark-run ,n
+                        (let ((tree-sitter-debug-traverse-function
+                               #'tsc-traverse-depth-first-iterative))
+                          (progn (tree-sitter-debug-mode -1)
+                                 (tree-sitter-debug-mode)))))))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

@@ -58,18 +58,18 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
 
 (defun tree-sitter-debug--display-node (node depth)
   "Display NODE that appears at the given DEPTH in the syntax tree."
-  (insert (make-string (* 2 depth) ?\ ))
-  (let ((node-text (format "%s:\n" (tsc-node-type node))))
-    (if tree-sitter-debug-jump-buttons
-        (insert-button node-text
-                       'action 'tree-sitter-debug--button-node-lookup
-                       'follow-link t
-                       'points-to node)
-      (insert node-text)))
-  (tsc-mapc-children (lambda (c)
-                       (when (tsc-node-named-p c)
-                         (tree-sitter-debug--display-node c (1+ depth))))
-                     node))
+  (when (tsc-node-named-p node)
+    (insert (make-string (* 2 depth) ?\ ))
+    (let ((node-text (format "%s:\n" (tsc-node-type node))))
+      (if tree-sitter-debug-jump-buttons
+          (insert-button node-text
+                         'action 'tree-sitter-debug--button-node-lookup
+                         'follow-link t
+                         'points-to node)
+        (insert node-text)))))
+
+(defvar tree-sitter-debug-traverse-function
+  #'tsc-traverse-depth-first-brute)
 
 (defun tree-sitter-debug--display-tree (_old-tree)
   "Display the current `tree-sitter-tree'."
@@ -78,7 +78,8 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
     (with-current-buffer tree-sitter-debug--tree-buffer
       (let (buffer-read-only)
         (erase-buffer)
-        (tree-sitter-debug--display-node (tsc-root-node tree) 0)))))
+        (funcall tree-sitter-debug-traverse-function
+                 tree #'tree-sitter-debug--display-node)))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."

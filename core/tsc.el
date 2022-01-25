@@ -217,7 +217,7 @@ the prefix \"@\"). If it returns nil, the associated capture name is disabled.
 
 See also: `tsc-query-captures' and `tsc-query-matches'."
   (tsc--make-query language (tsc--stringify-patterns patterns)
-                  (or tag-assigner #'intern)))
+                   (or tag-assigner #'intern)))
 
 (defun tsc-query-matches (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of matches.
@@ -262,6 +262,49 @@ QUERY. Otherwise, a newly created query-cursor is used."
   "Return the pretty-printed string of TREE's sexp."
   (pp-to-string (read (tsc-tree-to-sexp tree))))
 
+(defun tsc-traverse--depth-first (c fn d)
+  ""
+  (funcall fn (tsc-current-node c) d)
+  (when (tsc-goto-first-child c)
+    (tsc-traverse--depth-first c fn (1+ d))
+    (while (tsc-goto-next-sibling c)
+      (tsc-traverse--depth-first c fn (1+ d)))
+    (tsc-goto-parent c)))
+
+(defun tsc-traverse-depth-first-recursive (tree fn)
+  (tsc-traverse--depth-first (tsc-make-cursor tree) fn 0))
+
+(defun tsc-traverse-depth-first-iterative (tree fn)
+  (let ((c (tsc-make-cursor tree))
+        (d 0)
+        (dir :down)
+        done)
+    (funcall fn (tsc-current-node c) d)
+    (while (not done)
+      (pcase dir
+        (:down  (if (tsc-goto-first-child c)
+                    (progn
+                      (cl-incf d)
+                      (funcall fn (tsc-current-node c) d))
+                  (setq dir :right)))
+        (:right (if (tsc-goto-next-sibling c)
+                    (progn
+                      (funcall fn (tsc-current-node c) d)
+                      (setq dir :down))
+                  (if (tsc-goto-parent c)
+                      (cl-decf d)
+                    (setq done t))))))))
+
+(defun tsc-traverse--depth-first-brute (node fn d)
+  (funcall fn node d)
+  (tsc-mapc-children (lambda (c)
+                       (funcall #'tsc-traverse--depth-first-brute
+                                c fn (1+ d)))
+                     node))
+
+(defun tsc-traverse-depth-first-brute (tree fn)
+  (tsc-traverse--depth-first-brute (tsc-root-node tree) fn 0))
+
 (defun tsc--node-steps (node)
   "Return the sequence of steps from the root node to NODE.
 
@@ -276,10 +319,10 @@ If NODE is the root node, the sequence is empty."
       (push (catch :tsc-step
               (let ((i 0))
                 (tsc-mapc-children (lambda (child)
-                                    (if (tsc-node-eq child this)
-                                        (throw :tsc-step (cons this i))
-                                      (setq i (1+ i))))
-                                  parent))
+                                     (if (tsc-node-eq child this)
+                                         (throw :tsc-step (cons this i))
+                                       (setq i (1+ i))))
+                                   parent))
               (throw :tsc-is-not-parents-child (cons this parent)))
             steps)
       (setq this parent))
