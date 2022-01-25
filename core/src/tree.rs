@@ -10,7 +10,7 @@ use crate::{
 
 // XXX: If we pass a &, #[defun] will assume it's refcell-wrapped. If we pass a Value, we need
 // .into_rust() boilerplate. This is a trick to avoid both.
-type Borrowed<'e, T> = &'e Shared<T>;
+pub(crate) type Borrowed<'e, T> = &'e Shared<T>;
 
 impl_pred!(tree_p, &Shared<Tree>);
 

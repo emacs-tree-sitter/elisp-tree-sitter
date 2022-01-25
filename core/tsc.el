@@ -31,6 +31,9 @@
 
 (require 'tsc-dyn)
 
+(eval-and-compile
+  (require 'generator))
+
 (eval-when-compile
   (require 'pcase)
   (require 'subr-x)
@@ -262,38 +265,46 @@ QUERY. Otherwise, a newly created query-cursor is used."
   "Return the pretty-printed string of TREE's sexp."
   (pp-to-string (read (tsc-tree-to-sexp tree))))
 
-(defun tsc-traverse--depth-first (c fn d)
+(defun tsc-traverse--depth-first (c fn d props output)
   ""
-  (funcall fn (tsc-current-node c) d)
+  (funcall fn (tsc--current-node c props output) d)
   (when (tsc-goto-first-child c)
-    (tsc-traverse--depth-first c fn (1+ d))
+    (tsc-traverse--depth-first c fn (1+ d) props output)
     (while (tsc-goto-next-sibling c)
-      (tsc-traverse--depth-first c fn (1+ d)))
+      (tsc-traverse--depth-first c fn (1+ d) props output))
     (tsc-goto-parent c)))
 
-(defun tsc-traverse-depth-first-recursive (tree fn)
-  (tsc-traverse--depth-first (tsc-make-cursor tree) fn 0))
+(defun tsc-traverse-depth-first-recursive (tree fn &optional props)
+  (tsc-traverse--depth-first
+   (tsc-make-cursor tree) fn 0
+   props (when props
+           (make-vector (length props) nil))))
 
-(defun tsc-traverse-depth-first-iterative (tree fn)
+(defun tsc-traverse-depth-first-iterative (tree fn &optional props)
   (let ((c (tsc-make-cursor tree))
         (d 0)
         (dir :down)
-        done)
-    (funcall fn (tsc-current-node c) d)
+        done
+        (output (when props
+                  (make-vector (length props) nil))))
+    (funcall fn (tsc--current-node c props output) d)
     (while (not done)
       (pcase dir
-        (:down  (if (tsc-goto-first-child c)
-                    (progn
-                      (cl-incf d)
-                      (funcall fn (tsc-current-node c) d))
-                  (setq dir :right)))
+        (:down (if (tsc-goto-first-child c)
+                   (progn
+                     (cl-incf d)
+                     (funcall fn (tsc--current-node c props output) d))
+                 (setq dir :right)))
         (:right (if (tsc-goto-next-sibling c)
                     (progn
-                      (funcall fn (tsc-current-node c) d)
+                      (funcall fn (tsc--current-node c props output) d)
                       (setq dir :down))
                   (if (tsc-goto-parent c)
                       (cl-decf d)
                     (setq done t))))))))
+
+(defun tsc-traverse-depth-first-native (tree fn &optional props)
+  (tsc--traverse-depth-first-native tree fn props))
 
 (defun tsc-traverse--depth-first-brute (node fn d)
   (funcall fn node d)
@@ -304,6 +315,11 @@ QUERY. Otherwise, a newly created query-cursor is used."
 
 (defun tsc-traverse-depth-first-brute (tree fn)
   (tsc-traverse--depth-first-brute (tsc-root-node tree) fn 0))
+
+;; (defun tsc-generate-depth-first (tree props)
+;;   (let ((cursor (tsc-make-cursor))
+;;         (output (make-vector (length props) nil)))
+;;     ()))
 
 (defun tsc--node-steps (node)
   "Return the sequence of steps from the root node to NODE.
@@ -327,6 +343,54 @@ If NODE is the root node, the sequence is empty."
             steps)
       (setq this parent))
     steps))
+
+(defun tsc-traverse-depth-first-native-0 (tree fn)
+  (iter-do (item (tsc-generate-depth-first tree))
+    (pcase-let ((`(,node . ,depth) item))
+      (funcall fn node depth))))
+
+;;; TODO: Try optimizing this over tsc-traverse-depth-first-native
+(defun tsc-traverse-depth-first-native-1 (tree fn &optional props)
+  (let ((iter (tsc--iter tree))
+        (combined-output (vector (when props
+                                   (make-vector (length props) nil))
+                                 nil)))
+    (while (tsc--iter-next iter)
+      ;; (funcall fn (tsc--iter-current-node iter props output))
+      (tsc--iter-current-node iter props combined-output)
+      (pcase-let ((`[,data ,depth] combined-output))
+        (funcall fn data depth)))))
+
+(defun tsc-traverse-depth-first-iterator (tree &optional props)
+  (let ((iter (tsc--iter tree))
+        (combined-output (vector (when props
+                                   (make-vector (length props) nil))
+                                 nil)))
+    (lambda (control _yield-result)
+      (pcase control
+        (:next (if (and iter (tsc--iter-next iter))
+                   (progn
+                     (tsc--iter-current-node iter props combined-output)
+                     combined-output)
+                 (signal 'iter-end-of-sequence nil)))
+        (:close (setq iter nil))
+        (_ (error "???"))))))
+
+(cl-defmacro tsc-do-tree (tree (var props) &rest body)
+  (declare (indent 2)
+           (debug ((symbolp form) body)))
+  (let ((iter (gensym "iter"))
+        (combined-output (gensym "combined-output")))
+    `(let ((,iter (tsc--iter ,tree))
+           (,combined-output (vector
+                              (when ,props
+                                (make-vector (length ,props) nil))
+                              nil))
+           ,var)
+       (while (tsc--iter-next ,iter)
+         (tsc--iter-current-node ,iter ,props ,combined-output)
+         (setq ,var ,combined-output)
+         ,@body))))
 
 (define-error 'tsc--invalid-node-step "Cannot follow node step")
 

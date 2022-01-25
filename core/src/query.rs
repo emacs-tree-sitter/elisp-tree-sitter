@@ -6,7 +6,7 @@ use tree_sitter::{Node, QueryCursor, QueryErrorKind, TextProvider};
 use crate::{
     types::{BytePos, Point},
     lang::Language,
-    node::RNode,
+    node::{RNode, LispUtils},
     error,
 };
 
@@ -139,8 +139,8 @@ fn text_callback<'e>(
     error: &'e RefCell<Option<Error>>,
 ) -> impl TextProvider<'e> {
     move |child: Node| {
-        let beg: BytePos = child.start_byte().into();
-        let end: BytePos = child.end_byte().into();
+        let beg = child.lisp_start_byte();
+        let end = child.lisp_end_byte();
         let text = text_function.call((beg, end)).and_then(|v| v.into_rust()).unwrap_or_else(|e| {
             error.borrow_mut().replace(e);
             "".to_owned()
@@ -207,11 +207,9 @@ fn _query_cursor_captures_1<'e>(
             return Err(error);
         }
         let c = m.captures[capture_index];
-        let beg: BytePos = c.node.start_byte().into();
-        let end: BytePos = c.node.end_byte().into();
         let capture = env.cons(
             &query.capture_tags[c.index as usize],
-            env.cons(beg, end)?,
+            c.node.lisp_byte_range(env)?,
         )?;
         vec.push((m.pattern_index, capture));
     }
