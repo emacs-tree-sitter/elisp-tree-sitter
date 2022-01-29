@@ -118,7 +118,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
+          draft: false
           body_path: RELEASE-NOTES
           files: |
             tsc-dyn.*
