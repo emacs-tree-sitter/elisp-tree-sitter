@@ -77,8 +77,19 @@ this to nil."
     (_ "so")))
 
 (defun tsc-dyn-get--file ()
-  "Return the dynamic module filename, which is system-dependent."
+  "Return the dynamic module filename, which is OS-dependent."
   (format "tsc-dyn.%s" (tsc-dyn-get--ext)))
+
+;;; TODO: Make this correct.
+(defun tsc-dyn-get--system-specific-file ()
+  "Return the dynamic module filename, which is system-dependent."
+  (pcase system-type
+    ('windows-nt "tsc-dyn.x86_64-pc-windows-msvc.dll")
+    ('darwin (if (string-prefix-p "x86_64" system-configuration)
+                 "tsc-dyn.x86_64-apple-darwin.dylib"
+               "tsc-dyn.aarch64-apple-darwin.dylib"))
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+     "tsc-dyn.x86_64-unknown-linux-gnu.so")))
 
 (defun tsc-dyn-get--log (format-string &rest args)
   (apply #'message (concat "tsc-dyn-get: " format-string) args))
@@ -123,19 +134,24 @@ This function records the downloaded version in the manifest
   (let* ((bin-dir (tsc-dyn-get--dir))
          (default-directory bin-dir)
          (_ (unless (file-directory-p bin-dir) (make-directory bin-dir)))
-         (dyn-file (tsc-dyn-get--file))
-         (gz-file (format "%s.gz" dyn-file))
          (uncompressed? (version< "0.7.0" version))
+         (system-specific? (version<= "0.16.1" version))
+         (local-name (tsc-dyn-get--file))
+         (remote-name (format "%s%s"
+                              (if system-specific?
+                                  (tsc-dyn-get--system-specific-file)
+                                local-name)
+                              (if uncompressed? "" ".gz")))
          (url (format "https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases/download/%s/%s"
-                      version (if uncompressed? dyn-file gz-file))))
+                      version remote-name)))
     (tsc-dyn-get--log "Downloading %s" url)
     (if uncompressed?
-        (tsc-dyn-get--url-copy-file url dyn-file :ok-if-already-exists)
-      (tsc-dyn-get--url-copy-file url gz-file)
-      (when (file-exists-p dyn-file)
-        (delete-file dyn-file))
+        (tsc-dyn-get--url-copy-file url local-name :ok-if-already-exists)
+      (tsc-dyn-get--url-copy-file url remote-name)
+      (when (file-exists-p local-name)
+        (delete-file local-name))
       ;; XXX: Uncompressing with `dired-compress-file' doesn't work on Windows.
-      (dired-compress-file gz-file))
+      (dired-compress-file remote-name))
     (with-temp-file tsc-dyn-get--version-file
       (let ((coding-system-for-write 'utf-8))
         (insert version)))))
