@@ -162,6 +162,8 @@ jobs:
     needs: integ
     runs-on: ubuntu-18.04
     steps:
+      - uses: actions/checkout@v2
+
       - name: Set release version
         run: |
           echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
