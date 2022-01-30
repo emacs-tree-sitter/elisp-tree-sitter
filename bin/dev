@@ -91,9 +91,15 @@
       (-modify-regexp "Version: *\\(.*\\)" next)
       (-modify-regexp "Package-Requires:.*\(tsc *\"\\(.*\\)\"" next))
     (-with-file-edits CHANGELOG.md
-      (search-forward "Unreleased")
+      (search-forward "[Unreleased]")
       (end-of-line)
-      (insert (format "\n\n## %s - %s" next date)))    ))
+      (insert (format "\n\n## [%s] - %s" next date))
+      (search-forward "[Unreleased]")
+      (search-forward current)
+      (replace-match next)
+      (end-of-line)
+      (insert (format "\n[%s]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/%s...%s"
+                      next current next)))))
 
 (defun cmd:current-version ()
   "Print the current version."

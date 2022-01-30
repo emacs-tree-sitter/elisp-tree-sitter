@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## 0.17.0 - 2022-01-29
+## [0.17.0] - 2022-01-29
 - Added customization option `tsc-dyn-get-from`, which is a list of sources to get the dynamic module `tsc-dyn` from. Its default value is `(:github :compilation)`.
 - Made `tree-sitter-hl`'s region-fontification function fall back to the underlying non-tree-sitter function when called outside of `tree-sitter-hl-mode`. This fixes an issue where `jupyter-repl-mode`'s [input cells are not highlighted](https://github.com/nnicandro/emacs-jupyter/issues/363).
 - Updated `tsc-dyn-get` to download platform-specific binaries (mainly for Apple Silicon).
@@ -144,7 +144,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...HEAD
+[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...HEAD
+[0.17.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.2...0.16.0
 [0.15.2]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.1...0.15.2
