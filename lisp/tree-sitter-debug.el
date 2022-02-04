@@ -80,15 +80,15 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
         (erase-buffer)
         (pcase tree-sitter-debug-traversal-method
           (:native (tsc-traverse-depth-first-native
-                    tree (lambda (props depth)
-                           (pcase-let ((`[,named-p ,type ,start-byte ,end-byte] props))
+                    tree (lambda (props)
+                           (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
                              (tree-sitter-debug--display-node
                               named-p type start-byte end-byte depth)))
-                    [:named-p :type :start-byte :end-byte]))
+                    [:named-p :type :start-byte :end-byte :depth]))
           (:iterator (iter-do (item (tsc-traverse-depth-first-iterator
                                      tree
-                                     [:named-p :type :start-byte :end-byte]))
-                       (pcase-let ((`[[,named-p ,type ,start-byte ,end-byte] ,depth] item))
+                                     [:named-p :type :start-byte :end-byte :depth]))
+                       (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] item))
                          (tree-sitter-debug--display-node
                           named-p type start-byte end-byte depth))))
           (:do-tree (tsc-do-tree ([named-p type start-byte end-byte depth] tree)

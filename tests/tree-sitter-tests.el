@@ -374,10 +374,10 @@ source_file (1 . 20)
           (tsc-test-capture-messages
            (tsc-traverse-depth-first-native
             tree
-            (lambda (props depth)
-              (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field] props))
+            (lambda (props)
+              (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] props))
                 (tsc-test-render-node type named-p start-byte end-byte field depth)))
-            [:type :named-p :start-byte :end-byte :field])))))
+            [:type :named-p :start-byte :end-byte :field :depth])))))
       (ert-info ("Generator-based traversal should work")
         (should
          (string=
@@ -385,8 +385,8 @@ source_file (1 . 20)
           (tsc-test-capture-messages
            (cl-loop for item
                     iter-by (tsc-traverse-depth-first-iterator
-                             tree [:type :named-p :start-byte :end-byte :field])
-                    do (pcase-let ((`[[,type ,named-p ,start-byte ,end-byte ,field] ,depth] item))
+                             tree [:type :named-p :start-byte :end-byte :field :depth])
+                    do (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] item))
                          (tsc-test-render-node type named-p start-byte end-byte field depth)))))))
       (ert-info ("Inline traversal should work")
         (should

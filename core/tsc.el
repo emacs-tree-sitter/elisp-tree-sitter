@@ -269,13 +269,12 @@ QUERY. Otherwise, a newly created query-cursor is used."
 
 (defun tsc-traverse-depth-first-iterator (tree &optional props)
   (let ((iter (tsc--iter tree))
-        (combined-output (vector (when props
-                                   (make-vector (length props) nil))
-                                 nil)))
+        (output (when props
+                  (make-vector (length props) nil))))
     (lambda (control _yield-result)
       (pcase control
-        (:next (if (tsc--iter-next-node iter props combined-output)
-                   combined-output
+        (:next (if (tsc--iter-next-node iter props output)
+                   output
                  (signal 'iter-end-of-sequence nil)))
         (:close (setq iter nil))
         (_ (error "???"))))))
@@ -301,35 +300,24 @@ QUERY. Otherwise, a newly created query-cursor is used."
            (debug ((vectorp form) body)))
   (unless (vectorp vars)
     (error "Var bindings must be a vector"))
-  (let* ((get-depth? (seq-contains-p vars 'depth))
-         (invalid-props (seq-filter (lambda (symbol)
+  (let* ((invalid-props (seq-filter (lambda (symbol)
                                       (not (memq symbol tsc--valid-node-props)))
                                     vars))
          (_ (when invalid-props
               (error "Invalid bindings %s" invalid-props)))
-         (vars (seq-into (seq-filter (lambda (symbol)
-                                       (not (eq symbol 'depth)))
-                                     vars)
-                         'vector))
          (iter (gensym "iter"))
-         (combined-output (gensym "combined-output"))
-         (prop-vals (gensym "prop-vals"))
+         (output (gensym "output"))
          (props (cl-map 'vector
                         (lambda (symbol)
                           (intern (format ":%s" symbol)))
                         vars)))
     `(let ((,iter (tsc--iter ,tree))
-           (,combined-output (vector
-                              ,(when props
-                                 (make-vector (length props) nil))
-                              nil)))
-       (while (tsc--iter-next-node ,iter ,props ,combined-output)
-         (let* ((,prop-vals (aref ,combined-output 0))
-                ,@(cl-loop for i below (length vars)
+           (,output ,(when props
+                       (make-vector (length props) nil))))
+       (while (tsc--iter-next-node ,iter ,props ,output)
+         (let* (,@(cl-loop for i below (length vars)
                            collect `(,(aref vars i)
-                                     (aref ,prop-vals ,i)))
-                ,@(when get-depth?
-                    `((depth (aref ,combined-output 1)))))
+                                     (aref ,output ,i))))
            ,@body)))))
 
 (defun tsc--node-steps (node)

@@ -227,24 +227,22 @@ fn _iter_close(iter: &mut DepthFirstIterator) -> Result<()> {
 }
 
 #[defun]
-fn _iter_current_node(iter: &mut DepthFirstIterator, props: Option<Vector>, combined_output: Vector) -> Result<()> {
-    let env = combined_output.value().env;
+fn _iter_current_node(iter: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<()> {
+    let env = output.value().env;
     let cursor = &iter.cursor;
-    let output = combined_output.get(0)?;
-    let node = _current_node(cursor, props, output, env)?;
-    if props.is_none() {
-        combined_output.set(0, node)?;
+    let _ = _current_node(cursor, Some(props), Some(output), env)?;
+    for (i, prop) in props.into_iter().enumerate() {
+        if prop.eq(_depth.bind(env)) {
+            output.set(i, iter.depth)?;
+        }
     }
-    combined_output.set(1, iter.depth)?;
-    // Ok(data)
-    // Ok(combined_output)
     Ok(())
 }
 
 #[defun]
-fn _iter_next_node(iter: &mut DepthFirstIterator, props: Option<Vector>, combined_output: Vector) -> Result<bool> {
+fn _iter_next_node(iter: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<bool> {
     if iter.next().is_some() {
-        _iter_current_node(iter, props, combined_output)?;
+        _iter_current_node(iter, props, output)?;
         Ok(true)
     } else {
         Ok(false)
@@ -297,7 +295,7 @@ fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option
                 } else if eq!(_range) {
                     result.set(i, node.lisp_range())?;
                 } else {
-                    result.set(i, RNode::new(cursor.clone_tree(), |_| node))?;
+                    result.set(i, ())?;
                 }
             }
             result.into_lisp(env)
@@ -313,14 +311,31 @@ fn _traverse_depth_first_native(tree: Borrowed<Tree>, func: Value, props: Option
         None => None,
         Some(props) => Some(env.make_vector(props.len(), ())?),
     };
+    let mut depth_indexes = Vec::with_capacity(1);
+    if let Some(props) = props {
+        for (i, prop) in props.into_iter().enumerate() {
+            if prop.eq(_depth.bind(env)) {
+                depth_indexes.push(i)
+            }
+        }
+    }
     // Can't use a for loop because we need to access the cursor to process each item.
     let mut item: Option<(RNode, usize)> = iterator.next();
     while item.is_some() {
         let result = _current_node(&iterator.cursor, props, output, env)?;
-        let (_, depth) = item.unwrap();
-        // Safety: the returned value is unused.
+        // let (_, depth) = item.unwrap();
 
-        unsafe { func.call_unprotected((result, depth))?; }
+        if let Some(output) = output {
+            for i in &depth_indexes {
+                output.set(*i, iterator.depth)?;
+            }
+        }
+
+        // Safety: the returned value is unused.
+        unsafe { func.call_unprotected([result])?; }
+
+        // // Safety: the returned value is unused.
+        // unsafe { func.call_unprotected((result, depth))?; }
 
         // // 0
         // unsafe { func.call_unprotected([])?; }
