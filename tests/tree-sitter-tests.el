@@ -397,7 +397,7 @@ tree is held (since nodes internally reference the tree)."
         (pcase-dolist (`(,func ,msg)
                        '((tsc-traverse-depth-first-recursive
                           " recursive")
-                         (tsc-traverse-depth-first-recursive
+                         (tsc-traverse-depth-first-iterative
                           " iterative")
                          (tsc-traverse-depth-first-native-1
                           "  native-1")
@@ -645,7 +645,7 @@ We know it should since it is the `source_file' node."
       (pcase-dolist (`(,func ,msg)
                      '((tsc-traverse-depth-first-recursive
                         "recursive")
-                       (tsc-traverse-depth-first-recursive
+                       (tsc-traverse-depth-first-iterative
                         "iterative")
                        (tsc-traverse-depth-first-native-1
                         " native-1")

@@ -400,39 +400,59 @@ If NODE is the root node, the sequence is empty."
          (setq ,var ,combined-output)
          ,@body))))
 
+(defconst tsc--valid-node-props
+  '(field
+    type
+    named-p
+    extra-p
+    error-p
+    missing-p
+    has-error-p
+    start-byte
+    start-point
+    end-byte
+    end-point
+    range
+    byte-range
+    depth))
+
 (cl-defmacro tsc-do-tree ((vars tree) &rest body)
   (declare (indent 1)
            (debug ((symbolp form) body)))
-  (let* ((iter (gensym "iter"))
+  (unless (vectorp vars)
+    (error "Var bindings must be a vector"))
+  (let* ((get-depth? (seq-contains-p vars 'depth))
+         (invalid-props (seq-filter (lambda (symbol)
+                                      (not (memq symbol tsc--valid-node-props)))
+                                    vars))
+         (_ (when invalid-props
+              (error "Invalid bindings %s" invalid-props)))
+         (vars (seq-into (seq-filter (lambda (symbol)
+                                       (not (eq symbol 'depth)))
+                                     vars)
+                         'vector))
+         (iter (gensym "iter"))
          (combined-output (gensym "combined-output"))
          (prop-vals (gensym "prop-vals"))
-         (get-props? (vectorp vars))
-         (props (cond
-                 (get-props?
-                  (progn
-                    (cl-map 'vector
-                            (lambda (symbol)
-                              (intern (format ":%s" symbol)))
-                            vars)))
-                 ((symbolp vars) nil)
-                 (t (error "Vars must be a symbol or a vector")))))
+         (props (cl-map 'vector
+                        (lambda (symbol)
+                          (intern (format ":%s" symbol)))
+                        vars)))
     `(let ((,iter (tsc--iter ,tree))
            (,combined-output (vector
                               ,(when props
                                  (make-vector (length props) nil))
                               nil))
-           ,@(if get-props?
-                 (cl-map 'list #'identity vars)
-               (list vars))
-           depth)
+           ,@(seq-map #'identity vars)
+           ,@(when get-depth?
+               '(depth)))
        (while (tsc--iter-next-node ,iter ,props ,combined-output)
-         ,(if get-props?
-              `(let ((,prop-vals (aref ,combined-output 0)))
-                 ,@(cl-loop for i below (length vars)
-                            collect `(setq ,(aref vars i)
-                                           (aref ,prop-vals ,i))))
-            `(setq ,vars (aref ,combined-output 0)))
-         (setq depth (aref ,combined-output 1))
+         (let ((,prop-vals (aref ,combined-output 0)))
+           ,@(cl-loop for i below (length vars)
+                      collect `(setq ,(aref vars i)
+                                     (aref ,prop-vals ,i))))
+         ,@(when get-depth?
+             `((setq depth (aref ,combined-output 1))))
          ,@body))))
 
 (define-error 'tsc--invalid-node-step "Cannot follow node step")
