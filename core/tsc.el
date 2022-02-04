@@ -264,113 +264,8 @@ QUERY. Otherwise, a newly created query-cursor is used."
   "Return the pretty-printed string of TREE's sexp."
   (pp-to-string (read (tsc-tree-to-sexp tree))))
 
-(defun tsc-traverse--depth-first (c fn d props output)
-  ""
-  (funcall fn (tsc--current-node c props output) d)
-  (when (tsc-goto-first-child c)
-    (tsc-traverse--depth-first c fn (1+ d) props output)
-    (while (tsc-goto-next-sibling c)
-      (tsc-traverse--depth-first c fn (1+ d) props output))
-    (tsc-goto-parent c)))
-
-(defun tsc-traverse-depth-first-recursive (tree fn &optional props)
-  (tsc-traverse--depth-first
-   (tsc-make-cursor tree) fn 0
-   props (when props
-           (make-vector (length props) nil))))
-
-(defun tsc-traverse-depth-first-iterative (tree fn &optional props)
-  (let ((c (tsc-make-cursor tree))
-        (d 0)
-        (dir :down)
-        done
-        (output (when props
-                  (make-vector (length props) nil))))
-    (funcall fn (tsc--current-node c props output) d)
-    (while (not done)
-      (pcase dir
-        (:down (if (tsc-goto-first-child c)
-                   (progn
-                     (cl-incf d)
-                     (funcall fn (tsc--current-node c props output) d))
-                 (setq dir :right)))
-        (:right (if (tsc-goto-next-sibling c)
-                    (progn
-                      (funcall fn (tsc--current-node c props output) d)
-                      (setq dir :down))
-                  (if (tsc-goto-parent c)
-                      (cl-decf d)
-                    (setq done t))))))))
-
 (defun tsc-traverse-depth-first-native (tree fn &optional props)
   (tsc--traverse-depth-first-native tree fn props))
-
-(defun tsc-traverse--depth-first-brute (node fn d)
-  (funcall fn node d)
-  (tsc-mapc-children (lambda (c)
-                       (funcall #'tsc-traverse--depth-first-brute
-                                c fn (1+ d)))
-                     node))
-
-(defun tsc-traverse-depth-first-brute (tree fn)
-  (tsc-traverse--depth-first-brute (tsc-root-node tree) fn 0))
-
-;; (defun tsc-generate-depth-first (tree props)
-;;   (let ((cursor (tsc-make-cursor))
-;;         (output (make-vector (length props) nil)))
-;;     ()))
-
-(defun tsc--node-steps (node)
-  "Return the sequence of steps from the root node to NODE.
-
-Each step has the form (CHILD-NODE . NTH), where CHILD-NODE is the node to
-descend into, and NTH is its 0-based ordinal position within the parent node.
-
-If NODE is the root node, the sequence is empty."
-  (let ((steps)
-        (parent)
-        (this node))
-    (while (setq parent (tsc-get-parent this))
-      (push (catch :tsc-step
-              (let ((i 0))
-                (tsc-mapc-children (lambda (child)
-                                     (if (tsc-node-eq child this)
-                                         (throw :tsc-step (cons this i))
-                                       (setq i (1+ i))))
-                                   parent))
-              (throw :tsc-is-not-parents-child (cons this parent)))
-            steps)
-      (setq this parent))
-    steps))
-
-(defun tsc-traverse-depth-first-native-0 (tree fn)
-  (iter-do (item (tsc-generate-depth-first tree))
-    (pcase-let ((`(,node . ,depth) item))
-      (funcall fn node depth))))
-
-(defun tsc-traverse-depth-first-native-1 (tree fn &optional props)
-  (let ((iter (tsc--iter tree))
-        (combined-output (vector (when props
-                                   (make-vector (length props) nil))
-                                 nil)))
-    (while (tsc--iter-next-node iter props combined-output)
-      (pcase-let ((`[,data ,depth] combined-output))
-        (funcall fn data depth)))))
-
-(defun tsc-traverse-depth-first-iterator-0 (tree &optional props)
-  (let ((iter (tsc--iter tree))
-        (combined-output (vector (when props
-                                   (make-vector (length props) nil))
-                                 nil)))
-    (lambda (control _yield-result)
-      (pcase control
-        (:next (if (and iter (tsc--iter-next iter))
-                   (progn
-                     (tsc--iter-current-node iter props combined-output)
-                     combined-output)
-                 (signal 'iter-end-of-sequence nil)))
-        (:close (setq iter nil))
-        (_ (error "???"))))))
 
 (defun tsc-traverse-depth-first-iterator (tree &optional props)
   (let ((iter (tsc--iter tree))
@@ -384,21 +279,6 @@ If NODE is the root node, the sequence is empty."
                  (signal 'iter-end-of-sequence nil)))
         (:close (setq iter nil))
         (_ (error "???"))))))
-
-(cl-defmacro tsc-do-tree-0 (tree (var props) &rest body)
-  (declare (indent 2)
-           (debug ((symbolp form) body)))
-  (let ((iter (gensym "iter"))
-        (combined-output (gensym "combined-output")))
-    `(let ((,iter (tsc--iter ,tree))
-           (,combined-output (vector
-                              (when ,props
-                                (make-vector (length ,props) nil))
-                              nil))
-           ,var)
-       (while (tsc--iter-next-node ,iter ,props ,combined-output)
-         (setq ,var ,combined-output)
-         ,@body))))
 
 (defconst tsc--valid-node-props
   '(field
@@ -454,6 +334,29 @@ If NODE is the root node, the sequence is empty."
          ,@(when get-depth?
              `((setq depth (aref ,combined-output 1))))
          ,@body))))
+
+(defun tsc--node-steps (node)
+  "Return the sequence of steps from the root node to NODE.
+
+Each step has the form (CHILD-NODE . NTH), where CHILD-NODE is the node to
+descend into, and NTH is its 0-based ordinal position within the parent node.
+
+If NODE is the root node, the sequence is empty."
+  (let ((steps)
+        (parent)
+        (this node))
+    (while (setq parent (tsc-get-parent this))
+      (push (catch :tsc-step
+              (let ((i 0))
+                (tsc-mapc-children (lambda (child)
+                                     (if (tsc-node-eq child this)
+                                         (throw :tsc-step (cons this i))
+                                       (setq i (1+ i))))
+                                   parent))
+              (throw :tsc-is-not-parents-child (cons this parent)))
+            steps)
+      (setq this parent))
+    steps))
 
 (define-error 'tsc--invalid-node-step "Cannot follow node step")
 

@@ -91,7 +91,7 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
 ;;         (insert node-text)))))
 
 (defvar tree-sitter-debug-traverse-function
-  #'tsc-traverse-depth-first-iterative)
+  #'tsc-traverse-depth-first-native)
 
 (defun tree-sitter-debug--display-tree (_old-tree)
   "Display the current `tree-sitter-tree'."

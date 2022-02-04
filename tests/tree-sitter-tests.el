@@ -329,17 +329,16 @@ tree is held (since nodes internally reference the tree)."
       (should (tsc-goto-first-child cursor)))
     (garbage-collect)))
 
-(ert-deftest cursor::traverse-0 ()
-  (ert-skip "")
+(ert-deftest cursor::traverse-iterator ()
   (tsc-test-with rust parser
-    (let* ((tree (tsc-parse-string parser "fn foo() {}"))
-           (iter (tsc-generate-depth-first tree)))
-      (cl-loop for (node . depth) iter-by (tsc-generate-depth-first tree)
-               do (message "%s%s" (make-string (* 2 depth) ?\ )
-                           (tsc-node-type node))))))
+    (let* ((tree (tsc-parse-string parser "fn foo() {}")))
+      (cl-loop for item
+               iter-by (tsc-traverse-depth-first-iterator tree [:type])
+               do (pcase-let ((`[[,type] ,depth] item))
+                    (message "%s%s" (make-string (* 2 depth) ?\ )
+                             type))))))
 
-(ert-deftest cursor::traverse ()
-  (ert-skip "")
+(ert-deftest cursor::traverse-callback ()
   (tsc-test-with rust parser
     (let ((tree (tsc-parse-string parser "fn foo(x: usize) {}")))
       (tsc-traverse-depth-first-native
@@ -347,21 +346,6 @@ tree is held (since nodes internally reference the tree)."
               (message "%s%s" (make-string (* 2 depth) ?\ )
                        (tsc-node-type node))))
       (tsc-traverse-depth-first-native
-       tree (lambda (props depth)
-              (pcase-let ((`[,type ,start-byte ,end-byte] props))
-                (message "%s%s (%s . %s)" (make-string (* 2 depth) ?\ )
-                         type start-byte end-byte)))
-       [:type :start-byte :end-byte]))))
-
-(ert-deftest cursor::traverse-1 ()
-  (ert-skip "")
-  (tsc-test-with rust parser
-    (let ((tree (tsc-parse-string parser "fn foo(x: usize) {}")))
-      (tsc-traverse-depth-first-native-1
-       tree (lambda (node depth)
-              (message "%s%s" (make-string (* 2 depth) ?\ )
-                       (tsc-node-type node))))
-      (tsc-traverse-depth-first-native-1
        tree (lambda (props depth)
               (pcase-let ((`[,type ,start-byte ,end-byte] props))
                 (message "%s%s (%s . %s)" (make-string (* 2 depth) ?\ )
@@ -371,9 +355,9 @@ tree is held (since nodes internally reference the tree)."
 (ert-deftest cursor::traverse-do ()
   (tsc-test-with rust parser
     (let ((tree (tsc-parse-string parser "fn foo(x: usize) {}")))
-      (tsc-do-tree ([type start-byte end-byte field] tree)
-        (message "%s%s (%s . %s) %s" (make-string (* 2 depth) ?\ )
-                 type start-byte end-byte field)))))
+      (tsc-do-tree ([type start-byte end-byte field depth] tree)
+        (message "%s%s [%s] (%s . %s)" (make-string (* 2 depth) ?\ )
+                 type field start-byte end-byte)))))
 
 (defvar tsc-counter 0)
 
@@ -385,44 +369,30 @@ tree is held (since nodes internally reference the tree)."
   (byte-compile #'tsc-test-no-op))
 
 (ert-deftest cursor::bench ()
-  (ert-skip "")
   (tsc-test-lang-with-file rust "data/types.rs"
-    (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
     (require 'rust-mode)
     (rust-mode)
     (tree-sitter-mode)
     (let ((props [:named-p :type :start-byte :end-byte]))
       (dolist (n '(1 10 100))
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        (pcase-dolist (`(,func ,msg)
-                       '((tsc-traverse-depth-first-recursive
-                          " recursive")
-                         (tsc-traverse-depth-first-iterative
-                          " iterative")
-                         (tsc-traverse-depth-first-native-1
-                          "  native-1")
-                         (tsc-traverse-depth-first-native
-                          "    native")))
-          ;; (setq tsc-counter 0)
-          (garbage-collect)
-          (message "%s %3d %s" msg n
-                   (eval `(benchmark-run-compiled ,n
-                            (,func tree-sitter-tree tsc-test-no-op ,props)))))
+        (garbage-collect)
+        (message "    native %3d %s" n
+                 (eval `(benchmark-run-compiled ,n
+                          (tsc-traverse-depth-first-native
+                           tree-sitter-tree
+                           tsc-test-no-op
+                           ,props))))
         (garbage-collect)
         (message "  iterator %3d %s" n
                  (eval `(benchmark-run-compiled ,n
                           (iter-do (_ (tsc-traverse-depth-first-iterator tree-sitter-tree ,props))
                             (tsc-test-no-op)))))
         (garbage-collect)
-        (message " do-tree-0 %3d %s" n
-                 (eval `(benchmark-run-compiled ,n
-                          (tsc-do-tree-0 tree-sitter-tree (item ,props)
-                            (tsc-test-no-op)))))
-        (garbage-collect)
         (message "   do-tree %3d %s" n
                  (eval `(benchmark-run-compiled ,n
                           (tsc-do-tree ([named-p type start-byte end-byte] tree-sitter-tree)
-                            (tsc-test-no-op named-p type start-byte end-byte)))))
+                            named-p type start-byte end-byte))))
         (garbage-collect)
         (message "   funcall %3d %s" n
                  (eval `(benchmark-run-compiled ,(* 3429 n)
@@ -605,7 +575,6 @@ tree is held (since nodes internally reference the tree)."
     (should (tsc--hl-at 6 'tree-sitter-hl-face:function))))
 
 (ert-deftest hl::bench ()
-  (ert-skip "")
   (tsc-test-lang-with-file rust "data/types.rs"
     (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
     (require 'rust-mode)
@@ -622,7 +591,6 @@ tree is held (since nodes internally reference the tree)."
       (message "     font-lock %2d %s" n (eval `(benchmark-run ,n (font-lock-ensure)))))))
 
 (ert-deftest debug::jump ()
-  (ert-skip "")
   "Test if the first button takes us to the beginning of the file.
 We know it should since it is the `source_file' node."
   (tsc-test-lang-with-file rust "data/types.rs"
@@ -643,13 +611,7 @@ We know it should since it is the `source_file' node."
     (rust-mode)
     (dolist (n '(1 10 100))
       (pcase-dolist (`(,func ,msg)
-                     '((tsc-traverse-depth-first-recursive
-                        "recursive")
-                       (tsc-traverse-depth-first-iterative
-                        "iterative")
-                       (tsc-traverse-depth-first-native-1
-                        " native-1")
-                       (tsc-traverse-depth-first-native
+                     '((tsc-traverse-depth-first-native
                         "   native")))
         (garbage-collect)
         (message "%s %3d %s" msg n

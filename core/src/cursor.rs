@@ -1,11 +1,10 @@
 use std::{
-    os,
     cell::{Ref, RefCell},
     mem,
     ops::{Deref, DerefMut},
 };
 
-use emacs::{defun, Result, Value, GlobalRef, Vector};
+use emacs::{defun, Result, Value, Env, GlobalRef, Vector, IntoLisp};
 use tree_sitter::{Tree, TreeCursor};
 
 use crate::{
@@ -122,14 +121,6 @@ fn current_node(cursor: &RCursor) -> Result<RNode> {
 }
 
 emacs::use_symbols! {
-    nil
-    wtf
-    iter_end_of_sequence
-
-    _next        => ":next"
-    _close       => ":close"
-
-    _field       => ":field"
     _type        => ":type"
     _named_p     => ":named-p"
     _extra_p     => ":extra-p"
@@ -142,15 +133,9 @@ emacs::use_symbols! {
     _end_point   => ":end-point"
     _range       => ":range"
     _byte_range  => ":byte-range"
-}
 
-use emacs::*;
-use emacs::func::{HandleCall, Manage};
-
-fn iterate(env: &CallEnv) -> Result<Value> {
-    let iter: &mut DepthFirstIterator = unsafe { mem::transmute(env.data) };
-    let control = env.get_arg(0);
-    iter_next(iter, control, nil.bind(env))
+    _field       => ":field"
+    _depth       => ":depth"
 }
 
 enum TraversalState {
@@ -223,47 +208,6 @@ impl Iterator for DepthFirstIterator {
             }
             Done => None
         }
-    }
-}
-
-unsafe extern "C" fn iterate_wrapper(
-    env: *mut raw::emacs_env,
-    nargs: isize,
-    args: *mut raw::emacs_value,
-    data: *mut os::raw::c_void,
-) -> raw::emacs_value {
-    let env = Env::new(env);
-    let env = CallEnv::new(env, nargs, args, data);
-    env.handle_call(iterate)
-}
-
-#[defun]
-fn generate_depth_first<'e>(tree: Borrowed<'e, Tree>, env: &'e Env) -> Result<Value<'e>> {
-    // let tree = tree.borrow();
-    let iterator = DepthFirstIterator::new(tree);
-    let iterator = Box::new(iterator);
-    let iterator = Box::leak(iterator);
-    unsafe {
-        let iterator = mem::transmute(iterator);
-        env.make_function(iterate_wrapper, 1..2, "", iterator)
-    }
-}
-
-#[defun]
-fn iter_next<'e>(iter: &mut DepthFirstIterator, control: Value<'e>, _yield_result: Value) -> Result<Value<'e>> {
-    let env = control.env;
-    if control.eq(_next.bind(&env)) {
-        match iter.next() {
-            Some((node, depth)) =>
-                env.cons(node, depth),
-            None =>
-                env.signal(iter_end_of_sequence, []),
-        }
-    } else if control.eq(_close.bind(&env)) {
-        iter.close();
-        ().into_lisp(env)
-    } else {
-        env.signal(wtf, [])
     }
 }
 
