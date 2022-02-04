@@ -1,7 +1,6 @@
 use std::{
     mem,
     cell::RefCell,
-    marker::PhantomData,
     rc::Rc,
 };
 
@@ -145,22 +144,5 @@ impl FromLisp<'_> for Range {
         let start_point = vector.get::<Point>(2)?.into();
         let end_point = vector.get::<Point>(3)?.into();
         Ok(tree_sitter::Range { start_byte, end_byte, start_point, end_point }.into())
-    }
-}
-
-// -------------------------------------------------------------------------------------------------
-
-pub enum Either<'e, L, R> where L: FromLisp<'e>, R: FromLisp<'e> {
-    Left(L, PhantomData<&'e ()>),
-    Right(R, PhantomData<&'e ()>),
-}
-
-impl<'e, L, R> FromLisp<'e> for Either<'e, L, R> where L: FromLisp<'e>, R: FromLisp<'e> {
-    fn from_lisp(value: Value<'e>) -> Result<Self> {
-        if let Ok(value) = value.into_rust::<L>() {
-            return Ok(Either::Left(value, PhantomData));
-        }
-        let value = value.into_rust::<R>()?;
-        Ok(Either::Right(value, PhantomData))
     }
 }

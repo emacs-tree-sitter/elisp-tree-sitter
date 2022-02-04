@@ -4,12 +4,11 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use emacs::{defun, Result, Value, Env, GlobalRef, Vector, IntoLisp};
+use emacs::{defun, Result, Value, Env, GlobalRef, Vector, IntoLisp, FromLisp};
 use tree_sitter::{Tree, TreeCursor};
 
 use crate::{
-    types::{self, Shared, Either, BytePos},
-    tree::Borrowed,
+    types::{self, Shared, BytePos},
     node::{RNode, LispUtils},
     lang::Language,
 };
@@ -92,6 +91,35 @@ impl RCursor {
 
 // -------------------------------------------------------------------------------------------------
 
+pub enum TreeOrNode<'e> {
+    Tree(&'e Shared<Tree>),
+    Node(&'e RefCell<RNode>),
+}
+
+impl<'e> FromLisp<'e> for TreeOrNode<'e> {
+    fn from_lisp(value: Value<'e>) -> Result<Self> {
+        if let Ok(value) = value.into_rust() {
+            return Ok(Self::Tree(value));
+        }
+        if let Ok(value) = value.into_rust() {
+            return Ok(Self::Node(value))
+        }
+        value.env.signal(wrong_type_argument, (tree_or_node_p, value))
+    }
+}
+
+impl<'e> TreeOrNode<'e> {
+    fn walk(&self) -> RCursor {
+        match *self {
+            Self::Tree(tree) => RCursor::new(tree.clone(), |tree| tree.walk()),
+            Self::Node(node) => {
+                let node = node.borrow();
+                RCursor::new(node.clone_tree(), |_| node.borrow().walk())
+            }
+        }
+    }
+}
+
 /// Create a new cursor starting from the given TREE-OR-NODE.
 ///
 /// A cursor allows you to walk a syntax tree more efficiently than is possible
@@ -100,18 +128,8 @@ impl RCursor {
 ///
 /// If a tree is given, the returned cursor starts on its root node.
 #[defun(user_ptr)]
-fn make_cursor<'e>(
-    tree_or_node: Either<'e, &'e Shared<Tree>, &'e RefCell<RNode>>,
-) -> Result<RCursor> {
-    match tree_or_node {
-        Either::Left(tree, ..) => {
-            Ok(RCursor::new(tree.clone(), |tree| tree.walk()))
-        }
-        Either::Right(node, ..) => {
-            let node = node.borrow();
-            Ok(RCursor::new(node.clone_tree(), |_| node.borrow().walk()))
-        }
-    }
+fn make_cursor(tree_or_node: TreeOrNode) -> Result<RCursor> {
+    Ok(tree_or_node.walk())
 }
 
 /// Return CURSOR's current node.
@@ -121,6 +139,9 @@ fn current_node(cursor: &RCursor) -> Result<RNode> {
 }
 
 emacs::use_symbols! {
+    wrong_type_argument
+    tree_or_node_p
+
     _type        => ":type"
     _named_p     => ":named-p"
     _extra_p     => ":extra-p"
@@ -152,9 +173,9 @@ struct DepthFirstIterator {
 }
 
 impl DepthFirstIterator {
-    fn new(tree: Borrowed<Tree>) -> Self {
+    fn new(tree_or_node: TreeOrNode) -> Self {
         Self {
-            cursor: RCursor::new(tree.clone(), |tree| tree.walk()),
+            cursor: tree_or_node.walk(),
             state: Start,
             depth: 0,
         }
@@ -212,8 +233,8 @@ impl Iterator for DepthFirstIterator {
 }
 
 #[defun(user_ptr)]
-fn _iter(tree: Borrowed<Tree>) -> Result<DepthFirstIterator> {
-    Ok(DepthFirstIterator::new(tree))
+fn _iter(tree_or_node: TreeOrNode) -> Result<DepthFirstIterator> {
+    Ok(DepthFirstIterator::new(tree_or_node))
 }
 
 #[defun]
@@ -304,8 +325,8 @@ fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option
 }
 
 #[defun]
-fn _traverse_depth_first_native(tree: Borrowed<Tree>, func: Value, props: Option<Vector>) -> Result<()> {
-    let mut iterator = DepthFirstIterator::new(tree);
+fn _traverse_depth_first_native(tree_or_node: TreeOrNode, func: Value, props: Option<Vector>) -> Result<()> {
+    let mut iterator = DepthFirstIterator::new(tree_or_node);
     let env = func.env;
     let output = match props {
         None => None,
