@@ -57,41 +57,19 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   (push-mark (byte-to-position (cdr byte-range))
              tree-sitter-debug-highlight-jump-region))
 
-(defun tree-sitter-debug--display-node (node-props depth)
+(defun tree-sitter-debug--display-node (named-p type start-byte end-byte depth)
   "Display NODE that appears at the given DEPTH in the syntax tree."
-  (pcase-let ((`[,named-p ,type ,start-byte ,end-byte] node-props))
-    (when named-p
-      (insert (make-string (* 2 depth) ?\ ))
-      (let ((node-text (format "%s:\n" type)))
-        (if tree-sitter-debug-jump-buttons
-            (insert-button node-text
-                           'action 'tree-sitter-debug--button-node-lookup
-                           'follow-link t
-                           'points-to `(,start-byte . ,end-byte))
-          (insert node-text))))))
+  (when named-p
+    (insert (make-string (* 2 depth) ?\ ))
+    (let ((node-text (format "%s:\n" type)))
+      (if tree-sitter-debug-jump-buttons
+          (insert-button node-text
+                         'action 'tree-sitter-debug--button-node-lookup
+                         'follow-link t
+                         'points-to `(,start-byte . ,end-byte))
+        (insert node-text)))))
 
-;; (defun tree-sitter-debug--goto-node (buffer node)
-;;   "Switch to BUFFER, centering on the region defined by NODE."
-;;   (switch-to-buffer-other-window buffer)
-;;   (let ((range (tsc-node-position-range node)))
-;;     (goto-char (car range))
-;;     (push-mark (cdr range)
-;;                t tree-sitter-debug-highlight-jump-region)))
-
-;; (defun tree-sitter-debug--display-node (node depth)
-;;   "Display NODE that appears at the given DEPTH in the syntax tree."
-;;   (when (tsc-node-named-p node)
-;;     (insert (make-string (* 2 depth) ?\ ))
-;;     (let ((node-text (format "%s:\n" (tsc-node-type node))))
-;;       (if tree-sitter-debug-jump-buttons
-;;           (insert-button node-text
-;;                          'action 'tree-sitter-debug--button-node-lookup
-;;                          'follow-link t
-;;                          'points-to node)
-;;         (insert node-text)))))
-
-(defvar tree-sitter-debug-traverse-function
-  #'tsc-traverse-depth-first-native)
+(defvar tree-sitter-debug-traversal-method :do-tree)
 
 (defun tree-sitter-debug--display-tree (_old-tree)
   "Display the current `tree-sitter-tree'."
@@ -100,9 +78,22 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
     (with-current-buffer tree-sitter-debug--tree-buffer
       (let (buffer-read-only)
         (erase-buffer)
-        (funcall tree-sitter-debug-traverse-function
-                 tree #'tree-sitter-debug--display-node
-                 [:named-p :type :start-byte :end-byte])))))
+        (pcase tree-sitter-debug-traversal-method
+          (:native (tsc-traverse-depth-first-native
+                    tree (lambda (props depth)
+                           (pcase-let ((`[,named-p ,type ,start-byte ,end-byte] props))
+                             (tree-sitter-debug--display-node
+                              named-p type start-byte end-byte depth)))
+                    [:named-p :type :start-byte :end-byte]))
+          (:iterator (iter-do (item (tsc-traverse-depth-first-iterator
+                                     tree
+                                     [:named-p :type :start-byte :end-byte]))
+                       (pcase-let ((`[[,named-p ,type ,start-byte ,end-byte] ,depth] item))
+                         (tree-sitter-debug--display-node
+                          named-p type start-byte end-byte depth))))
+          (:do-tree (tsc-do-tree ([named-p type start-byte end-byte depth] tree)
+                      (tree-sitter-debug--display-node
+                       named-p type start-byte end-byte depth))))))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."

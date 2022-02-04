@@ -298,7 +298,7 @@ QUERY. Otherwise, a newly created query-cursor is used."
 
 (cl-defmacro tsc-do-tree ((vars tree) &rest body)
   (declare (indent 1)
-           (debug ((symbolp form) body)))
+           (debug ((vectorp form) body)))
   (unless (vectorp vars)
     (error "Var bindings must be a vector"))
   (let* ((get-depth? (seq-contains-p vars 'depth))
@@ -322,18 +322,15 @@ QUERY. Otherwise, a newly created query-cursor is used."
            (,combined-output (vector
                               ,(when props
                                  (make-vector (length props) nil))
-                              nil))
-           ,@(seq-map #'identity vars)
-           ,@(when get-depth?
-               '(depth)))
+                              nil)))
        (while (tsc--iter-next-node ,iter ,props ,combined-output)
-         (let ((,prop-vals (aref ,combined-output 0)))
-           ,@(cl-loop for i below (length vars)
-                      collect `(setq ,(aref vars i)
-                                     (aref ,prop-vals ,i))))
-         ,@(when get-depth?
-             `((setq depth (aref ,combined-output 1))))
-         ,@body))))
+         (let* ((,prop-vals (aref ,combined-output 0))
+                ,@(cl-loop for i below (length vars)
+                           collect `(,(aref vars i)
+                                     (aref ,prop-vals ,i)))
+                ,@(when get-depth?
+                    `((depth (aref ,combined-output 1)))))
+           ,@body)))))
 
 (defun tsc--node-steps (node)
   "Return the sequence of steps from the root node to NODE.
