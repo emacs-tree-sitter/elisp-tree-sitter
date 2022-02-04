@@ -15,6 +15,8 @@
 
 (require 'tree-sitter)
 
+(require 'generator)
+
 (defvar-local tree-sitter-debug--tree-buffer nil
   "Buffer used to display the syntax tree of this buffer.")
 

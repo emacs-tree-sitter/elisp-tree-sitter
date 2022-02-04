@@ -368,6 +368,12 @@ tree is held (since nodes internally reference the tree)."
                          type start-byte end-byte)))
        [:type :start-byte :end-byte]))))
 
+(ert-deftest cursor::traverse-do ()
+  (tsc-test-with rust parser
+    (let ((tree (tsc-parse-string parser "fn foo(x: usize) {}")))
+      (tsc-do-tree ([type start-byte end-byte field] tree)
+        (message "%s%s (%s . %s) %s" (make-string (* 2 depth) ?\ )
+                 type start-byte end-byte field)))))
 
 (defvar tsc-counter 0)
 
@@ -379,6 +385,7 @@ tree is held (since nodes internally reference the tree)."
   (byte-compile #'tsc-test-no-op))
 
 (ert-deftest cursor::bench ()
+  (ert-skip "")
   (tsc-test-lang-with-file rust "data/types.rs"
     (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
     (require 'rust-mode)
@@ -407,11 +414,15 @@ tree is held (since nodes internally reference the tree)."
                           (iter-do (_ (tsc-traverse-depth-first-iterator tree-sitter-tree ,props))
                             (tsc-test-no-op)))))
         (garbage-collect)
+        (message " do-tree-0 %3d %s" n
+                 (eval `(benchmark-run-compiled ,n
+                          (tsc-do-tree-0 tree-sitter-tree (item ,props)
+                            (tsc-test-no-op)))))
+        (garbage-collect)
         (message "   do-tree %3d %s" n
                  (eval `(benchmark-run-compiled ,n
-                          (tsc-do-tree tree-sitter-tree (item ,props)
-                            ;; (tsc-test-no-op)
-                            ))))
+                          (tsc-do-tree ([named-p type start-byte end-byte] tree-sitter-tree)
+                            (tsc-test-no-op named-p type start-byte end-byte)))))
         (garbage-collect)
         (message "   funcall %3d %s" n
                  (eval `(benchmark-run-compiled ,(* 3429 n)

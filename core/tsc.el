@@ -31,8 +31,7 @@
 
 (require 'tsc-dyn)
 
-(eval-and-compile
-  (require 'generator))
+(require 'seq)
 
 (eval-when-compile
   (require 'pcase)
@@ -386,7 +385,7 @@ If NODE is the root node, the sequence is empty."
         (:close (setq iter nil))
         (_ (error "???"))))))
 
-(cl-defmacro tsc-do-tree (tree (var props) &rest body)
+(cl-defmacro tsc-do-tree-0 (tree (var props) &rest body)
   (declare (indent 2)
            (debug ((symbolp form) body)))
   (let ((iter (gensym "iter"))
@@ -399,6 +398,41 @@ If NODE is the root node, the sequence is empty."
            ,var)
        (while (tsc--iter-next-node ,iter ,props ,combined-output)
          (setq ,var ,combined-output)
+         ,@body))))
+
+(cl-defmacro tsc-do-tree ((vars tree) &rest body)
+  (declare (indent 1)
+           (debug ((symbolp form) body)))
+  (let* ((iter (gensym "iter"))
+         (combined-output (gensym "combined-output"))
+         (prop-vals (gensym "prop-vals"))
+         (get-props? (vectorp vars))
+         (props (cond
+                 (get-props?
+                  (progn
+                    (cl-map 'vector
+                            (lambda (symbol)
+                              (intern (format ":%s" symbol)))
+                            vars)))
+                 ((symbolp vars) nil)
+                 (t (error "Vars must be a symbol or a vector")))))
+    `(let ((,iter (tsc--iter ,tree))
+           (,combined-output (vector
+                              ,(when props
+                                 (make-vector (length props) nil))
+                              nil))
+           ,@(if get-props?
+                 (cl-map 'list #'identity vars)
+               (list vars))
+           depth)
+       (while (tsc--iter-next-node ,iter ,props ,combined-output)
+         ,(if get-props?
+              `(let ((,prop-vals (aref ,combined-output 0)))
+                 ,@(cl-loop for i below (length vars)
+                            collect `(setq ,(aref vars i)
+                                           (aref ,prop-vals ,i))))
+            `(setq ,vars (aref ,combined-output 0)))
+         (setq depth (aref ,combined-output 1))
          ,@body))))
 
 (define-error 'tsc--invalid-node-step "Cannot follow node step")
