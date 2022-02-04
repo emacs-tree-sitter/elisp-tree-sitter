@@ -298,6 +298,16 @@ fn _iter_current_node(iter: &mut DepthFirstIterator, props: Option<Vector>, comb
 }
 
 #[defun]
+fn _iter_next_node(iter: &mut DepthFirstIterator, props: Option<Vector>, combined_output: Vector) -> Result<bool> {
+    if iter.next().is_some() {
+        _iter_current_node(iter, props, combined_output)?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+#[defun]
 fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option<Vector<'e>>, env: &'e Env) -> Result<Value<'e>> {
     macro_rules! sugar {
         ($prop:ident, $env:ident) => {

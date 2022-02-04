@@ -349,19 +349,16 @@ If NODE is the root node, the sequence is empty."
     (pcase-let ((`(,node . ,depth) item))
       (funcall fn node depth))))
 
-;;; TODO: Try optimizing this over tsc-traverse-depth-first-native
 (defun tsc-traverse-depth-first-native-1 (tree fn &optional props)
   (let ((iter (tsc--iter tree))
         (combined-output (vector (when props
                                    (make-vector (length props) nil))
                                  nil)))
-    (while (tsc--iter-next iter)
-      ;; (funcall fn (tsc--iter-current-node iter props output))
-      (tsc--iter-current-node iter props combined-output)
+    (while (tsc--iter-next-node iter props combined-output)
       (pcase-let ((`[,data ,depth] combined-output))
         (funcall fn data depth)))))
 
-(defun tsc-traverse-depth-first-iterator (tree &optional props)
+(defun tsc-traverse-depth-first-iterator-0 (tree &optional props)
   (let ((iter (tsc--iter tree))
         (combined-output (vector (when props
                                    (make-vector (length props) nil))
@@ -372,6 +369,19 @@ If NODE is the root node, the sequence is empty."
                    (progn
                      (tsc--iter-current-node iter props combined-output)
                      combined-output)
+                 (signal 'iter-end-of-sequence nil)))
+        (:close (setq iter nil))
+        (_ (error "???"))))))
+
+(defun tsc-traverse-depth-first-iterator (tree &optional props)
+  (let ((iter (tsc--iter tree))
+        (combined-output (vector (when props
+                                   (make-vector (length props) nil))
+                                 nil)))
+    (lambda (control _yield-result)
+      (pcase control
+        (:next (if (tsc--iter-next-node iter props combined-output)
+                   combined-output
                  (signal 'iter-end-of-sequence nil)))
         (:close (setq iter nil))
         (_ (error "???"))))))
@@ -387,8 +397,7 @@ If NODE is the root node, the sequence is empty."
                                 (make-vector (length ,props) nil))
                               nil))
            ,var)
-       (while (tsc--iter-next ,iter)
-         (tsc--iter-current-node ,iter ,props ,combined-output)
+       (while (tsc--iter-next-node ,iter ,props ,combined-output)
          (setq ,var ,combined-output)
          ,@body))))
 

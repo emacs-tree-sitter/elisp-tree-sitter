@@ -389,31 +389,31 @@ tree is held (since nodes internally reference the tree)."
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (pcase-dolist (`(,func ,msg)
                        '((tsc-traverse-depth-first-recursive
-                          "recursive")
+                          " recursive")
                          (tsc-traverse-depth-first-recursive
-                          "iterative")
+                          " iterative")
                          (tsc-traverse-depth-first-native-1
-                          " native-1")
+                          "  native-1")
                          (tsc-traverse-depth-first-native
-                          "   native")))
+                          "    native")))
           ;; (setq tsc-counter 0)
           (garbage-collect)
           (message "%s %3d %s" msg n
                    (eval `(benchmark-run-compiled ,n
                             (,func tree-sitter-tree tsc-test-no-op ,props)))))
         (garbage-collect)
-        (message " iterator %3d %s" n
+        (message "  iterator %3d %s" n
                  (eval `(benchmark-run-compiled ,n
                           (iter-do (_ (tsc-traverse-depth-first-iterator tree-sitter-tree ,props))
                             (tsc-test-no-op)))))
         (garbage-collect)
-        (message "  do-tree %3d %s" n
+        (message "   do-tree %3d %s" n
                  (eval `(benchmark-run-compiled ,n
                           (tsc-do-tree tree-sitter-tree (item ,props)
                             ;; (tsc-test-no-op)
                             ))))
         (garbage-collect)
-        (message "  funcall %3d %s" n
+        (message "   funcall %3d %s" n
                  (eval `(benchmark-run-compiled ,(* 3429 n)
                           (funcall tsc-test-no-op ,props 5))))))))
 
