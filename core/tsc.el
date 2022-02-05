@@ -258,11 +258,7 @@ QUERY. Otherwise, a newly created query-cursor is used."
    (or cursor (tsc-make-query-cursor)) query node text-function))
 
 
-;;; Utilities.
-
-(defun tsc-pp-to-string (tree)
-  "Return the pretty-printed string of TREE's sexp."
-  (pp-to-string (read (tsc-tree-to-sexp tree))))
+;;; Traversal.
 
 (defconst tsc-valid-node-props '(field
                                  type
@@ -374,6 +370,13 @@ VARS must be a vector of symbols. For example, to crudely render a syntax tree:
                            collect `(,(aref vars i)
                                      (aref ,output ,i))))
            ,@body)))))
+
+
+;;; Utilities.
+
+(defun tsc-pp-to-string (tree)
+  "Return the pretty-printed string of TREE's sexp."
+  (pp-to-string (read (tsc-tree-to-sexp tree))))
 
 (defun tsc--node-steps (node)
   "Return the sequence of steps from the root node to NODE.

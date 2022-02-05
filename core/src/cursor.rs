@@ -13,6 +13,27 @@ use crate::{
     lang::Language,
 };
 
+emacs::use_symbols! {
+    wrong_type_argument
+    tree_or_node_p
+
+    _type        => ":type"
+    _named_p     => ":named-p"
+    _extra_p     => ":extra-p"
+    _error_p     => ":error-p"
+    _missing_p   => ":missing-p"
+    _has_error_p => ":has-error-p"
+    _start_byte  => ":start-byte"
+    _start_point => ":start-point"
+    _end_byte    => ":end-byte"
+    _end_point   => ":end-point"
+    _range       => ":range"
+    _byte_range  => ":byte-range"
+
+    _field       => ":field"
+    _depth       => ":depth"
+}
+
 // -------------------------------------------------------------------------------------------------
 
 /// Wrapper around `tree_sitter::TreeCursor` that can have 'static lifetime, by keeping a
@@ -89,8 +110,6 @@ impl RCursor {
     }
 }
 
-// -------------------------------------------------------------------------------------------------
-
 pub enum TreeOrNode<'e> {
     Tree(&'e Shared<Tree>),
     Node(&'e RefCell<RNode>),
@@ -120,6 +139,8 @@ impl<'e> TreeOrNode<'e> {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Create a new cursor starting from the given TREE-OR-NODE.
 ///
 /// A cursor allows you to walk a syntax tree more efficiently than is possible
@@ -138,26 +159,59 @@ fn current_node(cursor: &RCursor) -> Result<RNode> {
     Ok(RNode::new(cursor.clone_tree(), |_| cursor.borrow().node()))
 }
 
-emacs::use_symbols! {
-    wrong_type_argument
-    tree_or_node_p
-
-    _type        => ":type"
-    _named_p     => ":named-p"
-    _extra_p     => ":extra-p"
-    _error_p     => ":error-p"
-    _missing_p   => ":missing-p"
-    _has_error_p => ":has-error-p"
-    _start_byte  => ":start-byte"
-    _start_point => ":start-point"
-    _end_byte    => ":end-byte"
-    _end_point   => ":end-point"
-    _range       => ":range"
-    _byte_range  => ":byte-range"
-
-    _field       => ":field"
-    _depth       => ":depth"
+/// Return the field id of CURSOR's current node.
+/// Return nil if the current node doesn't have a field.
+#[defun]
+fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
+    Ok(cursor.borrow().field_id())
 }
+
+/// Return the field associated with CURSOR's current node, as a keyword.
+/// Return nil if the current node is not associated with a field.
+#[defun]
+fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
+    let cursor = cursor.borrow();
+    let language: Language = cursor.reft.language().into();
+    Ok(cursor.field_id().and_then(|id| language.info().field_name(id)))
+}
+
+macro_rules! defun_cursor_walks {
+    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $itype:ty ),* ) )? -> $type:ty)*) => {
+        $(
+            $(#[$meta])*
+            #[defun$((name = $lisp_name))?]
+            fn $name(cursor: &mut RCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
+                Ok(cursor.borrow_mut().$name( $( $( $param $(.$into())? ),* )? ))
+            }
+        )*
+    };
+}
+
+defun_cursor_walks! {
+    /// Move CURSOR to the first child of its current node.
+    /// Return t if CURSOR successfully moved, nil if there were no children.
+    fn goto_first_child -> bool
+
+    /// Move CURSOR to the parent node of its current node.
+    /// Return t if CURSOR successfully moved, nil if it was already on the root node.
+    fn goto_parent -> bool
+
+    /// Move CURSOR to the next sibling of its current node.
+    /// Return t if CURSOR successfully moved, nil if there was no next sibling node.
+    fn goto_next_sibling -> bool
+
+    /// Move CURSOR to the first child that extends beyond the given BYTEPOS.
+    /// Return the index of the child node if one was found, nil otherwise.
+    "goto-first-child-for-byte" fn goto_first_child_for_byte(bytepos into: BytePos) -> Option<usize>
+}
+
+/// Re-initialize CURSOR to start at a different NODE.
+#[defun]
+fn reset_cursor(cursor: &mut RCursor, node: &RNode) -> Result<()> {
+    Ok(cursor.borrow_mut().reset(*node.borrow()))
+}
+
+// -------------------------------------------------------------------------------------------------
 
 enum TraversalState {
     Start,
@@ -165,6 +219,8 @@ enum TraversalState {
     Right,
     Done,
 }
+
+use TraversalState::*;
 
 struct DepthFirstIterator {
     cursor: RCursor,
@@ -194,8 +250,6 @@ impl DepthFirstIterator {
         self.state = Done;
     }
 }
-
-use TraversalState::*;
 
 impl Iterator for DepthFirstIterator {
     type Item = (RNode, usize);
@@ -384,56 +438,4 @@ fn _traverse_mapc(func: Value, tree_or_node: TreeOrNode, props: Option<Vector>) 
     //     func.call((result, depth))?;
     // }
     Ok(())
-}
-
-/// Return the field id of CURSOR's current node.
-/// Return nil if the current node doesn't have a field.
-#[defun]
-fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
-    Ok(cursor.borrow().field_id())
-}
-
-/// Return the field associated with CURSOR's current node, as a keyword.
-/// Return nil if the current node is not associated with a field.
-#[defun]
-fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
-    let cursor = cursor.borrow();
-    let language: Language = cursor.reft.language().into();
-    Ok(cursor.field_id().and_then(|id| language.info().field_name(id)))
-}
-
-macro_rules! defun_cursor_walks {
-    ($($(#[$meta:meta])* $($lisp_name:literal)? fn $name:ident $( ( $( $param:ident $($into:ident)? : $itype:ty ),* ) )? -> $type:ty)*) => {
-        $(
-            $(#[$meta])*
-            #[defun$((name = $lisp_name))?]
-            fn $name(cursor: &mut RCursor, $( $( $param: $itype ),* )? ) -> Result<$type> {
-                Ok(cursor.borrow_mut().$name( $( $( $param $(.$into())? ),* )? ))
-            }
-        )*
-    };
-}
-
-defun_cursor_walks! {
-    /// Move CURSOR to the first child of its current node.
-    /// Return t if CURSOR successfully moved, nil if there were no children.
-    fn goto_first_child -> bool
-
-    /// Move CURSOR to the parent node of its current node.
-    /// Return t if CURSOR successfully moved, nil if it was already on the root node.
-    fn goto_parent -> bool
-
-    /// Move CURSOR to the next sibling of its current node.
-    /// Return t if CURSOR successfully moved, nil if there was no next sibling node.
-    fn goto_next_sibling -> bool
-
-    /// Move CURSOR to the first child that extends beyond the given BYTEPOS.
-    /// Return the index of the child node if one was found, nil otherwise.
-    "goto-first-child-for-byte" fn goto_first_child_for_byte(bytepos into: BytePos) -> Option<usize>
-}
-
-/// Re-initialize CURSOR to start at a different NODE.
-#[defun]
-fn reset_cursor(cursor: &mut RCursor, node: &RNode) -> Result<()> {
-    Ok(cursor.borrow_mut().reset(*node.borrow()))
 }
