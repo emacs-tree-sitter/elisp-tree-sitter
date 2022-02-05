@@ -78,6 +78,8 @@ jobs:
         run: npm install -g tree-sitter-cli@0.19.3
       - run: bin/test
         if: ${{ !matrix.target }}
+      - run: bin/test bench
+        if: ${{ !matrix.target }}
 
       - name: Rename cross-build's binary
         if: matrix.target

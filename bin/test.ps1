@@ -11,6 +11,8 @@ if ($args[0] -eq "watch") {
 } else {
     if ($args[0] -eq "integ") {
         $test_mod = "tsc-dyn-get-tests.el"
+    } elseif ($args[0] -eq "bench") {
+        $test_mod = "tree-sitter-bench.el"
     } else {
         $test_mod = "tree-sitter-tests.el"
     }
