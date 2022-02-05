@@ -291,6 +291,7 @@ e.g. automatically through escape analysis. How about porting ELisp to GraalVM?"
                                  (not (memq kw tsc-valid-node-props)))
                                props)))
       (error "Invalid node properties %s" invalid-props)))
+   ((null props) nil)
    (t (error "Expected vectors or keyword %s" props))))
 
 (defun tsc-traverse-mapc (func tree-or-node &optional props)

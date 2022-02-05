@@ -26,7 +26,7 @@
             (garbage-collect)
             (message "tsc-parse-chunks %6d %s" tsc--buffer-input-chunk-size
                      (benchmark-run 10
-                         (tsc-parse-chunks parser #'tsc--buffer-input nil)))
+                       (tsc-parse-chunks parser #'tsc--buffer-input nil)))
             (cl-incf n)))))))
 
 (ert-deftest cursor::bench ()
@@ -37,6 +37,11 @@
     (let ((props [:named-p :type :start-byte :end-byte]))
       (dolist (n '(1 10 100))
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        (garbage-collect)
+        (message "%10s %3d %s" :do n
+                 (eval `(benchmark-run-compiled ,n
+                          (tsc-traverse-do ([named-p type start-byte end-byte] tree-sitter-tree)
+                            named-p type start-byte end-byte))))
         (garbage-collect)
         (message "%10s %3d %s" :mapc n
                  (eval `(benchmark-run-compiled ,n
@@ -50,10 +55,25 @@
                           (iter-do (_ (tsc-traverse-iter tree-sitter-tree ,props))
                             (tsc-test-no-op)))))
         (garbage-collect)
-        (message "%10s %3d %s" :do n
+        (message "%10s %3d %s" :node-mapc n
                  (eval `(benchmark-run-compiled ,n
-                          (tsc-traverse-do ([named-p type start-byte end-byte] tree-sitter-tree)
-                            named-p type start-byte end-byte))))
+                          (tsc-traverse-mapc
+                           (lambda (node)
+                             (tsc-node-named-p node)
+                             (tsc-node-type node)
+                             (tsc-node-start-byte node)
+                             (tsc-node-end-byte node)
+                             (tsc-test-no-op))
+                           tree-sitter-tree))))
+        (garbage-collect)
+        (message "%10s %3d %s" :node-iter n
+                 (eval `(benchmark-run-compiled ,n
+                          (iter-do (node (tsc-traverse-iter tree-sitter-tree))
+                            (tsc-node-named-p node)
+                            (tsc-node-type node)
+                            (tsc-node-start-byte node)
+                            (tsc-node-end-byte node)
+                            (tsc-test-no-op)))))
         (garbage-collect)
         (message "%10s %3d %s" 'funcall n
                  (eval `(benchmark-run-compiled ,(* 3429 n)

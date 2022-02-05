@@ -101,10 +101,10 @@
     (tsc-test-tree-sexp '(source_file (ERROR)))
     (insert " foo() {}")
     (tsc-test-tree-sexp '(source_file
-                         (function_item
-                          name: (identifier)
-                          parameters: (parameters)
-                          body: (block))))
+                          (function_item
+                           name: (identifier)
+                           parameters: (parameters)
+                           body: (block))))
     (kill-region (point-min) (point-max))
     (tsc-test-tree-sexp '(source_file))))
 
@@ -266,27 +266,46 @@ source_file (1 . 20)
              (tsc-test-render-node type named-p start-byte end-byte field depth)))))))))
 
 (ert-deftest cursor::traverse:single-property ()
-  (tsc-test-with rust parser
-    (let* ((code "fn foo(x: usize) {}")
-           (tree (tsc-parse-string parser code)))
-      (ert-info ("")
-        (let (mapc-result
-              do-result
-              iter-result)
-          (ert-info ("Callback-based traversal should work with single property")
-            (tsc-traverse-mapc
-             (lambda (type)
-               (cl-callf append mapc-result (list type)))
-             tree :type))
-          (ert-info ("Iterator-based traversal should work with single property")
-            (setq iter-result (cl-loop for type
-                                       iter-by (tsc-traverse-iter tree :type)
-                                       collect type)))
-          (tsc-traverse-do ([type] tree)
-            (cl-callf append do-result (list type)))
-          (ert-info ("All traversal methods should return the same result")
-            (should (equal do-result mapc-result))
-            (should (equal do-result iter-result))))))))
+  (tsc-test-lang-with-file rust "data/types.rs"
+    (let ((tree tree-sitter-tree)
+          mapc-result
+          do-result
+          iter-result)
+      (ert-info ("Callback-based traversal should work with single property")
+        (tsc-traverse-mapc
+         (lambda (type)
+           (push type mapc-result))
+         tree :type))
+      (ert-info ("Iterator-based traversal should work with single property")
+        (cl-loop for type
+                 iter-by (tsc-traverse-iter tree :type)
+                 do (push type iter-result)))
+      (tsc-traverse-do ([type] tree)
+        (push type do-result))
+      (ert-info ("All traversal methods should return the same result")
+        (should (equal do-result mapc-result))
+        (should (equal do-result iter-result))))))
+
+(ert-deftest cursor::traverse:node ()
+  (tsc-test-lang-with-file rust "data/types.rs"
+    (let ((tree tree-sitter-tree)
+          mapc-result
+          do-result
+          iter-result)
+      (ert-info ("Callback-based traversal should work with nodes")
+        (tsc-traverse-mapc
+         (lambda (node)
+           (push (tsc-node-type node) mapc-result))
+         tree))
+      (ert-info ("Iterator-based traversal should work with nodes")
+        (cl-loop for node
+                 iter-by (tsc-traverse-iter tree)
+                 do (push (tsc-node-type node) iter-result)))
+      (tsc-traverse-do ([type] tree)
+        (push type do-result))
+      (ert-info ("All traversal methods should return the same result")
+        (should (equal do-result mapc-result))
+        (should (equal do-result iter-result))))))
 
 (ert-deftest conversion::position<->tsc-point ()
   (tsc-test-with-file "tree-sitter-tests.el"
@@ -325,7 +344,7 @@ source_file (1 . 20)
     (ert-info ("Should work on vector")
       (should (= (tsc-query-count-patterns
                   (tsc-make-query rust [(function_item (identifier) @function)
-                                       (macro_definition (identifier) @macro)]))
+                                        (macro_definition (identifier) @macro)]))
                  2)))))
 
 (ert-deftest query::basic ()
@@ -341,8 +360,8 @@ source_file (1 . 20)
                                    (tsc-node-text node)))
                                captures))
            (capture-tags (mapcar (lambda (capture)
-                                    (pcase-let ((`(,tag . _) capture)) tag))
-                                  captures)))
+                                   (pcase-let ((`(,tag . _) capture)) tag))
+                                 captures)))
       (ert-info ("Should match specified functions and not more")
         (should (member "_make_query" node-texts))
         (should (member "make_query_cursor" node-texts))
@@ -355,10 +374,10 @@ source_file (1 . 20)
   (tsc-test-lang-with-file c "data/range-restriction-and-early-termination.c"
     (let ((cursor (tsc-make-query-cursor))
           (query (tsc-make-query tree-sitter-language
-                                [(call_expression
-                                  function: (identifier) @function
-                                  arguments: (argument_list (string_literal) @string.arg))
-                                 (string_literal) @string]))
+                                 [(call_expression
+                                   function: (identifier) @function
+                                   arguments: (argument_list (string_literal) @string.arg))
+                                  (string_literal) @string]))
           (root-node (tsc-root-node tree-sitter-tree))
           (capture-names '(function string.arg string)))
       (ert-info ("Querying without range restriction")
@@ -469,13 +488,13 @@ source_file (1 . 20)
 We know it should since it is the `source_file' node."
   (tsc-test-lang-with-file rust "data/types.rs"
     (let ((buf-name (buffer-name)))
-    (setq tree-sitter-debug-jump-buttons t)
-    (tree-sitter-debug-mode)
-    (goto-char (point-max))
-    (should (> (point) 0)) ; Test if worthless if the file is empty
-    (switch-to-buffer tree-sitter-debug--tree-buffer nil t)
-    (tree-sitter-debug--button-node-lookup (button-at 1))
-    (should (= (point) (point-min))))))
+      (setq tree-sitter-debug-jump-buttons t)
+      (tree-sitter-debug-mode)
+      (goto-char (point-max))
+      (should (> (point) 0)) ; Test if worthless if the file is empty
+      (switch-to-buffer tree-sitter-debug--tree-buffer nil t)
+      (tree-sitter-debug--button-node-lookup (button-at 1))
+      (should (= (point) (point-min))))))
 
 ;; Local Variables:
 ;; no-byte-compile: t
