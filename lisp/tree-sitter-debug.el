@@ -69,7 +69,7 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
                          'points-to `(,start-byte . ,end-byte))
         (insert node-text)))))
 
-(defvar tree-sitter-debug-traversal-method :do-tree)
+(defvar tree-sitter-debug-traversal-method :mapc)
 
 (defun tree-sitter-debug--display-tree (_old-tree)
   "Display the current `tree-sitter-tree'."
@@ -79,20 +79,21 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
       (let (buffer-read-only)
         (erase-buffer)
         (pcase tree-sitter-debug-traversal-method
-          (:native (tsc-traverse-depth-first-native
-                    tree (lambda (props)
-                           (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
-                             (tree-sitter-debug--display-node
-                              named-p type start-byte end-byte depth)))
-                    [:named-p :type :start-byte :end-byte :depth]))
-          (:iterator (iter-do (props (tsc-traverse-depth-first-iterator
-                                      tree [:named-p :type :start-byte :end-byte :depth]))
-                       (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
-                         (tree-sitter-debug--display-node
-                          named-p type start-byte end-byte depth))))
-          (:do-tree (tsc-do-tree ([named-p type start-byte end-byte depth] tree)
+          (:mapc (tsc-traverse-mapc
+                  (lambda (props)
+                    (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
                       (tree-sitter-debug--display-node
-                       named-p type start-byte end-byte depth))))))))
+                       named-p type start-byte end-byte depth)))
+                  tree
+                  [:named-p :type :start-byte :end-byte :depth]))
+          (:iter (iter-do (props (tsc-traverse-iter
+                                  tree [:named-p :type :start-byte :end-byte :depth]))
+                   (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
+                     (tree-sitter-debug--display-node
+                      named-p type start-byte end-byte depth))))
+          (:do (tsc-traverse-do ([named-p type start-byte end-byte depth] tree)
+                 (tree-sitter-debug--display-node
+                  named-p type start-byte end-byte depth))))))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."

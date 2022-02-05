@@ -325,7 +325,7 @@ fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option
 }
 
 #[defun]
-fn _traverse_depth_first_native(tree_or_node: TreeOrNode, func: Value, props: Option<Vector>) -> Result<()> {
+fn _traverse_mapc(func: Value, tree_or_node: TreeOrNode, props: Option<Vector>) -> Result<()> {
     let mut iterator = DepthFirstIterator::new(tree_or_node);
     let env = func.env;
     let output = match props {

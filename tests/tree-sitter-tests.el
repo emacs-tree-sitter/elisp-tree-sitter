@@ -372,11 +372,11 @@ source_file (1 . 20)
          (string=
           rendered
           (tsc-test-capture-messages
-           (tsc-traverse-depth-first-native
-            tree
+           (tsc-traverse-mapc
             (lambda (props)
               (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] props))
                 (tsc-test-render-node type named-p start-byte end-byte field depth)))
+            tree
             [:type :named-p :start-byte :end-byte :field :depth])))))
       (ert-info ("Generator-based traversal should work")
         (should
@@ -384,7 +384,7 @@ source_file (1 . 20)
           rendered
           (tsc-test-capture-messages
            (cl-loop for item
-                    iter-by (tsc-traverse-depth-first-iterator
+                    iter-by (tsc-traverse-iter
                              tree [:type :named-p :start-byte :end-byte :field :depth])
                     do (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] item))
                          (tsc-test-render-node type named-p start-byte end-byte field depth)))))))
@@ -393,7 +393,7 @@ source_file (1 . 20)
          (string=
           rendered
           (tsc-test-capture-messages
-           (tsc-do-tree ([type named-p start-byte end-byte field depth] tree)
+           (tsc-traverse-do ([type named-p start-byte end-byte field depth] tree)
              (tsc-test-render-node type named-p start-byte end-byte field depth)))))))))
 
 (ert-deftest cursor::bench ()
@@ -405,24 +405,24 @@ source_file (1 . 20)
       (dolist (n '(1 10 100))
         (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         (garbage-collect)
-        (message "    native %3d %s" n
+        (message "%10s %3d %s" :mapc n
                  (eval `(benchmark-run-compiled ,n
-                          (tsc-traverse-depth-first-native
-                           tree-sitter-tree
+                          (tsc-traverse-mapc
                            tsc-test-no-op
+                           tree-sitter-tree
                            ,props))))
         (garbage-collect)
-        (message "  iterator %3d %s" n
+        (message "%10s %3d %s" :iter n
                  (eval `(benchmark-run-compiled ,n
-                          (iter-do (_ (tsc-traverse-depth-first-iterator tree-sitter-tree ,props))
+                          (iter-do (_ (tsc-traverse-iter tree-sitter-tree ,props))
                             (tsc-test-no-op)))))
         (garbage-collect)
-        (message "   do-tree %3d %s" n
+        (message "%10s %3d %s" :do n
                  (eval `(benchmark-run-compiled ,n
-                          (tsc-do-tree ([named-p type start-byte end-byte] tree-sitter-tree)
+                          (tsc-traverse-do ([named-p type start-byte end-byte] tree-sitter-tree)
                             named-p type start-byte end-byte))))
         (garbage-collect)
-        (message "   funcall %3d %s" n
+        (message "%10s %3d %s" 'funcall n
                  (eval `(benchmark-run-compiled ,(* 3429 n)
                           (funcall tsc-test-no-op ,props 5))))))))
 
@@ -639,7 +639,7 @@ We know it should since it is the `source_file' node."
     (rust-mode)
     (dolist (n '(1 10 100))
       (message "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-      (dolist (tree-sitter-debug-traversal-method '(:native :iterator :do-tree))
+      (dolist (tree-sitter-debug-traversal-method '(:mapc :iter :do))
         (garbage-collect)
         (message "%10s %3d %s" tree-sitter-debug-traversal-method n
                  (eval `(benchmark-run-compiled ,n

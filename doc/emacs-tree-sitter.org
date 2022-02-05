@@ -630,26 +630,27 @@ These functions are high-level APIs that allow traversing the syntax tree in dep
 
 When dealing with a large number of nodes, working with node objects creates a huge pressure on the garbage collector. For better performance, it's advisable to extract and work with individual node properties.
 
-- ~tsc-do-tree~ /~(vars tree-or-node) body~/ :: Evaluate ~body~ with ~vars~ bound to corresponding properties of each traversed node.
+- ~tsc-traverse-do~ /~(vars tree-or-node) body~/ :: Evaluate ~body~ with ~vars~ bound to corresponding properties of each traversed node.
     #+begin_src emacs-lisp
-      (tsc-do-tree ([type depth named-p] tree)
+      (tsc-traverse-do ([type depth named-p] tree)
         (when named-p                         ;AST
           (insert (make-string depth \? )     ;indentation
                   (format "%S" type) "\n")))
     #+end_src
-- ~tsc-traverse-depth-first-native~ /~tree-or-node fn [props]~/ :: Call ~fn~ for each traversed node, passing the node as the argument. If the vector of keywords ~props~ is specified, ~fn~ receives a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across invocations. Use ~pcase-let~ to extract the properties.
+- ~tsc-traverse-mapc~ /~func tree-or-node [props]~/ :: Call ~func~ for each traversed node, passing the node as the argument. If the vector of keywords ~props~ is specified, ~func~ receives a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across invocations. Use ~pcase-let~ to extract the properties.
     #+begin_src emacs-lisp
-      (tsc-traverse-depth-first-native
-       tree (lambda (props)
-              (pcase-let ((`[,type ,depth ,named-p] props))
-                (when named-p                     ;AST
-                  (insert (make-string depth \? ) ;indentation
-                          (format "%S" type) "\n"))))
+      (tsc-traverse-mapc
+       (lambda (props)
+         (pcase-let ((`[,type ,depth ,named-p] props))
+           (when named-p                          ;AST
+             (insert (make-string depth \? )      ;indentation
+                     (format "%S" type) "\n"))))
+       tree
        [:type :depth :named-p])
     #+end_src
-- ~tsc-traverse-depth-first-iterator~ /~tree-or-node [props]~/ :: Create an iterator that yields traversed nodes. If the vector of keywords ~props~ is specified, the iterator yields a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across iterations. Use ~pcase-let~ to extract the properties.
+- ~tsc-traverse-iter~ /~tree-or-node [props]~/ :: Create an iterator that yields traversed nodes. If the vector of keywords ~props~ is specified, the iterator yields a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across iterations. Use ~pcase-let~ to extract the properties.
     #+begin_src emacs-lisp
-      (iter-do (props (tsc-traverse-depth-first-iterator
+      (iter-do (props (tsc-traverse-iter
                        tree [:type :depth :named-p]))
         (pcase-let ((`[,type ,depth ,named-p] props))
           (when named-p                       ;AST

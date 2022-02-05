@@ -289,28 +289,29 @@ values.
 This wouldn't be necessary if the runtime supported stack-allocated objects.
 e.g. automatically through escape analysis. How about porting ELisp to GraalVM?")
 
-(defun tsc-traverse-depth-first-native (tree-or-node fn &optional props)
-  "Call FN for each node of TREE-OR-NODE.
+(defun tsc-traverse-mapc (func tree-or-node &optional props)
+  "Call FUNC for each node of TREE-OR-NODE.
 The traversal is depth-first pre-order.
 
-If the optional arg PROPS is a vector of keywords, FN is called with a vector
+If the optional arg PROPS is a vector of keywords, FUNC is called with a vector
 containing the corresponding node properties, instead of the node itself. For
-efficiency, this vector is reused across invocations of FN. *DO NOT* keep a
+efficiency, this vector is reused across invocations of FUNC. *DO NOT* keep a
 reference to it. It's recommended to use `pcase-let' to extract the properties.
 
 For example, to crudely render a syntax tree:
 
-    (tsc-traverse-depth-first-native
-     tree (lambda (props)
-            (pcase-let ((`[,type ,depth ,named-p] props))
-              (when named-p                     ;AST
-                (insert (make-string depth \\? ) ;indentation
-                        (format \"%S\" type) \"\\n\"))))
+    (tsc-traverse-mapc
+     (lambda (props)
+       (pcase-let ((`[,type ,depth ,named-p] props))
+         (when named-p                     ;AST
+           (insert (make-string depth \\? ) ;indentation
+                   (format \"%S\" type) \"\\n\"))))
+     tree
      [:type :depth :named-p])
 "
-  (tsc--traverse-depth-first-native tree-or-node fn props))
+  (tsc--traverse-mapc func tree-or-node props))
 
-(defun tsc-traverse-depth-first-iterator (tree-or-node &optional props)
+(defun tsc-traverse-iter (tree-or-node &optional props)
   "Return an iterator that traverse TREE-OR-NODE.
 The traversal is depth-first pre-order.
 
@@ -321,7 +322,7 @@ to it. It's recommended to use `pcase-let' to extract the properties.
 
 For example, to crudely render a syntax tree:
 
-    (iter-do (props (tsc-traverse-depth-first-iterator
+    (iter-do (props (tsc-traverse-iter
                      tree [:type :depth :named-p]))
       (pcase-let ((`[,type ,depth ,named-p] props))
         (when named-p                       ;AST
@@ -339,13 +340,13 @@ For example, to crudely render a syntax tree:
         (:close (setq iter nil))
         (_ (error "???"))))))
 
-(cl-defmacro tsc-do-tree ((vars tree-or-node) &rest body)
+(cl-defmacro tsc-traverse-do ((vars tree-or-node) &rest body)
   "Evaluate BODY with VARS bound to properties of each node in TREE-OR-NODE.
 The traversal is depth-first pre-order.
 
 VARS must be a vector of symbols. For example, to crudely render a syntax tree:
 
-    (tsc-do-tree ([type depth named-p] tree)
+    (tsc-traverse-do ([type depth named-p] tree)
       (when named-p                     ;AST
         (insert (make-string depth \\? ) ;identation
                 (format \"%S\" type) \"\\n\")))
