@@ -340,9 +340,12 @@ fn _iter_next_node(iterator: &mut DepthFirstIterator, props: Vector, output: Vec
 
 /// Return CURSOR's current node, if PROPS is nil.
 ///
-/// If PROPS is a vector of keywords, this function returns a vector containing the
-/// corresponding node properties instead of the node itself. If OUTPUT is also a
-/// vector, this function overwrites its contents instead of creating a new vector.
+/// If PROPS is a vector of property names, this function returns a vector
+/// containing the node's corresponding properties instead of the node itself. If
+/// OUTPUT is also a vector, this function overwrites its contents instead of
+/// creating a new vector.
+///
+/// See `tsc-valid-node-props' for the list of available properties.
 #[defun]
 fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option<Vector<'e>>, env: &'e Env) -> Result<Value<'e>> {
     macro_rules! sugar {
