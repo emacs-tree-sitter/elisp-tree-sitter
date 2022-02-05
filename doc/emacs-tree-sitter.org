@@ -647,7 +647,7 @@ When dealing with a large number of nodes, working with node objects creates a h
           (insert (make-string depth \? )     ;indentation
                   (format "%S" type) "\n")))
     #+end_src
-- ~tsc-traverse-mapc~ /~func tree-or-node [props]~/ :: Call ~func~ for each traversed node, passing the node as the argument. If ~props~ is a vector of property names, ~func~ receives a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across invocations. Use ~pcase-let~ to extract the properties.
+- ~tsc-traverse-mapc~ /~func tree-or-node [props]~/ :: Call ~func~ for each traversed node, passing the node as the argument. If ~props~ is a vector of property names, ~func~ receives a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across invocations. Use ~pcase-let~ to extract the properties instead.
     #+begin_src emacs-lisp
       (tsc-traverse-mapc
        (lambda (props)
@@ -658,7 +658,7 @@ When dealing with a large number of nodes, working with node objects creates a h
        tree
        [:type :depth :named-p])
     #+end_src
-- ~tsc-traverse-iter~ /~tree-or-node [props]~/ :: Create an iterator that yields traversed nodes. If ~props~ is a vector of property names, the iterator yields a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across iterations. Use ~pcase-let~ to extract the properties.
+- ~tsc-traverse-iter~ /~tree-or-node [props]~/ :: Create an iterator that yields traversed nodes. If ~props~ is a vector of property names, the iterator yields a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across iterations. Use ~pcase-let~ to extract the properties instead.
     #+begin_src emacs-lisp
       (iter-do (props (tsc-traverse-iter
                        tree [:type :depth :named-p]))

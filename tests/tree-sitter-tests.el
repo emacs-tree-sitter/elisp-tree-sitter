@@ -222,7 +222,7 @@ tree is held (since nodes internally reference the tree)."
       (should (tsc-goto-first-child cursor)))
     (garbage-collect)))
 
-(ert-deftest cursor::traverse ()
+(ert-deftest cursor::traverse:properties ()
   (tsc-test-with rust parser
     (let* ((code "fn foo(x: usize) {}")
            (rendered (string-trim-left "
@@ -247,7 +247,7 @@ source_file (1 . 20)
                 (tsc-test-render-node type named-p start-byte end-byte field depth)))
             tree
             [:type :named-p :start-byte :end-byte :field :depth])))))
-      (ert-info ("Generator-based traversal should work")
+      (ert-info ("Iterator-based traversal should work")
         (should
          (string=
           rendered
@@ -264,6 +264,29 @@ source_file (1 . 20)
           (tsc-test-capture-messages
            (tsc-traverse-do ([type named-p start-byte end-byte field depth] tree)
              (tsc-test-render-node type named-p start-byte end-byte field depth)))))))))
+
+(ert-deftest cursor::traverse:single-property ()
+  (tsc-test-with rust parser
+    (let* ((code "fn foo(x: usize) {}")
+           (tree (tsc-parse-string parser code)))
+      (ert-info ("")
+        (let (mapc-result
+              do-result
+              iter-result)
+          (ert-info ("Callback-based traversal should work with single property")
+            (tsc-traverse-mapc
+             (lambda (type)
+               (cl-callf append mapc-result (list type)))
+             tree :type))
+          (ert-info ("Iterator-based traversal should work with single property")
+            (setq iter-result (cl-loop for type
+                                       iter-by (tsc-traverse-iter tree :type)
+                                       collect type)))
+          (tsc-traverse-do ([type] tree)
+            (cl-callf append do-result (list type)))
+          (ert-info ("All traversal methods should return the same result")
+            (should (equal do-result mapc-result))
+            (should (equal do-result iter-result))))))))
 
 (ert-deftest conversion::position<->tsc-point ()
   (tsc-test-with-file "tree-sitter-tests.el"

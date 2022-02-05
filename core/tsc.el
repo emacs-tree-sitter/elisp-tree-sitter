@@ -281,11 +281,17 @@ e.g. automatically through escape analysis. How about porting ELisp to GraalVM?"
 
 (defun tsc--check-node-props (props)
   "Validate that PROPS are valid node properties."
-  (when props
-    (when-let ((invalid-props (seq-filter (lambda (kw)
-                                            (not (memq kw tsc-valid-node-props)))
-                                          props)))
-      (error "Invalid node properties %s" invalid-props))))
+  (cond
+   ((keywordp props)
+    (unless (memq props tsc-valid-node-props)
+      (error "Invalid node property %s" props)))
+   ((vectorp props)
+    (when-let ((invalid-props (seq-filter
+                               (lambda (kw)
+                                 (not (memq kw tsc-valid-node-props)))
+                               props)))
+      (error "Invalid node properties %s" invalid-props)))
+   (t (error "Expected vectors or keyword %s" props))))
 
 (defun tsc-traverse-mapc (func tree-or-node &optional props)
   "Call FUNC for each node of TREE-OR-NODE.
@@ -296,6 +302,9 @@ vector containing the node's corresponding properties, instead of the node
 itself. For efficiency, this vector is reused across invocations of FUNC. *DO
 NOT KEEP* a reference to it. It's recommended to use `pcase-let' to extract the
 properties. See `tsc-valid-node-props' for the list of available properties.
+
+PROPS can also be a single property name, in which case FUNC receives only that
+property each invocation.
 
 For example, to crudely render a syntax tree:
 
@@ -321,6 +330,9 @@ itself. For efficiency, this vector is reused across iterations. *DO NOT KEEP* a
 reference to it. It's recommended to use `pcase-let' to extract the properties.
 See `tsc-valid-node-props' for the list of available properties.
 
+PROPS can also be a single property name, in which case the iterator yields only
+that property each iteration.
+
 For example, to crudely render a syntax tree:
 
     (iter-do (props (tsc-traverse-iter
@@ -332,13 +344,12 @@ For example, to crudely render a syntax tree:
 "
   (tsc--check-node-props props)
   (let ((iter (tsc--iter tree-or-node))
-        (output (when props
+        (output (when (vectorp props)
                   (make-vector (length props) nil))))
     (lambda (control _yield-result)
       (pcase control
-        (:next (if (tsc--iter-next-node iter props output)
-                   output
-                 (signal 'iter-end-of-sequence nil)))
+        (:next (or (tsc--iter-next-node iter props output)
+                   (signal 'iter-end-of-sequence nil)))
         (:close (setq iter nil))
         (_ (error "???"))))))
 
@@ -368,8 +379,7 @@ For example, to crudely render a syntax tree:
         (output (make-symbol "output")))
     (tsc--check-node-props props)
     `(let ((,iter (tsc--iter ,tree-or-node))
-           (,output ,(when props
-                       (make-vector (length props) nil))))
+           (,output ,(make-vector (length props) nil)))
        (while (tsc--iter-next-node ,iter ,props ,output)
          (let* (,@(cl-loop for i below (length vars)
                            collect `(,(aref vars i)

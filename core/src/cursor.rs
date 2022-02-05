@@ -5,7 +5,7 @@ use std::{
 };
 
 use emacs::{defun, Result, Value, Env, GlobalRef, Vector, IntoLisp, FromLisp};
-use tree_sitter::{Tree, TreeCursor};
+use tree_sitter::{Tree, TreeCursor, Node};
 
 use crate::{
     types::{self, Shared, BytePos},
@@ -121,7 +121,7 @@ impl<'e> FromLisp<'e> for TreeOrNode<'e> {
             return Ok(Self::Tree(value));
         }
         if let Ok(value) = value.into_rust() {
-            return Ok(Self::Node(value))
+            return Ok(Self::Node(value));
         }
         value.env.signal(wrong_type_argument, (tree_or_node_p, value))
     }
@@ -231,20 +231,12 @@ struct DepthFirstIterator {
 // TODO: Provide a function to move backward.
 impl DepthFirstIterator {
     fn new(tree_or_node: TreeOrNode) -> Self {
-        Self {
-            cursor: tree_or_node.walk(),
-            state: Start,
-            depth: 0,
-        }
+        Self { cursor: tree_or_node.walk(), state: Start, depth: 0 }
     }
 
     #[inline]
     fn item(&self) -> Option<(RNode, usize)> {
-        Some((
-            RNode::new(self.cursor.clone_tree(),
-                       |_| self.cursor.borrow().node()),
-            self.depth,
-        ))
+        Some((RNode::new(self.cursor.clone_tree(), |_| self.cursor.borrow().node()), self.depth))
     }
 
     fn close(&mut self) {
@@ -282,7 +274,7 @@ impl Iterator for DepthFirstIterator {
                     self.next()
                 }
             }
-            Done => None
+            Done => None,
         }
     }
 }
@@ -308,130 +300,205 @@ fn _iter_close(iterator: &mut DepthFirstIterator) -> Result<()> {
     Ok(iterator.close())
 }
 
-/// Retrieve properties of the node that ITERATOR is currently on.
-///
-/// PROPS is a vector of property names to retrieve.
-/// OUTPUT is a vector where the properties will be written to.
-#[defun]
-fn _iter_current_node(iterator: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<()> {
-    let env = output.value().env;
-    let cursor = &iterator.cursor;
-    let _ = _current_node(cursor, Some(props), Some(output), env)?;
-    for (i, prop) in props.into_iter().enumerate() {
-        if prop.eq(_depth.bind(env)) {
-            output.set(i, iterator.depth)?;
+#[derive(Clone, Copy)]
+enum VectorOrKeyword<'e> {
+    Vector(Vector<'e>),
+    Keyword(Value<'e>),
+}
+
+impl<'e> FromLisp<'e> for VectorOrKeyword<'e> {
+    fn from_lisp(value: Value<'e>) -> Result<Self> {
+        if let Ok(value) = value.into_rust::<Vector>() {
+            Ok(Self::Vector(value))
+        } else {
+            // TODO: Verify that it's a valid node property
+            Ok(Self::Keyword(value))
         }
     }
-    Ok(())
 }
 
-/// Move ITERATOR to the next node, and retrieve its properties.
+/// Return the properties of ITERATOR's current node, or the node itself.
 ///
-/// This a combination of `tsc--iter-next' and `tsc--iter-current-node'.
-#[defun]
-fn _iter_next_node(iterator: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<bool> {
-    if iterator.next().is_some() {
-        _iter_current_node(iterator, props, output)?;
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
-/// Return CURSOR's current node, if PROPS is nil.
+/// If PROPS is a vector of property names, return a vector containing the node's
+/// corresponding properties. If OUTPUT is also non-nil, it must be a vector of the
+/// same length, where the properties will be written into.
 ///
-/// If PROPS is a vector of property names, this function returns a vector
-/// containing the node's corresponding properties instead of the node itself. If
-/// OUTPUT is also a vector, this function overwrites its contents instead of
-/// creating a new vector.
+/// If PROPS is a single property name, return that property.
+///
+/// If PROPS is nil, return the node itself.
 ///
 /// See `tsc-valid-node-props' for the list of available properties.
 #[defun]
-fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option<Vector<'e>>, env: &'e Env) -> Result<Value<'e>> {
+fn _iter_current_node<'e>(
+    iterator: &mut DepthFirstIterator,
+    props: Option<VectorOrKeyword<'e>>,
+    output: Option<Vector<'e>>,
+    env: &'e Env,
+) -> Result<Value<'e>> {
+    let cursor = &iterator.cursor;
+    match props {
+        Some(VectorOrKeyword::Keyword(prop)) if prop.eq(_depth.bind(env)) => {
+            iterator.depth.into_lisp(env)
+        }
+        _ => {
+            let result = _current_node(cursor, props, output, env)?;
+            if let Some(VectorOrKeyword::Vector(props)) = props {
+                if let Some(output) = output {
+                    for (i, prop) in props.into_iter().enumerate() {
+                        if prop.eq(_depth.bind(env)) {
+                            output.set(i, iterator.depth)?;
+                        }
+                    }
+                } else {
+                    todo!()
+                }
+            }
+            Ok(result)
+        }
+    }
+}
+
+/// Move ITERATOR to the next node, and retrieve its properties, or the node itself.
+///
+/// This a combination of `tsc--iter-next' and `tsc--iter-current-node'.
+#[defun]
+fn _iter_next_node<'e>(
+    iterator: &mut DepthFirstIterator,
+    props: Option<VectorOrKeyword<'e>>,
+    output: Option<Vector<'e>>,
+    env: &'e Env,
+) -> Result<Option<Value<'e>>> {
+    if iterator.next().is_some() {
+        Ok(Some(_iter_current_node(iterator, props, output, env)?))
+    } else {
+        Ok(None)
+    }
+}
+
+fn get<'e>(prop: Value<'e>, node: Node, cursor: &RCursor) -> Result<Value<'e>> {
     macro_rules! sugar {
         ($prop:ident, $env:ident) => {
             macro_rules! eq {
-                ($name:ident) => ($prop.eq($name.bind($env)))
+                ($name:ident) => {
+                    $prop.eq($name.bind($env))
+                };
             }
-        }
+        };
     }
+    let env = prop.env;
+    sugar!(prop, env);
+    if eq!(_type) {
+        node.lisp_type().into_lisp(env)
+    } else if eq!(_byte_range) {
+        node.lisp_byte_range(env)
+    } else if eq!(_start_byte) {
+        node.lisp_start_byte().into_lisp(env)
+    } else if eq!(_end_byte) {
+        node.lisp_end_byte().into_lisp(env)
+    } else if eq!(_field) {
+        current_field(cursor)?.into_lisp(env)
+    } else if eq!(_named_p) {
+        node.is_named().into_lisp(env)
+    } else if eq!(_extra_p) {
+        node.is_extra().into_lisp(env)
+    } else if eq!(_error_p) {
+        node.is_error().into_lisp(env)
+    } else if eq!(_missing_p) {
+        node.is_missing().into_lisp(env)
+    } else if eq!(_has_error_p) {
+        node.has_error().into_lisp(env)
+    } else if eq!(_start_point) {
+        node.lisp_start_point().into_lisp(env)
+    } else if eq!(_end_point) {
+        node.lisp_end_point().into_lisp(env)
+    } else if eq!(_range) {
+        node.lisp_range().into_lisp(env)
+    } else {
+        ().into_lisp(env)
+    }
+}
+
+/// Return the properties of CURSOR's current node, or the node itself.
+///
+/// If PROPS is a vector of property names, return a vector containing the node's
+/// corresponding properties. If OUTPUT is also non-nil, it must be a vector of the
+/// same length, where the properties will be written into.
+///
+/// If PROPS is a single property name, return that property.
+///
+/// If PROPS is nil, return the node itself.
+///
+/// See `tsc-valid-node-props' for the list of available properties.
+#[defun]
+fn _current_node<'e>(
+    cursor: &RCursor,
+    props: Option<VectorOrKeyword<'e>>,
+    output: Option<Vector<'e>>,
+    env: &'e Env,
+) -> Result<Value<'e>> {
     let node = cursor.borrow().node();
     match props {
         None => RNode::new(cursor.clone_tree(), |_| node).into_lisp(env),
-        Some(props) => {
+        Some(VectorOrKeyword::Vector(props)) => {
             let result = match output {
                 None => env.make_vector(props.len(), ())?,
                 Some(output) => output,
             };
             for (i, prop) in props.into_iter().enumerate() {
-                sugar!(prop, env);
-                if eq!(_type) {
-                    result.set(i, node.lisp_type())?;
-                } else if eq!(_byte_range) {
-                    result.set(i, node.lisp_byte_range(env)?)?;
-                } else if eq!(_start_byte) {
-                    result.set(i, node.lisp_start_byte())?;
-                } else if eq!(_end_byte) {
-                    result.set(i, node.lisp_end_byte())?;
-                } else if eq!(_field) {
-                    result.set(i, current_field(cursor)?)?;
-                } else if eq!(_named_p) {
-                    result.set(i, node.is_named())?;
-                } else if eq!(_extra_p) {
-                    result.set(i, node.is_extra())?;
-                } else if eq!(_error_p) {
-                    result.set(i, node.is_error())?;
-                } else if eq!(_missing_p) {
-                    result.set(i, node.is_missing())?;
-                } else if eq!(_has_error_p) {
-                    result.set(i, node.has_error())?;
-                } else if eq!(_start_point) {
-                    result.set(i, node.lisp_start_point())?;
-                } else if eq!(_end_point) {
-                    result.set(i, node.lisp_end_point())?;
-                } else if eq!(_range) {
-                    result.set(i, node.lisp_range())?;
-                } else {
-                    result.set(i, ())?;
-                }
+                result.set(i, get(prop, node, cursor)?)?;
             }
             result.into_lisp(env)
         }
+        Some(VectorOrKeyword::Keyword(prop)) => get(prop, node, cursor),
     }
 }
 
 /// Actual logic of `tsc-traverse-mapc'. The wrapper is needed because
 /// `emacs-module-rs' doesn't currently support optional arguments.
 #[defun]
-fn _traverse_mapc(func: Value, tree_or_node: TreeOrNode, props: Option<Vector>) -> Result<()> {
+fn _traverse_mapc(
+    func: Value,
+    tree_or_node: TreeOrNode,
+    props: Option<VectorOrKeyword>,
+) -> Result<()> {
     let mut iterator = DepthFirstIterator::new(tree_or_node);
     let env = func.env;
-    let output = match props {
-        None => None,
-        Some(props) => Some(env.make_vector(props.len(), ())?),
-    };
+    let mut output = None;
     let mut depth_indexes = Vec::with_capacity(1);
-    if let Some(props) = props {
-        for (i, prop) in props.into_iter().enumerate() {
-            if prop.eq(_depth.bind(env)) {
-                depth_indexes.push(i)
+    let mut depth = false;
+    match props {
+        Some(VectorOrKeyword::Vector(props)) => {
+            output = Some(env.make_vector(props.len(), ())?);
+            for (i, prop) in props.into_iter().enumerate() {
+                if prop.eq(_depth.bind(env)) {
+                    depth_indexes.push(i)
+                }
             }
         }
+        Some(VectorOrKeyword::Keyword(prop)) if prop.eq(_depth.bind(env)) => {
+            depth = true;
+        }
+        _ => {}
     }
     // Can't use a for loop because we need to access the cursor to process each item.
     let mut item: Option<(RNode, usize)> = iterator.next();
     while item.is_some() {
-        let result = _current_node(&iterator.cursor, props, output, env)?;
-        // let (_, depth) = item.unwrap();
-
-        if let Some(output) = output {
-            for i in &depth_indexes {
-                output.set(*i, iterator.depth)?;
+        let result = if depth {
+            iterator.depth.into_lisp(env)?
+        } else {
+            let result = _current_node(&iterator.cursor, props, output, env)?;
+            if let Some(output) = output {
+                for i in &depth_indexes {
+                    output.set(*i, iterator.depth)?;
+                }
             }
-        }
+            result
+        };
 
         // Safety: the returned value is unused.
-        unsafe { func.call_unprotected([result])?; }
+        unsafe {
+            func.call_unprotected([result])?;
+        }
 
         // // Safety: the returned value is unused.
         // unsafe { func.call_unprotected((result, depth))?; }
