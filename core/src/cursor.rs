@@ -228,6 +228,7 @@ struct DepthFirstIterator {
     depth: usize,
 }
 
+// TODO: Provide a function to move backward.
 impl DepthFirstIterator {
     fn new(tree_or_node: TreeOrNode) -> Self {
         Self {
@@ -286,44 +287,62 @@ impl Iterator for DepthFirstIterator {
     }
 }
 
+/// Create a new depth-first iterator from the given TREE-OR-NODE.
+/// The traversal is pre-order.
 #[defun(user_ptr)]
 fn _iter(tree_or_node: TreeOrNode) -> Result<DepthFirstIterator> {
     Ok(DepthFirstIterator::new(tree_or_node))
 }
 
+/// Move ITERATOR to the next node.
+/// Return t if ITERATOR successfully moved, nil if there was no next node, or if
+/// ITERATOR was closed.
 #[defun]
-fn _iter_next(iter: &mut DepthFirstIterator) -> Result<bool> {
-    Ok(iter.next().is_some())
+fn _iter_next(iterator: &mut DepthFirstIterator) -> Result<bool> {
+    Ok(iterator.next().is_some())
 }
 
+/// Close ITERATOR.
 #[defun]
-fn _iter_close(iter: &mut DepthFirstIterator) -> Result<()> {
-    Ok(iter.close())
+fn _iter_close(iterator: &mut DepthFirstIterator) -> Result<()> {
+    Ok(iterator.close())
 }
 
+/// Retrieve properties of the node that ITERATOR is currently on.
+///
+/// PROPS is a vector of property names to retrieve.
+/// OUTPUT is a vector where the properties will be written to.
 #[defun]
-fn _iter_current_node(iter: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<()> {
+fn _iter_current_node(iterator: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<()> {
     let env = output.value().env;
-    let cursor = &iter.cursor;
+    let cursor = &iterator.cursor;
     let _ = _current_node(cursor, Some(props), Some(output), env)?;
     for (i, prop) in props.into_iter().enumerate() {
         if prop.eq(_depth.bind(env)) {
-            output.set(i, iter.depth)?;
+            output.set(i, iterator.depth)?;
         }
     }
     Ok(())
 }
 
+/// Move ITERATOR to the next node, and retrieve its properties.
+///
+/// This a combination of `tsc--iter-next' and `tsc--iter-current-node'.
 #[defun]
-fn _iter_next_node(iter: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<bool> {
-    if iter.next().is_some() {
-        _iter_current_node(iter, props, output)?;
+fn _iter_next_node(iterator: &mut DepthFirstIterator, props: Vector, output: Vector) -> Result<bool> {
+    if iterator.next().is_some() {
+        _iter_current_node(iterator, props, output)?;
         Ok(true)
     } else {
         Ok(false)
     }
 }
 
+/// Return CURSOR's current node, if PROPS is nil.
+///
+/// If PROPS is a vector of keywords, this function returns a vector containing the
+/// corresponding node properties instead of the node itself. If OUTPUT is also a
+/// vector, this function overwrites its contents instead of creating a new vector.
 #[defun]
 fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option<Vector<'e>>, env: &'e Env) -> Result<Value<'e>> {
     macro_rules! sugar {
@@ -378,6 +397,8 @@ fn _current_node<'e>(cursor: &RCursor, props: Option<Vector<'e>>, output: Option
     }
 }
 
+/// Actual logic of `tsc-traverse-mapc'. The wrapper is needed because
+/// `emacs-module-rs' doesn't currently support optional arguments.
 #[defun]
 fn _traverse_mapc(func: Value, tree_or_node: TreeOrNode, props: Option<Vector>) -> Result<()> {
     let mut iterator = DepthFirstIterator::new(tree_or_node);
