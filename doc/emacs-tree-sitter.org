@@ -623,9 +623,44 @@ As described in the previous section, the ~-named-~  variants of the functions i
 :PROPERTIES:
 :EXPORT_FILE_NAME: walking
 :END:
-Tree-walking functions enable efficient traversal of the syntax tree with the help of a stateful ~cursor~ object.
+Tree-walking functions enable efficient traversal of the syntax tree.
 
-- ~tsc-make-cursor~ /~node-or-tree~/ :: Create a new cursor on a node. The cursor /cannot move out/ of this node. If called on a tree, the cursor is created on the tree's root node.
+*** Traversing All Descendant Nodes
+These functions are high-level APIs that allow traversing the syntax tree in depth-first pre-order.
+
+When dealing with a large number of nodes, working with node objects creates a huge pressure on the garbage collector. For better performance, it's advisable to extract and work with individual node properties.
+
+- ~tsc-do-tree~ /~(vars tree-or-node) body~/ :: Evaluate ~body~ with ~vars~ bound to corresponding properties of each traversed node.
+    #+begin_src emacs-lisp
+      (tsc-do-tree ([type depth named-p] tree)
+        (when named-p                         ;AST
+          (insert (make-string depth \? )     ;indentation
+                  (format "%S" type) "\n")))
+    #+end_src
+- ~tsc-traverse-depth-first-native~ /~tree-or-node fn [props]~/ :: Call ~fn~ for each traversed node, passing the node as the argument. If the vector of keywords ~props~ is specified, ~fn~ receives a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across invocations. Use ~pcase-let~ to extract the properties.
+    #+begin_src emacs-lisp
+      (tsc-traverse-depth-first-native
+       tree (lambda (props)
+              (pcase-let ((`[,type ,depth ,named-p] props))
+                (when named-p                     ;AST
+                  (insert (make-string depth \? ) ;indentation
+                          (format "%S" type) "\n"))))
+       [:type :depth :named-p])
+    #+end_src
+- ~tsc-traverse-depth-first-iterator~ /~tree-or-node [props]~/ :: Create an iterator that yields traversed nodes. If the vector of keywords ~props~ is specified, the iterator yields a vector containing the node's properties instead. *Do not keep a reference to the vector*, as it is reused across iterations. Use ~pcase-let~ to extract the properties.
+    #+begin_src emacs-lisp
+      (iter-do (props (tsc-traverse-depth-first-iterator
+                       tree [:type :depth :named-p]))
+        (pcase-let ((`[,type ,depth ,named-p] props))
+          (when named-p                       ;AST
+            (insert (make-string depth \? )   ;indentation
+                    (format "%S" type) "\n"))))
+    #+end_src
+
+*** Walking Step-by-step
+These functions are the low-level APIs that allow walking through the syntax tree one node at a time, with the help of a stateful ~cursor~ object.
+
+- ~tsc-make-cursor~ /~tree-or-node~/ :: Create a new cursor on a node. The cursor /cannot move out/ of this node. If called on a tree, the cursor is created on the tree's root node.
 - ~tsc-goto-parent~ /~cursor~/ :: <br>
 - ~tsc-goto-first-child~ /~cursor~/ :: <br>
 - ~tsc-goto-next-sibling~ /~cursor~/ :: Attempt to move the cursor to the parent node, the first child node, or the next sibling node. This function returns t if the move was successful, nil if the move is invalid.

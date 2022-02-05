@@ -264,11 +264,71 @@ QUERY. Otherwise, a newly created query-cursor is used."
   "Return the pretty-printed string of TREE's sexp."
   (pp-to-string (read (tsc-tree-to-sexp tree))))
 
-(defun tsc-traverse-depth-first-native (tree fn &optional props)
-  (tsc--traverse-depth-first-native tree fn props))
+(defconst tsc-valid-node-props '(field
+                                 type
+                                 named-p
+                                 extra-p
+                                 error-p
+                                 missing-p
+                                 has-error-p
+                                 start-byte
+                                 start-point
+                                 end-byte
+                                 end-point
+                                 range
+                                 byte-range
+                                 depth)
+  "Node properties that the traversal functions can return.
 
-(defun tsc-traverse-depth-first-iterator (tree &optional props)
-  (let ((iter (tsc--iter tree))
+When dealing with a large number of nodes, working with node objects creates a
+huge pressure on the garbage collector. To increase performance, it's better to
+instead extract and work with individual node properties. Several functions can
+optionally take a vector of property names, and return a vector of property
+values.
+
+This wouldn't be necessary if the runtime supported stack-allocated objects.
+e.g. automatically through escape analysis. How about porting ELisp to GraalVM?")
+
+(defun tsc-traverse-depth-first-native (tree-or-node fn &optional props)
+  "Call FN for each node of TREE-OR-NODE.
+The traversal is depth-first pre-order.
+
+If the optional arg PROPS is a vector of keywords, FN is called with a vector
+containing the corresponding node properties, instead of the node itself. For
+efficiency, this vector is reused across invocations of FN. *DO NOT* keep a
+reference to it. It's recommended to use `pcase-let' to extract the properties.
+
+For example, to crudely render a syntax tree:
+
+    (tsc-traverse-depth-first-native
+     tree (lambda (props)
+            (pcase-let ((`[,type ,depth ,named-p] props))
+              (when named-p                     ;AST
+                (insert (make-string depth \\? ) ;indentation
+                        (format \"%S\" type) \"\\n\"))))
+     [:type :depth :named-p])
+"
+  (tsc--traverse-depth-first-native tree-or-node fn props))
+
+(defun tsc-traverse-depth-first-iterator (tree-or-node &optional props)
+  "Return an iterator that traverse TREE-OR-NODE.
+The traversal is depth-first pre-order.
+
+If the optional arg PROPS is a vector of keywords, the iterator yields a vector
+containing corresponding node properties, instead of the node itself. For
+efficiency, this vector is reused across iterations. *DO NOT* keep a reference
+to it. It's recommended to use `pcase-let' to extract the properties.
+
+For example, to crudely render a syntax tree:
+
+    (iter-do (props (tsc-traverse-depth-first-iterator
+                     tree [:type :depth :named-p]))
+      (pcase-let ((`[,type ,depth ,named-p] props))
+        (when named-p                       ;AST
+          (insert (make-string depth \\? )   ;indentation
+                  (format \"%S\" type) \"\\n\"))))
+"
+  (let ((iter (tsc--iter tree-or-node))
         (output (when props
                   (make-vector (length props) nil))))
     (lambda (control _yield-result)
@@ -279,29 +339,23 @@ QUERY. Otherwise, a newly created query-cursor is used."
         (:close (setq iter nil))
         (_ (error "???"))))))
 
-(defconst tsc--valid-node-props
-  '(field
-    type
-    named-p
-    extra-p
-    error-p
-    missing-p
-    has-error-p
-    start-byte
-    start-point
-    end-byte
-    end-point
-    range
-    byte-range
-    depth))
+(cl-defmacro tsc-do-tree ((vars tree-or-node) &rest body)
+  "Evaluate BODY with VARS bound to properties of each node in TREE-OR-NODE.
+The traversal is depth-first pre-order.
 
-(cl-defmacro tsc-do-tree ((vars tree) &rest body)
+VARS must be a vector of symbols. For example, to crudely render a syntax tree:
+
+    (tsc-do-tree ([type depth named-p] tree)
+      (when named-p                     ;AST
+        (insert (make-string depth \\? ) ;identation
+                (format \"%S\" type) \"\\n\")))
+"
   (declare (indent 1)
            (debug ((vectorp form) body)))
   (unless (vectorp vars)
     (error "Var bindings must be a vector"))
   (let* ((invalid-props (seq-filter (lambda (symbol)
-                                      (not (memq symbol tsc--valid-node-props)))
+                                      (not (memq symbol tsc-valid-node-props)))
                                     vars))
          (_ (when invalid-props
               (error "Invalid bindings %s" invalid-props)))
@@ -311,7 +365,7 @@ QUERY. Otherwise, a newly created query-cursor is used."
                         (lambda (symbol)
                           (intern (format ":%s" symbol)))
                         vars)))
-    `(let ((,iter (tsc--iter ,tree))
+    `(let ((,iter (tsc--iter ,tree-or-node))
            (,output ,(when props
                        (make-vector (length props) nil))))
        (while (tsc--iter-next-node ,iter ,props ,output)
