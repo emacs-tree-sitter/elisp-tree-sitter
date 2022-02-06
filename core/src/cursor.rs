@@ -153,12 +153,6 @@ fn make_cursor(tree_or_node: TreeOrNode) -> Result<RCursor> {
     Ok(tree_or_node.walk())
 }
 
-/// Return CURSOR's current node.
-#[defun]
-fn current_node(cursor: &RCursor) -> Result<RNode> {
-    Ok(RNode::new(cursor.clone_tree(), |_| cursor.borrow().node()))
-}
-
 /// Return the field id of CURSOR's current node.
 /// Return nil if the current node doesn't have a field.
 #[defun]
@@ -414,6 +408,7 @@ fn get<'e>(prop: Value<'e>, node: Node, cursor: &RCursor) -> Result<Value<'e>> {
     } else if eq!(_range) {
         node.lisp_range().into_lisp(env)
     } else {
+        // FIX: Signal an error instead.
         ().into_lisp(env)
     }
 }

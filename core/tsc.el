@@ -176,6 +176,25 @@ This function must be called in NODE's source buffer."
 Return the index of the child node if one was found, nil otherwise."
   (tsc-goto-first-child-for-byte cursor (position-bytes position)))
 
+(defun tsc-current-node (cursor &optional props output)
+  "Return CURSOR's current node.
+
+If the optional arg PROPS is a vector of property names, this function returns a
+vector containing the node's corresponding properties. If the optional arg
+OUTPUT is also non-nil, it must be a vector of the same length, where the
+properties will be written into.
+
+PROPS can also be a single property name, in which case this function returns
+only that property, and OUTPUT is ignored.
+
+See `tsc-valid-node-props' for the list of available properties."
+  (tsc--check-node-props props)
+  ;; TODO: Fix this.
+  (when (or (eq props :depth)
+            (and (seqp props) (cl-find :depth props)))
+    (error "Cursor doesn't currently support :depth property"))
+  (tsc--current-node cursor props output))
+
 (defun tsc-lang-field-id (language field)
   "Return the numeric id of FIELD in LANGUAGE. FIELD should be a keyword."
   (unless (keywordp field)
@@ -292,7 +311,7 @@ e.g. automatically through escape analysis. How about porting ELisp to GraalVM?"
                                props)))
       (error "Invalid node properties %s" invalid-props)))
    ((null props) nil)
-   (t (error "Expected vectors or keyword %s" props))))
+   (t (error "Expected vectors, keyword, or nil %s" props))))
 
 (defun tsc-traverse-mapc (func tree-or-node &optional props)
   "Call FUNC for each node of TREE-OR-NODE.

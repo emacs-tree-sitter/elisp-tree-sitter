@@ -212,8 +212,11 @@ tree is held (since nodes internally reference the tree)."
       (should-not (equal (tsc-node-type (tsc-current-node cursor)) 'source_file))
       (tsc-reset-cursor cursor node)
       (should (equal (tsc-node-type (tsc-current-node cursor)) 'source_file))
-      (should (equal (tsc--current-node cursor [:type] nil) [source_file]))
-      (message "->> %s" (tsc--current-node cursor [:start-byte :end-byte :type :field nil] nil)))))
+      (should (equal (tsc-current-node cursor :type) 'source_file))
+      (should (equal (tsc-current-node cursor [:start-byte :end-byte :type])
+                     `[,(point-min) ,(point-max) source_file]))
+      (should-error (tsc-current-node cursor :depth))
+      (should-error (tsc-current-node cursor [:depth])))))
 
 (ert-deftest cursor::using-without-tree ()
   (tsc-test-with rust parser

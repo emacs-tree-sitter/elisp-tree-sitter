@@ -562,7 +562,11 @@ For more details, see Tree-sitter's documentation:
 :EXPORT_FILE_NAME: inspecting
 :END:
 
-The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and [[*Walking][traverse]] this structure, but does not support modifying it directly (for the purposes of source code transformation or generation).
+{{% notice info %}}
+If your code works with a large number of nodes, consider using the [[*Walking][traversal APIs]], which are more efficient.
+{{% /notice %}}
+
+The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and traverse this structure, but does not support modifying it directly (for the purposes of source code transformation or generation).
 
 - ~tsc-root-node~ /~tree~/ :: Get the root node of a syntax tree.
 - ~tsc-changed-ranges~ /~old-tree new-tree~/ :: Compare an edited old syntax tree to a newly parsed one. It is typically used in ~tree-sitter-after-change-functions~ hook. This function returns a sequence of ranges whose syntactic structure has changed. Each range is a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
@@ -631,10 +635,7 @@ As described in the previous section, the ~-named-~  variants of the functions i
 :END:
 Tree-walking functions enable efficient traversal of the syntax tree.
 
-*** Traversing All Descendant Nodes
-These functions are high-level APIs that allow traversing the syntax tree in depth-first pre-order.
-
-When dealing with a large number of nodes, working with node objects creates a huge pressure on the garbage collector. For better performance, it's advisable to extract and work with individual node properties. The constant ~tsc-valid-node-props~ holds the list of all available property names.
+When dealing with a large number of nodes, working with node objects creates a huge pressure on the garbage collector. For better performance, it's advisable to extract and work with individual node properties. The constant ~tsc-valid-node-props~ holds the list of all available property names:
 # TODO: Make :exports results work with ox-hugo.
 #+begin_src emacs-lisp
   '(:type
@@ -645,6 +646,12 @@ When dealing with a large number of nodes, working with node objects creates a h
     :start-point :end-point
     :range :byte-range)
 #+end_src
+{{% notice note %}}
+Functions that accept a vector of property names can also accept a single property name, in which case only that property is returned/yielded, instead of a vector of properties.
+{{% /notice %}}
+
+*** Traversing All Descendant Nodes
+These functions are high-level APIs that allow traversing the syntax tree in depth-first pre-order.
 
 - ~tsc-traverse-do~ /~(vars tree-or-node) body~/ :: Evaluate ~body~ with ~vars~ bound to corresponding properties of each traversed node.
     #+begin_src emacs-lisp
@@ -683,8 +690,12 @@ These functions are the low-level APIs that allow walking through the syntax tre
 - ~tsc-goto-next-sibling~ /~cursor~/ :: Attempt to move the cursor to the parent node, the first child node, or the next sibling node. This function returns t if the move was successful, nil if the move is invalid.
 - ~tsc-goto-first-child-for-position~ /~cursor pos~/ :: Attempt to move the cursor to the first child node that extends beyond the given position. This function returns the index of the child node found, nil otherwise.
 - ~tsc-reset-cursor~ /~cursor node~/ :: Re-initialize the cursor to start on a different node.
-- ~tsc-current-node~ /~cursor~/ :: Get the node that the cursor is currently on.
-- ~tsc-current-field~ /~cursor~/ :: Get the field name (as a keyword) associated with the current node.
+- ~tsc-current-node~ /~cursor [props] [output]~/ :: Get the node that the cursor is currently on. If ~props~ is a vector of property names, return a vector containing the node's corresponding properties. If ~output~ is also non-nil, it must be a vector of the same length, where the properties will be written into.
+- ~tsc-current-field~ /~cursor~/ :: Get the field name (as a keyword) associated with the current node. This is equivalent to:
+    #+begin_src emacs-lisp
+      (tsc-current-node cursor :field)
+    #+end_src
+
 
 ** Querying
 :PROPERTIES:
