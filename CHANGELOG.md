@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Added APIs to traverse the syntax tree: `tsc-traverse-do`, `tsc-traverse-mapc`, `tsc-traverse-iter`. The traversal is depth-first pre-order.
+- Improved syntax tree rendering's performance in `tree-sitter-debug`.
+- Added optional params `props` and `output` to `tsc-current-node`, which allows retrieving node properties, instead of the node object itself. This enables performance optimizations in uses cases that deal with a large number of nodes.
 
 ## 0.17.0 - 2022-01-29
 - Added customization option `tsc-dyn-get-from`, which is a list of sources to get the dynamic module `tsc-dyn` from. Its default value is `(:github :compilation)`.
