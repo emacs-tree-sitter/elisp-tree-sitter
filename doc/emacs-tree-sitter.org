@@ -36,13 +36,13 @@ The author of Tree-sitter articulated its merits a lot better in this [Strange L
   module-file-suffix ; should be non-nil
 #+end_src
 
-{{% notice note %}}
+#+html: {{% notice note %}}
 Upon byte compilation and first load, the package ~tree-sitter~ (~tsc~) will try to obtain the dynamic module using 2 mechanisms:
 - Downloading a pre-compiled binary from GitHub. This only works for macOS/Linux/Windows on x86_64 machines, and macOS on Apple Silicon.
 - Compiling the binary from the Rust source. This requires the [[https://rustup.rs/][Rust toolchain]].
 
 This behavior can be customized by setting the variable ~tsc-dyn-get-from~, *before tree-sitter (tsc) is byte-compiled/loaded*. Its default value is ~(:github :compilation)~. For example, you should set it to ~(:compilation)~ if you don't want to download binaries from GitHub.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 ** Installing from MELPA
 - Run ~M-x package-refresh-contents~.
@@ -122,9 +122,9 @@ For more details, see [[../syntax-highlighting/][Syntax Highlighting]].
 ** View the Syntax Tree
 Run ~M-x tree-sitter-debug-mode~ to show the current buffer's syntax tree in a separate buffer.
 
-{{% notice warning %}}
+#+html: {{% notice warning %}}
 Printing the syntax tree can be slow for very large buffers, as it hasn't been optimized yet.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 # TODO: Example screenshots.
 
@@ -176,11 +176,11 @@ Language major modes use these generic mechanisms to provide functionalities spe
 
 For the full list of languages bundled by ~tree-sitter-langs~, see the submodules under its [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/repos][repos/]] directory.
 
-{{% notice warning %}}
+#+html: {{% notice warning %}}
 Binaries for older versions were hosted on bintray, which was [[https://www.infoq.com/news/2021/02/jfrog-jcenter-bintray-closure/][shut down]]. If you install from source, you should update the code to a newer version whose binaries are hosted [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/releases][on GitHub]].
 
 If, for some reason, you cannot update, the older binaries can be downloaded from [[https://elpa.ubolonton.org/packages/bin/][here]].
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 * Syntax Highlighting
 :PROPERTIES:
@@ -205,9 +205,9 @@ To enable it whenever possible (assuming the language major modes were already i
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 Like ~font-lock-mode~, ~tree-sitter-hl-mode~ provides only the mechanisms. The actual highlighting rules are provided by language-specific packages, or a language bundle like ~tree-sitter-langs~.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 *** tree-sitter-langs
 The package ~tree-sitter-langs~ provides syntax highlighting [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][queries]] for some languages.
@@ -221,11 +221,11 @@ Most of them are *intentionally different* from those from upstream repositories
 - Special faces should have high priority (placed earlier in the pattern list): ~@function.macro~, ~@type.builtin~, ~@variable.special~.
 - Patterns whose internals may be highlighted should have low priority (placed towards the end). Example: strings with interpolation.
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 For some languages, the highlighting patterns are similar to those from upstream [[https://github.com/tree-sitter][grammar repositories]], instead of extensively following the above principles. They should be considered WIP.
 
 Contributions to improve them are welcome.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 ** Queries
 :PROPERTIES:
@@ -234,9 +234,9 @@ Contributions to improve them are welcome.
 
 A query is a set of patterns, written in a Lisp-like syntax.
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 Queries are language-specific. Different language grammars use different /node types/ and /field names/. Examples in this section apply to Rust.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 *** Patterns
 A *pattern* is an S-expression (Lisp form), optionally /preceded/ by a field name, /suffixed/ with a quantifier, and/or /followed/ by a capture name.
@@ -356,7 +356,7 @@ The special dot symbol ~.~ denotes an *anchor*, which effectively "glues togethe
   (call_expression (arguments (string_literal) .))
 #+end_src
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 The dot symbol ~.~ is not a valid read syntax in Emacs Lisp, so it has to be escaped in query patterns embedded in code:
 #+begin_src emacs-lisp
   (tree-sitter-hl-add-patterns 'c
@@ -365,7 +365,7 @@ The dot symbol ~.~ is not a valid read syntax in Emacs Lisp, so it has to be esc
       arguments: (argument_list \. (string_literal) @function))
      (.eq? @keyword "DEFUN"))])
 #+end_src
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 # TODO: Link to Querying API section.
 
@@ -453,7 +453,7 @@ Project-specific patterns (through ~.dir-locals.el~):
                  (.eq? @keyword "DEFUN"))]))))
 #+end_src
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 When a node matches multiple patterns in a highlighting query, earlier patterns are prioritized.
 #+begin_src scheme
   ;; More specific patterns should be written earlier.
@@ -461,7 +461,7 @@ When a node matches multiple patterns in a highlighting query, earlier patterns 
    (.eq? @type.builtin "static"))
   (lifetime (identifier) @label)
 #+end_src
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 # TODO: Describe how to find and make changes to highlighting queries defined by tree-sitter-langs.
 
@@ -474,9 +474,9 @@ When a node matches multiple patterns in a highlighting query, earlier patterns 
 
 /Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~. It plays a similar role to ~font-lock-add-keywords~.
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 The language bundle ~tree-sitter-langs~ provides [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/tree/master/langs/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 * Core APIs
 :PROPERTIES:
@@ -492,11 +492,11 @@ Emacs Tree-sitter is split into 2 packages:
 - ~tree-sitter~: The high-level features, i.e. the *framework* and the *apps*. For example, [[../syntax-highlighting/][Syntax Highlighting]].
 - ~tsc~: The core functionalities, i.e. the *lib*, which is the focus of this section.
 
-{{% notice warning %}}
+#+html: {{% notice warning %}}
 In older versions, the core APIs were prefixed with =ts-=, and provided by ~tree-sitter-core.el~. They are still available as deprecated aliases, but will eventually be removed.
 
 This was changed to [[https://github.com/melpa/melpa/pull/7112#issuecomment-703136075][conform with MELPA's conventions]] and to avoid [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/35][naming conflicts with ~ts.el~]].
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers][own documentation]] is a good read to understand its concepts and features. This documentation focuses more on details that are specific to Emacs Lisp.
 
@@ -514,9 +514,9 @@ In order to follow Emacs Lisp's conventions, functions and data types in this pa
   + /~byte-column~/ counts from 0, like ~current-column~. However, unlike that function, it counts bytes, instead of displayed glyphs.
 - ~range~: A vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 These types are understood only by this package and its type-checking predicates, which are useful for debugging: ~tsc-language-p~, ~tsc-tree-p~, ~tsc-node-p~... They are not recognized by ~type-of~.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 For consistency with Emacs's conventions, there are some differences compared to Tree-sitter's C/Rust APIs:
 - It uses *1-based* byte positions, instead of 0-based byte offsets.
@@ -534,9 +534,9 @@ For consistency with Emacs's conventions, there are some differences compared to
 :PROPERTIES:
 :EXPORT_FILE_NAME: parsing
 :END:
-{{% notice info %}}
+#+html: {{% notice info %}}
 The minor mode ~tree-sitter-mode~ provides the high-level interface for working with an up-to-date buffer-local syntax tree. [[*Writing a Dependent Minor Mode]] is recommended over directly using the low level parsing APIs below.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 Parsing is done through stateful parser objects.
 
@@ -562,9 +562,9 @@ For more details, see Tree-sitter's documentation:
 :EXPORT_FILE_NAME: inspecting
 :END:
 
-{{% notice info %}}
+#+html: {{% notice info %}}
 If your code works with a large number of nodes, consider using the [[*Walking][traversal APIs]], which are more efficient.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 The result of parsing is a syntax tree of the entire source code (string, buffer). It contains syntax nodes that indicate the structure of the source code. Tree-sitter provides APIs to inspect and traverse this structure, but does not support modifying it directly (for the purposes of source code transformation or generation).
 
@@ -572,26 +572,30 @@ The result of parsing is a syntax tree of the entire source code (string, buffer
 - ~tsc-changed-ranges~ /~old-tree new-tree~/ :: Compare an edited old syntax tree to a newly parsed one. It is typically used in ~tree-sitter-after-change-functions~ hook. This function returns a sequence of ranges whose syntactic structure has changed. Each range is a vector in the form of /~[start-bytepos end-bytepos start-point end-point]~/.
 
     # FIX: ox-hugo cannot properly export [[*Data Types]] here.
-    {{% notice info %}}In ~tree-sitter~'s context, ~point~ typically means a pair of /~(line-number . byte-column)~/, instead of its usual meaning of /current position/. See [[../#data-types][Data Types]].{{% /notice %}}
-- ~tsc-tree-to-sexp~ :: <br>
+    #+html: {{% notice info %}}
+In ~tree-sitter~'s context, ~point~ typically means a pair of /~(line-number . byte-column)~/, instead of its usual meaning of /current position/. See [[../#data-types][Data Types]].
+#+html: {{% /notice %}}
+- ~tsc-tree-to-sexp~ :: @@html:<br>@@
 - ~tsc-node-to-sexp~ :: Debug utilities that return the sexp representation of a syntax tree/node, as a string.
 
 *** Node Properties
 Functions that return a node's property have the prefix =tsc-node-=:
-- ~tsc-node-type~ :: <br>
+- ~tsc-node-type~ :: @@html:<br>@@
 - ~tsc-node-named-p~ :: Tree-sitter's parse tree is a [[https://en.wikipedia.org/wiki/Parse_tree][concrete syntax tree]], which contains nodes for every single token in the source code, including things which are typically omitted in a simpler [[https://en.wikipedia.org/wiki/Abstract_syntax_tree][abstract syntax tree]], like commas, parentheses, punctuations, keywords.
 
     These less important nodes are called *anonymous nodes*. Their node types are strings. For example: ~"if"~, ~"else"~. The more important nodes are call *named nodes*. Their node types are symbols, corresponding to the named rules that define them in the language's grammar. For example: ~identifier~, ~block~, ~if_expression~.
 
-    {{% notice info %}}In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types][documentation]], due to the low-level nature of C and JSON, node types are always represented as strings. Representing named node types as symbols makes it more Lisp-idiomatic, and is more consistent with [[*Patterns][tree queries]].{{% /notice %}}
+    #+html: {{% notice info %}}
+In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types][documentation]], due to the low-level nature of C and JSON, node types are always represented as strings. Representing named node types as symbols makes it more Lisp-idiomatic, and is more consistent with [[*Patterns][tree queries]].
+#+html: {{% /notice %}}
 
 - ~tsc-node-extra-p~ :: Whether a node is an *extra node*, which is not required by the grammar, but can appear anywhere in the source code, like comments.
 - ~tsc-node-error-p~ :: Whether the node /represents/ a syntax error. The node type of an *error node* is the special symbol ~ERROR~.
 - ~tsc-node-has-error-p~ :: Whether the node /contains/ a syntax error.
 - ~tsc-node-missing-p~ :: Whether a node is a *missing node*, i.e. inserted by the parser in order to recover from certain kinds of syntax errors, like a missing semicolon.
-- ~tsc-node-start-byte~ :: <br>
+- ~tsc-node-start-byte~ :: @@html:<br>@@
 - ~tsc-node-end-byte~ :: The start/end byte position of a node.
-- ~tsc-node-start-position~ :: <br>
+- ~tsc-node-start-position~ :: @@html:<br>@@
 - ~tsc-node-end-position~ :: The start/end position of a node. These functions assume that the current buffer is the source buffer of the given node's syntax tree.
 - ~tsc-node-range~ :: A node's /~[start-bytepos end-bytepos start-point end-point]~/.
 
@@ -599,9 +603,9 @@ Functions that return a node's property have the prefix =tsc-node-=:
 As described in the previous section, the ~-named-~  variants of the functions in this section allow working on the parse tree as if it is an abstract syntax tree.
 
 - ~tsc-get-parent~ /~node~/ :: Get a node's parent node.
-- ~tsc-count-children~ /~node~/ :: <br>
+- ~tsc-count-children~ /~node~/ :: @@html:<br>@@
 - ~tsc-count-named-children~ /~node~/ :: Count the number of child nodes (all, or named only).
-- ~tsc-get-nth-child~ /~node nth~/ :: <br>
+- ~tsc-get-nth-child~ /~node nth~/ :: @@html:<br>@@
 - ~tsc-get-nth-named-child~ /~node nth~/ :: Get a child node by its 0-based index (any, or named only).
     #+begin_src emacs-lisp
       (let ((func (tree-sitter-node-at-pos 'function_item)))
@@ -614,12 +618,14 @@ As described in the previous section, the ~-named-~  variants of the functions i
       (let ((func (tree-sitter-node-at-pos 'function_item)))
         (tsc-node-text (tsc-get-child-by-field func :name)))
     #+end_src
-    {{% notice info %}}In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#node-field-names][documentation]], due to the low-level nature of C and JSON, field names are specified as strings. Representing field names as keywords makes it more Lisp-idiomatic.{{% /notice %}}
-- ~tsc-get-next-sibling~ /~node~/ :: <br>
-- ~tsc-get-prev-sibling~ /~node~/ :: <br>
-- ~tsc-get-next-named-sibling~ /~node~/ :: <br>
+    #+html: {{% notice info %}}
+In Tree-sitter's [[https://tree-sitter.github.io/tree-sitter/using-parsers#node-field-names][documentation]], due to the low-level nature of C and JSON, field names are specified as strings. Representing field names as keywords makes it more Lisp-idiomatic.
+#+html: {{% /notice %}}
+- ~tsc-get-next-sibling~ /~node~/ :: @@html:<br>@@
+- ~tsc-get-prev-sibling~ /~node~/ :: @@html:<br>@@
+- ~tsc-get-next-named-sibling~ /~node~/ :: @@html:<br>@@
 - ~tsc-get-prev-named-sibling~ /~node~/ :: Get next/previous sibling node (any, or named only).
-- ~tsc-get-descendant-for-position-range~ /~node beg end~/ :: <br>
+- ~tsc-get-descendant-for-position-range~ /~node beg end~/ :: @@html:<br>@@
 - ~tsc-get-named-descendant-for-position-range~ /~node beg end~/ :: Get smallest descendant node that spans the given range.
     #+begin_src emacs-lisp
       ;; Get the syntax node the cursor is on.
@@ -646,9 +652,9 @@ When dealing with a large number of nodes, working with node objects creates a h
     :start-point :end-point
     :range :byte-range)
 #+end_src
-{{% notice note %}}
+#+html: {{% notice note %}}
 Functions that accept a vector of property names can also accept a single property name, in which case only that property is returned/yielded, instead of a vector of properties.
-{{% /notice %}}
+#+html: {{% /notice %}}
 
 *** Traversing All Descendant Nodes
 These functions are high-level APIs that allow traversing the syntax tree in depth-first pre-order.
@@ -685,8 +691,8 @@ These functions are high-level APIs that allow traversing the syntax tree in dep
 These functions are the low-level APIs that allow walking through the syntax tree one node at a time, with the help of a stateful ~cursor~ object.
 
 - ~tsc-make-cursor~ /~tree-or-node~/ :: Create a new cursor on a node. The cursor /cannot move out/ of this node. If called on a tree, the cursor is created on the tree's root node.
-- ~tsc-goto-parent~ /~cursor~/ :: <br>
-- ~tsc-goto-first-child~ /~cursor~/ :: <br>
+- ~tsc-goto-parent~ /~cursor~/ :: @@html:<br>@@
+- ~tsc-goto-first-child~ /~cursor~/ :: @@html:<br>@@
 - ~tsc-goto-next-sibling~ /~cursor~/ :: Attempt to move the cursor to the parent node, the first child node, or the next sibling node. This function returns t if the move was successful, nil if the move is invalid.
 - ~tsc-goto-first-child-for-position~ /~cursor pos~/ :: Attempt to move the cursor to the first child node that extends beyond the given position. This function returns the index of the child node found, nil otherwise.
 - ~tsc-reset-cursor~ /~cursor node~/ :: Re-initialize the cursor to start on a different node.
@@ -709,7 +715,7 @@ Tree-sitter provides a Lisp-like [[*Queries][query language]] to search for patt
 
     When the query is executed, each captured node is *tagged* with a symbol, whose name is the corresponding capture name defined in /~patterns~/. For example, nodes that are captured as ~@function.builtin~ will be tagged with the symbol ~function.builtin~. This behavior can be customized by the optional function /~tag-assigner~/, which should return a tag value when given a capture name (without the prefix ~@~). If it returns nil, the associated capture name is disabled.
 - ~tsc-make-query-cursor~ :: Create a new *query cursor* to execute queries. It stores the state that is needed to iteratively search for matches.
-- ~tsc-query-captures~ /~query node text-function [query-cursor]~/ :: <br>
+- ~tsc-query-captures~ /~query node text-function [query-cursor]~/ :: @@html:<br>@@
 - ~tsc-query-matches~ /~query node text-function [query-cursor]~/ :: Execute a query on the given syntax node. ~tsc-query-captures~ returns a sequence of captures, sorted in the order they appear in the source code. ~tsc-query-matches~ returns a sequence of matches, sorted in the order they were found.
 
     Each *capture* has the form /~(capture-tag . captured-node)~/, where /~capture-tag~/ is a symbol, whose name is the corresponding capture name defined in /~query~/ (without the prefix ~@~). If /~query~/ was created with a custom *tag assigner*, /~capture-tag~/ is instead the value returned by that function.
@@ -729,13 +735,13 @@ Tree-sitter provides a Lisp-like [[*Queries][query language]] to search for patt
 
 TODO: Write this.
 
-- Hook: ~tree-sitter-after-on-hook~ :: <br>
-- Hook: ~tree-sitter-after-first-parse-hook~ :: <br>
-- Hook: ~tree-sitter-after-change-functions~ :: <br>
-- Variable: ~tree-sitter-major-mode-language-alist~ :: <br>
-- Variable: ~tree-sitter-language~ :: <br>
-- Variable: ~tree-sitter-tree~ :: <br>
-- Function: ~tree-sitter-node-at-pos~ /~[node-type] [pos]~/ :: <br>
+- Hook: ~tree-sitter-after-on-hook~ :: @@html:<br>@@
+- Hook: ~tree-sitter-after-first-parse-hook~ :: @@html:<br>@@
+- Hook: ~tree-sitter-after-change-functions~ :: @@html:<br>@@
+- Variable: ~tree-sitter-major-mode-language-alist~ :: @@html:<br>@@
+- Variable: ~tree-sitter-language~ :: @@html:<br>@@
+- Variable: ~tree-sitter-tree~ :: @@html:<br>@@
+- Function: ~tree-sitter-node-at-pos~ /~[node-type] [pos]~/ :: @@html:<br>@@
 
 ** Writing a Dependent Minor Mode
 See the docstring of ~tree-sitter--handle-dependent~.
