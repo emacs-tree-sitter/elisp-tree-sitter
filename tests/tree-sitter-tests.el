@@ -11,101 +11,7 @@
 
 ;;; Code:
 
-(setq tsc-dyn-get-from nil)
-(require 'tree-sitter)
-(require 'tree-sitter-debug)
-
-(defvar tree-sitter-langs--testing)
-;;; Disable grammar downloading.
-(let ((tree-sitter-langs--testing t))
-  (require 'tree-sitter-langs))
-;;; Build the grammars, if necessary.
-(dolist (lang-symbol '(rust python javascript c))
-  (tree-sitter-langs-ensure lang-symbol))
-
-;; XXX: Bash grammar failed 'tree-sitter test' on Windows: 'Escaped newlines'.
-(with-demoted-errors "Failed to ensure bash grammar %s"
-  (tree-sitter-langs-ensure 'bash))
-
-(require 'ert)
-
-(eval-when-compile
-  (require 'subr-x)
-  (require 'cl-lib))
-
-;;; ----------------------------------------------------------------------------
-;;; Helpers.
-
-(defun tsc-test-make-parser (lang-symbol)
-  "Return a new parser for LANG-SYMBOL."
-  (let ((parser (tsc-make-parser))
-        (language (tree-sitter-require lang-symbol)))
-    (tsc-set-language parser language)
-    parser))
-
-(defun tsc-test-full-path (relative-path)
-  "Return full path from project RELATIVE-PATH."
-  (concat (file-name-directory (locate-library "tree-sitter-tests.el"))
-          relative-path))
-
-(defun tsc-test-tree-sexp (sexp &optional reset)
-  "Check that the current syntax tree's sexp representation is SEXP.
-If RESET is non-nil, also do another full parse and check again."
-  (should (equal (read (tsc-tree-to-sexp tree-sitter-tree)) sexp))
-  (when reset
-    (setq tree-sitter-tree nil)
-    (tree-sitter--do-parse)
-    (tsc-test-tree-sexp sexp)))
-
-(defun tsc-test-use-lang (lang-symbol)
-  "Turn on `tree-sitter-mode' in the current buffer, using language LANG-SYMBOL."
-  (setq tree-sitter-language (tree-sitter-require lang-symbol))
-  (ignore-errors
-    (setq tree-sitter-hl-default-patterns
-          (tree-sitter-langs--hl-default-patterns lang-symbol)))
-  (add-hook 'tree-sitter-after-first-parse-hook
-            (lambda () (should (not (null tree-sitter-tree)))))
-  (tree-sitter-mode))
-
-(defun tsc--listify (x)
-  (if (listp x)
-      x
-    (list x)))
-
-(defun tsc--hl-at (pos face)
-  "Return t if text at POS is highlighted with FACE."
-  (memq face (tsc--listify (get-text-property pos 'face))))
-
-(defmacro tsc-test-with (lang-symbol var &rest body)
-  "Eval BODY with VAR bound to a new parser for LANG-SYMBOL."
-  (declare (indent 2))
-  `(let ((,var (tsc-test-make-parser ',lang-symbol)))
-     ,@body))
-
-(defmacro tsc-test-with-file (relative-path &rest body)
-  "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH."
-  (declare (indent 1))
-  `(with-temp-buffer
-     (let ((coding-system-for-read 'utf-8))
-       (insert-file-contents (tsc-test-full-path ,relative-path)))
-     ,@body))
-
-(defmacro tsc-test-lang-with-file (lang-symbol relative-path &rest body)
-  "Eval BODY in a temp buffer filled with content of the file at RELATIVE-PATH.
-`tree-sitter-mode' is turned on, using the given language LANG-SYMBOL."
-  (declare (indent 2))
-  `(tsc-test-with-file ,relative-path
-     (tsc-test-use-lang ',lang-symbol)
-     ,@body))
-
-(defmacro tsc-test-with-advice (symbol where function &rest body)
-  "Eval BODY while advising SYMBOL with FUNCTION at WHERE."
-  (declare (indent 3))
-  `(progn
-     (advice-add ,symbol ,where ,function)
-     (unwind-protect
-         ,@body
-       (advice-remove ,symbol ,function))))
+(require 'tree-sitter-tests-utils)
 
 ;;; ----------------------------------------------------------------------------
 ;;; Tests.
@@ -187,18 +93,6 @@ If RESET is non-nil, also do another full parse and check again."
           (ert-info ("Incremental parsing should be faster than initial")
             (should (> (car initial) (car reparse)))))))))
 
-(ert-deftest parsing::bench ()
-  (tsc-test-with c parser
-    (tsc-test-with-file "data/types.rs"
-      (let ((n 0))
-        (while (<= n 4)
-          (let ((tsc--buffer-input-chunk-size (* 1024 (expt 2 n))))
-            (garbage-collect)
-            (message "tsc-parse-chunks %6d %s" tsc--buffer-input-chunk-size
-                     (benchmark-run 10
-                         (tsc-parse-chunks parser #'tsc--buffer-input nil)))
-            (cl-incf n)))))))
-
 (ert-deftest minor-mode::basic-editing ()
   (with-temp-buffer
     (tsc-test-use-lang 'rust)
@@ -207,10 +101,10 @@ If RESET is non-nil, also do another full parse and check again."
     (tsc-test-tree-sexp '(source_file (ERROR)))
     (insert " foo() {}")
     (tsc-test-tree-sexp '(source_file
-                         (function_item
-                          name: (identifier)
-                          parameters: (parameters)
-                          body: (block))))
+                          (function_item
+                           name: (identifier)
+                           parameters: (parameters)
+                           body: (block))))
     (kill-region (point-min) (point-max))
     (tsc-test-tree-sexp '(source_file))))
 
@@ -317,7 +211,12 @@ tree is held (since nodes internally reference the tree)."
       (tsc-goto-first-child cursor)
       (should-not (equal (tsc-node-type (tsc-current-node cursor)) 'source_file))
       (tsc-reset-cursor cursor node)
-      (should (equal (tsc-node-type (tsc-current-node cursor)) 'source_file)))))
+      (should (equal (tsc-node-type (tsc-current-node cursor)) 'source_file))
+      (should (equal (tsc-current-node cursor :type) 'source_file))
+      (should (equal (tsc-current-node cursor [:start-byte :end-byte :type])
+                     `[,(point-min) ,(point-max) source_file]))
+      (should-error (tsc-current-node cursor :depth))
+      (should-error (tsc-current-node cursor [:depth])))))
 
 (ert-deftest cursor::using-without-tree ()
   (tsc-test-with rust parser
@@ -325,6 +224,91 @@ tree is held (since nodes internally reference the tree)."
       (garbage-collect)
       (should (tsc-goto-first-child cursor)))
     (garbage-collect)))
+
+(ert-deftest cursor::traverse:properties ()
+  (tsc-test-with rust parser
+    (let* ((code "fn foo(x: usize) {}")
+           (rendered (string-trim-left "
+source_file (1 . 20)
+  function_item (1 . 20)
+    :name identifier (4 . 7)
+    :parameters parameters (7 . 17)
+      parameter (8 . 16)
+        :pattern identifier (8 . 9)
+        :type primitive_type (11 . 16)
+    :body block (18 . 20)
+"))
+           (tree (tsc-parse-string parser code)))
+      (ert-info ("Callback-based traversal should work")
+        (should
+         (string=
+          rendered
+          (tsc-test-capture-messages
+           (tsc-traverse-mapc
+            (lambda (props)
+              (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] props))
+                (tsc-test-render-node type named-p start-byte end-byte field depth)))
+            tree
+            [:type :named-p :start-byte :end-byte :field :depth])))))
+      (ert-info ("Iterator-based traversal should work")
+        (should
+         (string=
+          rendered
+          (tsc-test-capture-messages
+           (cl-loop for item
+                    iter-by (tsc-traverse-iter
+                             tree [:type :named-p :start-byte :end-byte :field :depth])
+                    do (pcase-let ((`[,type ,named-p ,start-byte ,end-byte ,field ,depth] item))
+                         (tsc-test-render-node type named-p start-byte end-byte field depth)))))))
+      (ert-info ("Inline traversal should work")
+        (should
+         (string=
+          rendered
+          (tsc-test-capture-messages
+           (tsc-traverse-do ([type named-p start-byte end-byte field depth] tree)
+             (tsc-test-render-node type named-p start-byte end-byte field depth)))))))))
+
+(ert-deftest cursor::traverse:single-property ()
+  (tsc-test-lang-with-file rust "data/types.rs"
+    (let ((tree tree-sitter-tree)
+          mapc-result
+          do-result
+          iter-result)
+      (ert-info ("Callback-based traversal should work with single property")
+        (tsc-traverse-mapc
+         (lambda (type)
+           (push type mapc-result))
+         tree :type))
+      (ert-info ("Iterator-based traversal should work with single property")
+        (cl-loop for type
+                 iter-by (tsc-traverse-iter tree :type)
+                 do (push type iter-result)))
+      (tsc-traverse-do ([type] tree)
+        (push type do-result))
+      (ert-info ("All traversal methods should return the same result")
+        (should (equal do-result mapc-result))
+        (should (equal do-result iter-result))))))
+
+(ert-deftest cursor::traverse:node ()
+  (tsc-test-lang-with-file rust "data/types.rs"
+    (let ((tree tree-sitter-tree)
+          mapc-result
+          do-result
+          iter-result)
+      (ert-info ("Callback-based traversal should work with nodes")
+        (tsc-traverse-mapc
+         (lambda (node)
+           (push (tsc-node-type node) mapc-result))
+         tree))
+      (ert-info ("Iterator-based traversal should work with nodes")
+        (cl-loop for node
+                 iter-by (tsc-traverse-iter tree)
+                 do (push (tsc-node-type node) iter-result)))
+      (tsc-traverse-do ([type] tree)
+        (push type do-result))
+      (ert-info ("All traversal methods should return the same result")
+        (should (equal do-result mapc-result))
+        (should (equal do-result iter-result))))))
 
 (ert-deftest conversion::position<->tsc-point ()
   (tsc-test-with-file "tree-sitter-tests.el"
@@ -363,7 +347,7 @@ tree is held (since nodes internally reference the tree)."
     (ert-info ("Should work on vector")
       (should (= (tsc-query-count-patterns
                   (tsc-make-query rust [(function_item (identifier) @function)
-                                       (macro_definition (identifier) @macro)]))
+                                        (macro_definition (identifier) @macro)]))
                  2)))))
 
 (ert-deftest query::basic ()
@@ -379,8 +363,8 @@ tree is held (since nodes internally reference the tree)."
                                    (tsc-node-text node)))
                                captures))
            (capture-tags (mapcar (lambda (capture)
-                                    (pcase-let ((`(,tag . _) capture)) tag))
-                                  captures)))
+                                   (pcase-let ((`(,tag . _) capture)) tag))
+                                 captures)))
       (ert-info ("Should match specified functions and not more")
         (should (member "_make_query" node-texts))
         (should (member "make_query_cursor" node-texts))
@@ -393,10 +377,10 @@ tree is held (since nodes internally reference the tree)."
   (tsc-test-lang-with-file c "data/range-restriction-and-early-termination.c"
     (let ((cursor (tsc-make-query-cursor))
           (query (tsc-make-query tree-sitter-language
-                                [(call_expression
-                                  function: (identifier) @function
-                                  arguments: (argument_list (string_literal) @string.arg))
-                                 (string_literal) @string]))
+                                 [(call_expression
+                                   function: (identifier) @function
+                                   arguments: (argument_list (string_literal) @string.arg))
+                                  (string_literal) @string]))
           (root-node (tsc-root-node tree-sitter-tree))
           (capture-names '(function string.arg string)))
       (ert-info ("Querying without range restriction")
@@ -502,34 +486,18 @@ tree is held (since nodes internally reference the tree)."
     (font-lock-ensure)
     (should (tsc--hl-at 6 'tree-sitter-hl-face:function))))
 
-(ert-deftest hl::bench ()
-  (tsc-test-lang-with-file rust "data/types.rs"
-    (setq tree-sitter-hl-default-patterns (tree-sitter-langs--hl-default-patterns 'rust))
-    (require 'rust-mode)
-    (rust-mode)
-    (font-lock-mode)
-    (font-lock-set-defaults)
-    (dolist (n '(1 10 100))
-      (tree-sitter-hl-mode)
-      (garbage-collect)
-      (message "tree-sitter-hl %2d %s" n (eval `(benchmark-run ,n (font-lock-ensure))))
-      (tree-sitter-hl-mode -1)
-      (font-lock-ensure)
-      (garbage-collect)
-      (message "     font-lock %2d %s" n (eval `(benchmark-run ,n (font-lock-ensure)))))))
-
 (ert-deftest debug::jump ()
   "Test if the first button takes us to the beginning of the file.
 We know it should since it is the `source_file' node."
   (tsc-test-lang-with-file rust "data/types.rs"
     (let ((buf-name (buffer-name)))
-    (setq tree-sitter-debug-jump-buttons t)
-    (tree-sitter-debug-mode)
-    (goto-char (point-max))
-    (should (> (point) 0)) ; Test if worthless if the file is empty
-    (switch-to-buffer tree-sitter-debug--tree-buffer nil t)
-    (tree-sitter-debug--button-node-lookup (button-at 1))
-    (should (= (point) (point-min))))))
+      (setq tree-sitter-debug-jump-buttons t)
+      (tree-sitter-debug-mode)
+      (goto-char (point-max))
+      (should (> (point) 0)) ; Test if worthless if the file is empty
+      (switch-to-buffer tree-sitter-debug--tree-buffer nil t)
+      (tree-sitter-debug--button-node-lookup (button-at 1))
+      (should (= (point) (point-min))))))
 
 ;; Local Variables:
 ;; no-byte-compile: t

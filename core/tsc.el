@@ -31,6 +31,8 @@
 
 (require 'tsc-dyn)
 
+(require 'seq)
+
 (eval-when-compile
   (require 'pcase)
   (require 'subr-x)
@@ -174,6 +176,25 @@ This function must be called in NODE's source buffer."
 Return the index of the child node if one was found, nil otherwise."
   (tsc-goto-first-child-for-byte cursor (position-bytes position)))
 
+(defun tsc-current-node (cursor &optional props output)
+  "Return CURSOR's current node.
+
+If the optional arg PROPS is a vector of property names, this function returns a
+vector containing the node's corresponding properties. If the optional arg
+OUTPUT is also non-nil, it must be a vector of the same length, where the
+properties will be written into.
+
+PROPS can also be a single property name, in which case this function returns
+only that property, and OUTPUT is ignored.
+
+See `tsc-valid-node-props' for the list of available properties."
+  (tsc--check-node-props props)
+  ;; TODO: Fix this.
+  (when (or (eq props :depth)
+            (and (seqp props) (cl-find :depth props)))
+    (error "Cursor doesn't currently support :depth property"))
+  (tsc--current-node cursor props output))
+
 (defun tsc-lang-field-id (language field)
   "Return the numeric id of FIELD in LANGUAGE. FIELD should be a keyword."
   (unless (keywordp field)
@@ -217,7 +238,7 @@ the prefix \"@\"). If it returns nil, the associated capture name is disabled.
 
 See also: `tsc-query-captures' and `tsc-query-matches'."
   (tsc--make-query language (tsc--stringify-patterns patterns)
-                  (or tag-assigner #'intern)))
+                   (or tag-assigner #'intern)))
 
 (defun tsc-query-matches (query node text-function &optional cursor)
   "Execute QUERY on NODE and return a sequence of matches.
@@ -256,6 +277,136 @@ QUERY. Otherwise, a newly created query-cursor is used."
    (or cursor (tsc-make-query-cursor)) query node text-function))
 
 
+;;; Traversal.
+
+(defconst tsc-valid-node-props
+  '(:type
+    :field ;node's field name within the parent node
+    :depth ;node's depth, relative to the iterator's start
+    :named-p :extra-p :error-p :missing-p :has-error-p
+    :start-byte :end-byte
+    :start-point :end-point
+    :range :byte-range)
+  "Node properties that the traversal functions can return.
+
+When dealing with a large number of nodes, working with node objects creates a
+huge pressure on the garbage collector. To increase performance, it's better to
+instead extract and work with individual node properties. Several functions can
+optionally take a vector of property names, and return a vector of property
+values.
+
+This wouldn't be necessary if the runtime supported stack-allocated objects.
+e.g. automatically through escape analysis. How about porting ELisp to GraalVM?")
+
+(defun tsc--check-node-props (props)
+  "Validate that PROPS are valid node properties."
+  (cond
+   ((keywordp props)
+    (unless (memq props tsc-valid-node-props)
+      (error "Invalid node property %s" props)))
+   ((vectorp props)
+    (when-let ((invalid-props (seq-filter
+                               (lambda (kw)
+                                 (not (memq kw tsc-valid-node-props)))
+                               props)))
+      (error "Invalid node properties %s" invalid-props)))
+   ((null props) nil)
+   (t (error "Expected vectors, keyword, or nil %s" props))))
+
+(defun tsc-traverse-mapc (func tree-or-node &optional props)
+  "Call FUNC for each node of TREE-OR-NODE.
+The traversal is depth-first pre-order.
+
+If the optional arg PROPS is a vector of property names, FUNC is called with a
+vector containing the node's corresponding properties, instead of the node
+itself. For efficiency, this vector is reused across invocations of FUNC. *DO
+NOT KEEP* a reference to it. It's recommended to use `pcase-let' to extract the
+properties. See `tsc-valid-node-props' for the list of available properties.
+
+PROPS can also be a single property name, in which case FUNC receives only that
+property each invocation.
+
+For example, to crudely render a syntax tree:
+
+    (tsc-traverse-mapc
+     (lambda (props)
+       (pcase-let ((`[,type ,depth ,named-p] props))
+         (when named-p                     ;AST
+           (insert (make-string depth \\? ) ;indentation
+                   (format \"%S\" type) \"\\n\"))))
+     tree
+     [:type :depth :named-p])
+"
+  (tsc--check-node-props props)
+  (tsc--traverse-mapc func tree-or-node props))
+
+(defun tsc-traverse-iter (tree-or-node &optional props)
+  "Return an iterator that traverse TREE-OR-NODE.
+The traversal is depth-first pre-order.
+
+If the optional arg PROPS is a vector of property names, the iterator yields a
+vector containing the node's corresponding properties, instead of the node
+itself. For efficiency, this vector is reused across iterations. *DO NOT KEEP* a
+reference to it. It's recommended to use `pcase-let' to extract the properties.
+See `tsc-valid-node-props' for the list of available properties.
+
+PROPS can also be a single property name, in which case the iterator yields only
+that property each iteration.
+
+For example, to crudely render a syntax tree:
+
+    (iter-do (props (tsc-traverse-iter
+                     tree [:type :depth :named-p]))
+      (pcase-let ((`[,type ,depth ,named-p] props))
+        (when named-p                       ;AST
+          (insert (make-string depth \\? )   ;indentation
+                  (format \"%S\" type) \"\\n\"))))
+"
+  (tsc--check-node-props props)
+  (let ((iter (tsc--iter tree-or-node))
+        (output (when (vectorp props)
+                  (make-vector (length props) nil))))
+    (lambda (control _yield-result)
+      (pcase control
+        (:next (or (tsc--iter-next-node iter props output)
+                   (signal 'iter-end-of-sequence nil)))
+        (:close (setq iter nil))
+        (_ (error "???"))))))
+
+(cl-defmacro tsc-traverse-do ((vars tree-or-node) &rest body)
+  "Evaluate BODY with VARS bound to properties of each node in TREE-OR-NODE.
+The traversal is depth-first pre-order.
+
+VARS must be a vector of symbols. See `tsc-valid-node-props' for the list of
+available properties. (In VARS, they must be symbols, not keywords.)
+
+For example, to crudely render a syntax tree:
+
+    (tsc-traverse-do ([type depth named-p] tree)
+      (when named-p                     ;AST
+        (insert (make-string depth \\? ) ;identation
+                (format \"%S\" type) \"\\n\")))
+"
+  (declare (indent 1)
+           (debug ((vectorp form) body)))
+  (unless (vectorp vars)
+    (error "Var bindings must be a vector"))
+  (let ((props (cl-map 'vector
+                       (lambda (symbol)
+                         (intern (format ":%s" symbol)))
+                       vars))
+        (iter (make-symbol "iter"))
+        (output (make-symbol "output")))
+    (tsc--check-node-props props)
+    `(let ((,iter (tsc--iter ,tree-or-node))
+           (,output ,(make-vector (length props) nil)))
+       (while (tsc--iter-next-node ,iter ,props ,output)
+         (let* (,@(cl-loop for i below (length vars)
+                           collect `(,(aref vars i)
+                                     (aref ,output ,i))))
+           ,@body)))))
+
+
 ;;; Utilities.
 
 (defun tsc-pp-to-string (tree)
@@ -276,10 +427,10 @@ If NODE is the root node, the sequence is empty."
       (push (catch :tsc-step
               (let ((i 0))
                 (tsc-mapc-children (lambda (child)
-                                    (if (tsc-node-eq child this)
-                                        (throw :tsc-step (cons this i))
-                                      (setq i (1+ i))))
-                                  parent))
+                                     (if (tsc-node-eq child this)
+                                         (throw :tsc-step (cons this i))
+                                       (setq i (1+ i))))
+                                   parent))
               (throw :tsc-is-not-parents-child (cons this parent)))
             steps)
       (setq this parent))

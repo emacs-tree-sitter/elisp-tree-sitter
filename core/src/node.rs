@@ -141,14 +141,61 @@ emacs::use_symbols!(ERROR);
 /// If NODE is an anonymous node, its type is a string. For example: "if", "else".
 #[defun]
 fn node_type(node: &RNode) -> Result<&'static GlobalRef> {
-    let node = node.borrow();
-    let language: Language = node.language().into();
-    Ok(if node.is_error() {
-        ERROR
-    } else {
-        &language.info().node_type(node.kind_id()).expect("Failed to get node type from id")
-    })
+    Ok(node.borrow().lisp_type())
 }
+
+pub(crate) trait LispUtils {
+    fn lisp_type(&self) -> &'static GlobalRef;
+    fn lisp_byte_range<'e>(&self, env: &'e Env) -> Result<Value<'e>>;
+    fn lisp_start_byte(&self) -> BytePos;
+    fn lisp_end_byte(&self) -> BytePos;
+    fn lisp_start_point(&self) -> Point;
+    fn lisp_end_point(&self) -> Point;
+    fn lisp_range(&self) -> Range;
+}
+
+impl<'n> LispUtils for Node<'n> {
+    #[inline]
+    fn lisp_type(&self) -> &'static GlobalRef {
+        let language: Language = self.language().into();
+        if self.is_error() {
+            ERROR
+        } else {
+            &language.info().node_type(self.kind_id()).expect("Failed to get node type from id")
+        }
+    }
+
+    #[inline]
+    fn lisp_byte_range<'e>(&self, env: &'e Env) -> Result<Value<'e>> {
+        let beg: BytePos = self.start_byte().into();
+        let end: BytePos = self.end_byte().into();
+        env.cons(beg, end)
+    }
+
+    #[inline]
+    fn lisp_start_byte(&self) -> BytePos {
+        self.start_byte().into()
+    }
+
+    #[inline]
+    fn lisp_end_byte(&self) -> BytePos {
+        self.end_byte().into()
+    }
+
+    #[inline]
+    fn lisp_start_point(&self) -> Point {
+        self.start_position().into()
+    }
+
+    #[inline]
+    fn lisp_end_point(&self) -> Point {
+        self.end_position().into()
+    }
+
+    #[inline]
+    fn lisp_range(&self) -> Range {
+        self.range().into()
+    }}
 
 defun_node_props! {
     /// Return NODE's numeric type-id.
@@ -211,10 +258,7 @@ defun_node_props! {
 /// Return NODE's (START-BYTEPOS . END-BYTEPOS).
 #[defun]
 fn node_byte_range<'e>(env: &'e Env, node: &RNode) -> Result<Value<'e>> {
-    let node = node.borrow();
-    let beg: BytePos = node.start_byte().into();
-    let end: BytePos = node.end_byte().into();
-    env.cons(beg, end)
+    node.borrow().lisp_byte_range(env)
 }
 
 /// Return t if two nodes are identical.
