@@ -64,11 +64,19 @@
   "Print VERSION's release notes, defaulting to 'Unreleased'."
   (princ (-release-notes version)))
 
-(defun cmd:bump-version (&optional next)
-  "Increase the patch version. This does not create a git tag."
-  (let* ((rel-notes (-release-notes))
+(defun cmd:bump-version (&optional next-or-flag)
+  "Increase the version. This does not create a git tag.
+
+If NEXT-OR-FLAG is not given, increase the patch version.
+
+If NEXT-OR-FLAG is \"lisp-only\", only increase the version of the Lisp code. "
+  (let* (lisp-only
+         (rel-notes (-release-notes))
          (current (-current-version))
-         (next (or next (-next-version current)))
+         (next (or (pcase next-or-flag
+                     ("lisp-only" (setq lisp-only t) nil)
+                     (_ next-or-flag))
+                   (-next-version current)))
          (time (decode-time (current-time)))
          (date (format "%d-%02d-%02d" (nth 5 time) (nth 4 time) (nth 3 time))))
     (unless (version< current next)
@@ -79,14 +87,16 @@
         (warn "Release notes are empty!")
       (message "Release notes:\n%s\n" rel-notes))
     (message " Bumping version %s -> %s" current next)
-    (-with-file-edits Cargo.toml
-      (-modify-regexp "version *= *\"\\(.*\\)\"" next))
-    (-with-file-edits Cargo.lock
-      (search-forward "name = \"emacs-tree-sitter\"")
-      (-modify-regexp "version *= *\"\\(.*\\)\"" next))
+    (unless lisp-only
+      (-with-file-edits Cargo.toml
+        (-modify-regexp "version *= *\"\\(.*\\)\"" next))
+      (-with-file-edits Cargo.lock
+        (search-forward "name = \"emacs-tree-sitter\"")
+        (-modify-regexp "version *= *\"\\(.*\\)\"" next)))
     (-with-file-edits tsc.el
       (-modify-regexp "Version: *\\(.*\\)" next)
-      (-modify-regexp "tsc--dyn-version.*\"\\(.*\\)\"" next))
+      (unless lisp-only
+        (-modify-regexp "tsc--dyn-version.*\"\\(.*\\)\"" next)))
     (-with-file-edits tree-sitter.el
       (-modify-regexp "Version: *\\(.*\\)" next)
       (-modify-regexp "Package-Requires:.*\(tsc *\"\\(.*\\)\"" next))
