@@ -6,3 +6,9 @@
 [submodule "doc/themes/docdock"]
 	path = doc/themes/docdock
 	url = https://github.com/emacs-tree-sitter/hugo-theme-docdock
+	ignore = all
+
+[submodule "doc/ox-hugo"]
+	path = doc/ox-hugo
+	url = https://github.com/emacs-tree-sitter/ox-hugo
+	ignore = all
