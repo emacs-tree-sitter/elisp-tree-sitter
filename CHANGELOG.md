@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.18.0] - 2022-02-12
 - Added APIs to traverse the syntax tree: `tsc-traverse-do`, `tsc-traverse-mapc`, `tsc-traverse-iter`. The traversal is depth-first pre-order.
 - Improved syntax tree rendering's performance in `tree-sitter-debug`.
 - Added optional params `props` and `output` to `tsc-current-node`, which allows retrieving node properties, instead of the node object itself. This enables performance optimizations in uses cases that deal with a large number of nodes.
@@ -147,7 +149,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
-[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...HEAD
+[Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...HEAD
+[0.18.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.15.2...0.16.0

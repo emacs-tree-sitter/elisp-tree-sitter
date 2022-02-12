@@ -6,7 +6,7 @@
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 ;; Keywords: languages tools parsers dynamic-modules tree-sitter
 ;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
-;; Version: 0.17.0
+;; Version: 0.18.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: MIT
 
@@ -24,7 +24,7 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tsc--dyn-version "0.17.0"
+  (defconst tsc--dyn-version "0.18.0"
     "Required version of the dynamic module `tsc-dyn'.")
   (require 'tsc-dyn-get)
   (tsc-dyn-get-ensure tsc--dyn-version))

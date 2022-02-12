@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
-;; Version: 0.17.0
-;; Package-Requires: ((emacs "25.1") (tsc "0.17.0"))
+;; Version: 0.18.0
+;; Package-Requires: ((emacs "25.1") (tsc "0.18.0"))
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
