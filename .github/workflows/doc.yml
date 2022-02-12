@@ -1,0 +1,59 @@
+name: Doc
+
+on:
+  push:
+    branches:
+      - master
+      - doc
+    paths:
+      - doc/**
+
+
+jobs:
+  publish-doc:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Hugo
+        run: |
+          export HUGO_VERSION=0.92.2
+          export HUGO_DEB="hugo_${HUGO_VERSION}_Linux-64bit.deb"
+          wget "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/${HUGO_DEB}"
+          sudo dpkg -i "${HUGO_DEB}"
+          hugo version
+
+      - name: Set up Emacs
+        uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
+        with:
+          version: '27.2'
+
+      - name: Generate markdown files
+        run: bin/dev generate-doc-md
+
+      - name: Check out GitHub page repo
+        uses: actions/checkout@v2
+        with:
+          repository: emacs-tree-sitter/emacs-tree-sitter.github.io
+          path: emacs-tree-sitter.github.io
+          token: ${{ secrets.PAT }}
+
+      - name: Build doc artifacts with Hugo
+        run: hugo --destination ../emacs-tree-sitter.github.io
+        working-directory: doc
+
+      # TODO: Generate better commit message
+      - name: Publish doc artifacts
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -F- <<-_UBLT_COMMIT_MSG_
+          auto: ${{ github.event.head_commit.message }}
+
+          SourceCommit: https://github.com/emacs-tree-sitter/elisp-tree-sitter/commit/${{ github.sha }}
+          _UBLT_COMMIT_MSG_
+          git push
+        working-directory: emacs-tree-sitter.github.io
