@@ -171,16 +171,24 @@ jobs:
           echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Greenlight releasing to MELPA
-        run: |
-          git push origin ${{ env.RELEASE_VERSION }}:refs/heads/release
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.PAT }}
+          script: |
+            github.rest.git.updateRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "heads/release",
+              sha: context.sha
+            })
         continue-on-error: true
 
       # We don't want this to trigger workflows, so we don't use a personal access token.
       - name: Greenlight releasing to MELPA Stable
-        uses: actions/github-script@v4
+        uses: actions/github-script@v5
         with:
           script: |
-            github.git.createRef({
+            github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: "refs/tags/melpa-stable/v${{ env.RELEASE_VERSION }}",
