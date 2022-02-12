@@ -105,6 +105,23 @@
   "Print the current version."
   (princ (-current-version)))
 
+(defun cmd:generate-doc-md ()
+  "Generate markdown files from `org', for documentation."
+  (let* ((root-dir (file-name-directory
+                    (directory-file-name
+                     (file-name-directory load-file-name))))
+         (doc-dir (format "%sdoc/" root-dir))
+         (ox-hugo-path (format "%sox-hugo" doc-dir))
+         (default-directory doc-dir))
+    (add-to-list 'load-path ox-hugo-path)
+    (add-to-list 'load-path doc-dir)
+    (require 'org)
+    (require 'ox)
+    (require 'ox-hugo)
+    (load "-config-ox-hugo.el")
+    (with-current-buffer (find-file "emacs-tree-sitter.org")
+      (org-hugo-export-wim-to-md :all-subtrees))))
+
 (defun -main (&rest args)
   (when-let* ((cmd (car args))
               (func (intern (format "cmd:%s" cmd))))
