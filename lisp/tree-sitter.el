@@ -240,6 +240,7 @@ Functions that depend on the syntax tree will stop working until
   (if tree-sitter-mode
       (tree-sitter--error-protect
           (progn
+            (run-hooks 'tree-sitter--before-on-hook)
             (tree-sitter--setup)
             ;; TODO: When the dependent mode requested us, but then failed to
             ;; turn itself on, we should probably turn ourselves off as well.

@@ -14,6 +14,8 @@
 
 (require 'tree-sitter)
 
+(require 'nadvice)
+
 (eval-when-compile
   (require 'subr-x))
 
@@ -77,6 +79,81 @@ instead, to make this restoration exact."
           ,@(when tree-sitter-save-excursion-try-hard
               '((goto-char (tsc-node-start-position (cadr err)))
                 (tree-sitter--recenter screen-line pixel-posn-y))))))))
+
+;;; ----------------------------------------------------------------------------
+
+(declare-function jupyter-repl-cell-code-beginning-position "ext:jupyter-repl")
+(declare-function jupyter-repl-cell-code-end-position "ext:jupyter-repl")
+
+(declare-function jupyter-current-client "ext:jupyter-client")
+(defvar jupyter-current-client)
+
+(defun tree-sitter--jupyter-repl-set-parse-region-function ()
+  (unless (local-variable-p 'tree-sitter-get-parse-region-function)
+    (setq-local tree-sitter-get-parse-region-function
+                (lambda ()
+                  ;; TODO: Return an empty region when we don't have an input
+                  ;; cell ready.
+                  (save-excursion
+                    (save-restriction
+                      (widen)
+                      (goto-char (point-max))
+                      (cons (jupyter-repl-cell-code-beginning-position)
+                            (jupyter-repl-cell-code-end-position))))))))
+
+(defun tree-sitter--jupyter-repl-init-cell (&optional type &rest _args)
+  (when (and (eq type 'in) tree-sitter-mode)
+    (tree-sitter--jupyter-repl-set-parse-region-function)
+    ;; FIX: Figure out why Emacs hangs if we parse right now.
+    (run-with-idle-timer 0 nil
+                         (lambda ()
+                           (tree-sitter-resume)))))
+
+(defun tree-sitter--jupyter-repl-finalize-cell (&rest _args)
+  (save-excursion
+    (goto-char (point-max))
+    (when tree-sitter-mode
+      (tree-sitter-pause))
+    (when tree-sitter-hl-mode
+      (tree-sitter-hl-dry-up-region
+       (jupyter-repl-cell-code-beginning-position)
+       (jupyter-repl-cell-code-end-position)))))
+
+(defun tree-sitter--jupyter-repl-initialize (&optional _arg)
+  (when (eq major-mode 'jupyter-repl-mode)
+    (unless tree-sitter-language
+      (if-let ((lang-symbol (jupyter-kernel-language jupyter-current-client)))
+          (with-demoted-errors "tree-sitter--jupyter-repl-initialize: %S"
+            (setq tree-sitter-language (tree-sitter-require lang-symbol)))
+        (error "Cannot determine jupyter kernel language")))
+    (tree-sitter--jupyter-repl-set-parse-region-function)))
+
+;;;###autoload
+(defun tree-sitter-enable-jupyter-repl-integration ()
+  (advice-add 'jupyter-repl-insert-prompt :after
+              #'tree-sitter--jupyter-repl-init-cell)
+  (advice-add 'jupyter-repl-finalize-cell :before
+              #'tree-sitter--jupyter-repl-finalize-cell)
+  (advice-add 'tree-sitter-mode :before
+              #'tree-sitter--jupyter-repl-initialize))
+
+;;;###autoload
+(defun tree-sitter-disable-jupyter-repl-integration ()
+  (advice-remove 'jupyter-repl-insert-prompt
+                 #'tree-sitter--jupyter-repl-init-cell)
+  (advice-remove 'jupyter-repl-finalize-cell
+                 #'tree-sitter--jupyter-repl-finalize-cell)
+  (advice-remove 'tree-sitter-mode
+                 #'tree-sitter--jupyter-repl-initialize))
+
+;; (cl-defmethod jupyter-repl-after-init (&context (jupyter-lang python))
+;;   (tree-sitter-enable 'python)
+;;   (cl-call-next-method))
+
+;; (cl-defmethod jupyter-repl-initialize-fontification :after (&context (jupyter-lang python))
+;;   (message "HERE HERE HERE")
+;;   (tree-sitter-enable 'python)
+;;   (tree-sitter-hl-mode))
 
 (provide 'tree-sitter-extras)
 ;;; tree-sitter-extras.el ends here
