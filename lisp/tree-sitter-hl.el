@@ -246,6 +246,15 @@
   "Face for attributes markup languages."
   :group 'tree-sitter-hl-faces)
 
+;;; ------------------------------------
+;;; Special.
+
+(defface tree-sitter-hl-face:noise
+  '((default :inherit default))
+  "Face for things that are syntatic noises.
+It's up to themes how they should be displayed: dimmed, hidden..."
+  :group 'tree-sitter-hl-faces)
+
 ;;; ----------------------------------------------------------------------------
 ;;; Interfaces for modes and end users.
 
