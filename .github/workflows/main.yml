@@ -23,18 +23,11 @@ jobs:
       matrix:
         os:
           - macos-10.15
-          # - ubuntu-18.04
+          - windows-2019
           - ubuntu-20.04
         emacs-version:
-          # - '25.3'
-          # - '26.3'
           - '27.2'
         include:
-          # # Older Emacs binaries for Windows don't have dynamic modules enabled.
-          # - os: windows-2016
-          #   emacs-version: '27.2'
-          - os: windows-2019
-            emacs-version: '27.2'
           - os: macos-11
             emacs-version: '27.2'
             # Cross build
@@ -56,21 +49,11 @@ jobs:
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
-      # Seems like the Emacs archive from GNU's FTP uses its own outdated bundle of CA certs, which
-      # wouldn't include the new LetsEncrypt's root CA cert, which is used by MELPA, among others.
-      # So we use mingw64's Emacs instead. TODO: Switch back whenever possible.
-      - name: Install Emacs (Windows)
+
+      - uses: jcs090218/setup-emacs-windows@v4
         if: runner.os == 'Windows'
-        run: |
-          $env:MSYS_PATH = "$env:CD\ci-tools\msys2"
-          choco install msys2 --params="/InstallDir:$env:MSYS_PATH /NoPath"
-          $env:PATH = "$env:MSYS_PATH\usr\bin;" + $env:PATH
-          pacman -S --noconfirm --needed mingw-w64-x86_64-emacs
-          echo "$env:MSYS_PATH\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf-8 -Append
-      # - uses: jcs090218/setup-emacs-windows@v4
-      #   if: runner.os == 'Windows'
-      #   with:
-      #     version: ${{ matrix.emacs-version }}
+        with:
+          version: ${{ matrix.emacs-version }}
 
       - uses: actions/checkout@v2
         with:
