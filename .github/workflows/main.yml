@@ -23,13 +23,18 @@ jobs:
       matrix:
         os:
           - macos-10.15
-          - windows-2019
           - ubuntu-20.04
+          - windows-2019
         emacs-version:
           - '27.2'
+          - '28.1'
         include:
           - os: macos-11
             emacs-version: '27.2'
+            # Cross build
+            target: aarch64-apple-darwin
+          - os: macos-11
+            emacs-version: '28.1'
             # Cross build
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
@@ -50,7 +55,7 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@v4
+      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
         if: runner.os == 'Windows'
         with:
           version: ${{ matrix.emacs-version }}

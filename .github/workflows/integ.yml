@@ -18,6 +18,7 @@ jobs:
           - windows-2019
         emacs-version:
           - '27.2'
+          - '28.1'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
@@ -25,7 +26,7 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@v4
+      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
         if: runner.os == 'Windows'
         with:
           version: ${{ matrix.emacs-version }}

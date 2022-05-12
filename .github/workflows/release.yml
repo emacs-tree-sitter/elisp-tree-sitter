@@ -46,7 +46,7 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@v4
+      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
         if: runner.os == 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
@@ -138,7 +138,7 @@ jobs:
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
-      - uses: jcs090218/setup-emacs-windows@v4
+      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
         if: runner.os == 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
