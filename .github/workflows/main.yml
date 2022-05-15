@@ -23,20 +23,18 @@ jobs:
       matrix:
         os:
           - macos-10.15
-          # - ubuntu-18.04
           - ubuntu-20.04
+          - windows-2019
         emacs-version:
-          # - '25.3'
-          # - '26.3'
           - '27.2'
+          - '28.1'
         include:
-          # # Older Emacs binaries for Windows don't have dynamic modules enabled.
-          # - os: windows-2016
-          #   emacs-version: '27.2'
-          - os: windows-2019
-            emacs-version: '27.2'
           - os: macos-11
             emacs-version: '27.2'
+            # Cross build
+            target: aarch64-apple-darwin
+          - os: macos-11
+            emacs-version: '28.1'
             # Cross build
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
@@ -56,21 +54,19 @@ jobs:
         if: runner.os != 'Windows'
         with:
           version: ${{ matrix.emacs-version }}
-      # Seems like the Emacs archive from GNU's FTP uses its own outdated bundle of CA certs, which
-      # wouldn't include the new LetsEncrypt's root CA cert, which is used by MELPA, among others.
-      # So we use mingw64's Emacs instead. TODO: Switch back whenever possible.
-      - name: Install Emacs (Windows)
+
+      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
         if: runner.os == 'Windows'
+        with:
+          version: ${{ matrix.emacs-version }}
+      # Remove expired DST Root CA X3 certificate. Workaround for
+      # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038 bug on Emacs 27.2.
+      # https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-1126671598
+      - name: Workaround for Emacs 27.2's Windows build from GNU FTP
+        if: ${{ runner.os == 'Windows' && matrix.emacs-version == '27.2' }}
         run: |
-          $env:MSYS_PATH = "$env:CD\ci-tools\msys2"
-          choco install msys2 --params="/InstallDir:$env:MSYS_PATH /NoPath"
-          $env:PATH = "$env:MSYS_PATH\usr\bin;" + $env:PATH
-          pacman -S --noconfirm --needed mingw-w64-x86_64-emacs
-          echo "$env:MSYS_PATH\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf-8 -Append
-      # - uses: jcs090218/setup-emacs-windows@v4
-      #   if: runner.os == 'Windows'
-      #   with:
-      #     version: ${{ matrix.emacs-version }}
+          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
+          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
 
       - uses: actions/checkout@v2
         with:

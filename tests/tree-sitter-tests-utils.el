@@ -77,6 +77,12 @@ If RESET is non-nil, also do another full parse and check again."
   "Return t if text at POS is highlighted with FACE."
   (memq face (tsc--listify (get-text-property pos 'face))))
 
+;; In Emacs 28,`font-lock-ensure' checks `font-lock-specified-p' first.
+;; See https://github.com/emacs-tree-sitter/elisp-tree-sitter/pull/220#issuecomment-1120423580.
+(defun tsc--hl-ensure (&optional beg end)
+  (funcall font-lock-ensure-function
+           (or beg (point-min)) (or end (point-max))))
+
 (defun tsc-test-no-op (&rest _args))
 
 (defvar tsc-test-no-op
