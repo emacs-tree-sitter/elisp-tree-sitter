@@ -5,6 +5,8 @@ if [[ $system == "Linux" ]]; then
     ext="so"
 elif [[ $system == "Darwin" ]]; then
     ext="dylib"
+elif [[ $system == "OpenBSD" ]]; then
+    ext='so'
 else
     echo "Unsupported system: $system"
     exit 1
