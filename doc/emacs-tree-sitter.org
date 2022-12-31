@@ -14,6 +14,8 @@
 :EXPORT_HUGO_TYPE: homepage
 :END:
 
+For Emacs 29+, please use [[https://lists.gnu.org/archive/html/emacs-devel/2022-11/msg01443.html][the built-in integration]] instead.
+
 ~tree-sitter~ is an Emacs binding for [[https://tree-sitter.github.io/][Tree-sitter]], an incremental parsing system.
 
 It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:

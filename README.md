@@ -3,6 +3,8 @@
 [![Azure Pipelines](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
 [![GitHub Actions](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml/badge.svg)](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml)
 
+For Emacs 29+, please use [the built-in integration](https://lists.gnu.org/archive/html/emacs-devel/2022-11/msg01443.html) instead of this package.
+
 This is an Emacs Lisp binding for [tree-sitter](https://tree-sitter.github.io/tree-sitter/), an incremental parsing library. It requires Emacs 25.1 or above, built with dynamic module support.
 
 It aims to be the foundation for a new breed of Emacs packages that understand code structurally. For example:
@@ -71,7 +73,7 @@ To test against a different version of Emacs, set the environment variable `EMAC
 
 ## Alternatives
 
-- Tree-sitter in Emacs's core: https://github.com/casouri/emacs (the future)
+- [Tree-sitter in Emacs's core](https://lists.gnu.org/archive/html/emacs-devel/2022-11/msg01443.html) (the future)
 - Binding through C instead of Rust: https://github.com/karlotness/tree-sitter.el (dormant)
 
 ## Contribution
