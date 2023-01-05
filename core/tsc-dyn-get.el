@@ -105,6 +105,9 @@ this to nil."
       (with-temp-buffer
         (let ((coding-system-for-read 'utf-8))
           (insert-file-contents tsc-dyn-get--version-file)
+          (goto-char (point-min))
+          (when (re-search-forward "@" nil t)
+            (delete-region (point-min) (point)))
           (buffer-string))))))
 
 (defun tsc-dyn-get--loaded-version ()
