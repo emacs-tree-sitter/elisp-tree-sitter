@@ -1,9 +1,9 @@
-(package "elisp-tree-sitter"
+(package "tree-sitter"
          "0.18.0"
-         "Tree-sitter bindings for Emacs Lisp")
+         "Incremental parsing system")
 
 (website-url "https://github.com/emacs-tree-sitter/elisp-tree-sitter")
-(keywords "tree-sitter")
+(keywords "languages" "tools" "parsers" "tree-sitter")
 
 (package-file "lisp/tree-sitter.el")
 (files
@@ -14,6 +14,7 @@
 (source 'melpa)
 
 (depends-on "emacs" "27.1")
+(depends-on "tsc")
 
 (development
  (depends-on "rust-mode")
