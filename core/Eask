@@ -3,7 +3,7 @@
          "Core Tree-sitter APIs")
 
 (website-url "https://github.com/emacs-tree-sitter/elisp-tree-sitter")
-(keywords "tree-sitter")
+(keywords "languages" "tools" "parsers" "dynamic-modules" "tree-sitter")
 
 (package-file "tsc.el")
 (files
