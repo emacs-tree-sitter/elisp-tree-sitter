@@ -81,9 +81,9 @@ if [[ $target != '' ]]; then
 fi
 (
     cd "$core_root"
-    eask compileZ
+    eask compile
 )
 (
     cd "$PROJECT_ROOT"
-    eask compileZ
+    eask compile
 )
