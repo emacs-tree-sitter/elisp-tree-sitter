@@ -1,0 +1,26 @@
+(package "tsc"
+         "0.18.0"
+         "Core Tree-sitter APIs")
+
+(website-url "https://github.com/emacs-tree-sitter/elisp-tree-sitter")
+(keywords "tree-sitter")
+
+(package-file "tsc.el")
+(files
+ "*.el"
+ "tsc-dyn.dylib"
+ "tsc-dyn.so"
+ "tsc-dyn.dll"
+ "Cargo.toml"
+ "Cargo.lock"
+ "src")
+
+(script "test" "echo \"Error: no test specified\" && exit 1")
+
+(depends-on "emacs" "27.1")
+
+(setq network-security-level 'low)  ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
+
+;; Use GNU tar in Windows
+(when (memq system-type '(cygwin windows-nt ms-dos))
+  (setq package-build-tar-executable "C:/Program Files/Git/usr/bin/tar.exe"))

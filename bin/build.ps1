@@ -20,7 +20,7 @@ try {
     Copy-Item "target\$profile\${module_name}.dll" "${module_renamed}.dll"
     $version = ((cargo pkgid) | Out-String).Trim().Split('#')[-1].Split(':')[-1]
     Set-Content -Path "DYN-VERSION" -Value "${version}" -NoNewLine -Force
-    cask build
+    eask compile
 } finally {
     Pop-Location
 }
@@ -28,7 +28,7 @@ try {
 echo "!! Building Lisp code"
 Push-Location $project_root
 try {
-    cask build
+    eask compile
 } finally {
     Pop-Location
 }

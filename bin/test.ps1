@@ -32,7 +32,7 @@ if ($args[0] -eq "watch") {
     emacs --version
     Push-Location $project_root
     try {
-        cask emacs --batch `
+        eask emacs --batch `
           --directory "$project_root\core" `
           --directory "$project_root\lisp" `
           --directory "$project_root\langs" `
