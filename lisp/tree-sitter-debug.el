@@ -61,13 +61,14 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   "Display NODE that appears at the given DEPTH in the syntax tree."
   (when named-p
     (insert (make-string (* 2 depth) ?\ ))
-    (let ((node-text (format "%s:\n" type)))
+    (let ((node-text (format "%s:" type)))
       (if tree-sitter-debug-jump-buttons
           (insert-button node-text
                          'action 'tree-sitter-debug--button-node-lookup
                          'follow-link t
                          'points-to `(,start-byte . ,end-byte))
-        (insert node-text)))))
+        (insert node-text))
+      (insert "\n"))))
 
 (defvar tree-sitter-debug-traversal-method :mapc)
 
