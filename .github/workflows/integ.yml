@@ -7,6 +7,10 @@ on:
         required: true
         default: 'master'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   integ:
     strategy:
