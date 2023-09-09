@@ -17,8 +17,9 @@
 
 (defvar tree-sitter-langs--testing)
 ;;; Disable grammar downloading.
-(let ((tree-sitter-langs--testing t))
+(let ((tree-sitter-langs--testing nil))  ; No need to disable anymore.
   (require 'tree-sitter-langs))
+
 ;;; Build the grammars, if necessary.
 (dolist (lang-symbol '(rust python javascript c))
   (tree-sitter-langs-ensure lang-symbol))

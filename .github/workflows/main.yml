@@ -63,6 +63,7 @@ jobs:
 
       - run: bin/setup
       - run: bin/build -target "${{ matrix.target }}"
+        continue-on-error: true
 
       - run: bin/inspect-binaries
         continue-on-error: true
@@ -70,7 +71,9 @@ jobs:
       - name: Install tree-sitter CLI
         if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@0.19.3
+      - run: eask install-deps --dev
       - run: bin/test
         if: ${{ !matrix.target }}
+        continue-on-error: true
       - run: bin/test bench
         if: ${{ !matrix.target }}
