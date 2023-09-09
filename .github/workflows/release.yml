@@ -26,7 +26,7 @@ jobs:
             emacs-version: '27.2'
             ext: dylib
             target: aarch64-apple-darwin
-          - os: ubuntu-18.04
+          - os: ubuntu-20.04
             emacs-version: '27.2'
             ext: so
             host: x86_64-unknown-linux-gnu
@@ -94,7 +94,7 @@ jobs:
 
   publish-binaries:
     needs: build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: jcs090218/setup-emacs@master
         with:
@@ -127,7 +127,7 @@ jobs:
         include:
           - os: macos-12
             emacs-version: '27.2'
-          - os: ubuntu-18.04
+          - os: ubuntu-20.04
             emacs-version: '27.2'
           # XXX: Fails on CI, but not locally (Windows 10) with
           # :value 2 :fail-reason "did not signal an error"
@@ -154,7 +154,7 @@ jobs:
 
   publish-melpa:
     needs: integ
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
