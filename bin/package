@@ -5,24 +5,24 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-function cask-zip-tar {
+function eask-zip-tar {
     local name=$1
     local tar_file
-    tar_file="dist/$name-$(cask version).tar"
+    tar_file="dist/$name-$(eask version).tar"
     gzip --verbose "$tar_file" --stdout > "$tar_file".gz
     tar --gzip --list --file "$tar_file".gz
 }
 
 (
     cd "$PROJECT_ROOT"/core
-    cask build
-    cask package
-    cask-zip-tar tsc
+    eask compile
+    eask package
+    eask-zip-tar tsc
 )
 
 (
     cd "$PROJECT_ROOT"
-    cask build
-    cask package
-    cask-zip-tar tree-sitter
+    eask build
+    eask package
+    eask-zip-tar tree-sitter
 )

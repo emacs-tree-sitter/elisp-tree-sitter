@@ -81,9 +81,9 @@ if [[ $target != '' ]]; then
 fi
 (
     cd "$core_root"
-    cask build
+    eask compile  --allow-error
 )
 (
     cd "$PROJECT_ROOT"
-    cask build
+    eask compile  --allow-error
 )

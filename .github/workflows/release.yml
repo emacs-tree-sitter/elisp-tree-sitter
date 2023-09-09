@@ -5,6 +5,11 @@ on:
     tags:
       - '*.*.*'
       - '!melpa-stable*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -13,11 +18,11 @@ jobs:
       matrix:
         include:
           # TODO: Get host platform from rustc instead of specifying it explicitly.
-          - os: macos-10.15
+          - os: macos-11
             emacs-version: '27.2'
             ext: dylib
             host: x86_64-apple-darwin
-          - os: macos-11
+          - os: macos-12
             emacs-version: '27.2'
             ext: dylib
             target: aarch64-apple-darwin
@@ -41,29 +46,17 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
-        if: runner.os != 'Windows'
+      - uses: jcs090218/setup-emacs@master
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
-        if: runner.os == 'Windows'
+      - uses: emacs-eask/setup-eask@master
         with:
-          version: ${{ matrix.emacs-version }}
-      # Remove expired DST Root CA X3 certificate. Workaround for
-      # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038 bug on Emacs 27.2.
-      # https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-1126671598
-      - name: Workaround for Emacs 27.2's Windows build from GNU FTP
-        if: ${{ runner.os == 'Windows' && matrix.emacs-version == '27.2' }}
-        run: |
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
+          version: 'snapshot'
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
-
-      - run: .github/script/setup-cask
 
       - run: bin/setup
       - run: bin/build -target "${{ matrix.target }}"
@@ -100,10 +93,10 @@ jobs:
     needs: build
     runs-on: ubuntu-18.04
     steps:
-      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
+      - uses: jcs090218/setup-emacs@master
         with:
           version: '27.2'
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Generate release notes
         run: |
           bin/dev release-notes $(git describe --tags --abbrev=0) > RELEASE-NOTES
@@ -129,7 +122,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-10.15
+          - os: macos-12
             emacs-version: '27.2'
           - os: ubuntu-18.04
             emacs-version: '27.2'
@@ -142,27 +135,16 @@ jobs:
           #   emacs-version: '27.2'
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: purcell/setup-emacs@v3.0
-        if: runner.os != 'Windows'
+      - uses: jcs090218/setup-emacs@master
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
-        if: runner.os == 'Windows'
+      - uses: actions/checkout@v4
+
+      - uses: emacs-eask/setup-eask@master
         with:
-          version: ${{ matrix.emacs-version }}
-      # Remove expired DST Root CA X3 certificate. Workaround for
-      # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038 bug on Emacs 27.2.
-      # https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-1126671598
-      - name: Workaround for Emacs 27.2's Windows build from GNU FTP
-        if: ${{ runner.os == 'Windows' && matrix.emacs-version == '27.2' }}
-        run: |
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
+          version: 'snapshot'
 
-      - uses: actions/checkout@v2
-
-      - run: .github/script/setup-cask
       - run: bin/setup
 
       - run: bin/test integ
@@ -171,7 +153,7 @@ jobs:
     needs: integ
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set release version
         run: |

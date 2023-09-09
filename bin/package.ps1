@@ -4,10 +4,10 @@ $core_root = "$project_root\core"
 
 Push-Location $core_root
 try {
-    cask build
-    cask package
+    eask compile
+    eask package
 
-    $version = ((cask version) | Out-String).Trim()
+    $version = ((eask version) | Out-String).Trim()
     $tar_file = "dist\tsc-$version.tar"
     gzip --verbose $tar_file --stdout > "$tar_file.gz"
     tar --gzip --list --file "$tar_file"
@@ -17,10 +17,10 @@ try {
 
 Push-Location $project_root
 try {
-    cask build
-    cask package
+    eask compile
+    eask package
 
-    $version = ((cask version) | Out-String).Trim()
+    $version = ((eask version) | Out-String).Trim()
     $tar_file = "dist\tree-sitter-$version.tar"
     gzip --verbose $tar_file --stdout > "$tar_file.gz"
     tar --gzip --list --file "$tar_file"

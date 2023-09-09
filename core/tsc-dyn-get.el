@@ -329,8 +329,8 @@ Return nil if the file does not exist, or is not a loadable shared library."
     (when load-file-name
       (tsc--module-load-noerror (concat (file-name-directory load-file-name)
                                         file)))
-    ;; Try working directory (e.g. when invoked by `cask'). TODO: Modifying load
-    ;; path when using `cask' instead.
+    ;; Try working directory (e.g. when invoked by `eask'). TODO: Modifying load
+    ;; path when using `eask' instead.
     (tsc--module-load-noerror file)
     ;; Fall back to `load-path'.
     (seq-find (lambda (dir)
