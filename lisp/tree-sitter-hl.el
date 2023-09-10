@@ -215,6 +215,21 @@
   "Face for boolean."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:repeat
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for repeat."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:conditional
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for conditional."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:conditional.ternary
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for conditional ternary."
+  :group 'tree-sitter-hl-faces)
+
 ;;; ------------------------------------
 ;;; Punctuations (aka. should-be-dimmed).
 
