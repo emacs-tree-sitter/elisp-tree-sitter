@@ -210,6 +210,11 @@
   "Face for numbers."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:boolean
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for boolean."
+  :group 'tree-sitter-hl-faces)
+
 ;;; ------------------------------------
 ;;; Punctuations (aka. should-be-dimmed).
 
