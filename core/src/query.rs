@@ -39,7 +39,7 @@ impl_pred!(query_p, &RefCell<Query>);
 /// the associated capture name is disabled.
 #[defun(user_ptr)]
 fn _make_query(language: Language, source: String, tag_assigner: Value) -> Result<Query> {
-    let mut raw = tree_sitter::Query::new(language.into(), &source).or_else(|err| {
+    let mut raw = tree_sitter::Query::new(&language.0, &source).or_else(|err| {
         let symbol = match err.kind {
             QueryErrorKind::Syntax => error::tsc_query_invalid_syntax,
             QueryErrorKind::NodeType => error::tsc_query_invalid_node_type,
@@ -55,9 +55,13 @@ fn _make_query(language: Language, source: String, tag_assigner: Value) -> Resul
         // TODO: Convert named node types and field names to symbols and keywords?
         tag_assigner.env.signal(symbol, (err.message, point, byte_pos))
     })?;
-    let capture_names = raw.capture_names().to_vec();
+    // XXX: tree-sitter changed the return type of `capture_names` from `&[String]` to `&[&str]`,
+    //  which is too restrictive. `&[&'static str]` would have been better.
+    let capture_names: Vec<&'static str> = unsafe {
+        std::mem::transmute(raw.capture_names().to_vec())
+    };
     let mut capture_tags = vec![];
-    for name in &capture_names {
+    for name in capture_names {
         let value = tag_assigner.call((name, ))?;
         if !value.is_not_nil() {
             raw.disable_capture(name);
@@ -95,7 +99,7 @@ fn _query_capture_names(query: Value) -> Result<Vector> {
     let names = query.raw.capture_names();
     let vec = env.make_vector(names.len(), ())?;
     for (i, name) in names.iter().enumerate() {
-        vec.set(i, name)?;
+        vec.set(i, *name)?;
     }
     Ok(vec)
 }
@@ -137,7 +141,7 @@ fn make_query_cursor() -> Result<QueryCursor> {
 fn text_callback<'e>(
     text_function: Value<'e>,
     error: &'e RefCell<Option<Error>>,
-) -> impl TextProvider<'e> {
+) -> impl TextProvider<Vec<u8>> + 'e {
     move |child: Node| {
         let beg = child.lisp_start_byte();
         let end = child.lisp_end_byte();

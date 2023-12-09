@@ -3,6 +3,7 @@ use std::{
     mem,
     ops::{Deref, DerefMut},
 };
+use std::num::NonZeroU16;
 
 use emacs::{defun, Result, Value, Env, GlobalRef, Vector, IntoLisp, FromLisp};
 use tree_sitter::{Tree, TreeCursor, Node};
@@ -156,7 +157,7 @@ fn make_cursor(tree_or_node: TreeOrNode) -> Result<RCursor> {
 /// Return the field id of CURSOR's current node.
 /// Return nil if the current node doesn't have a field.
 #[defun]
-fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
+fn current_field_id(cursor: &RCursor) -> Result<Option<NonZeroU16>> {
     Ok(cursor.borrow().field_id())
 }
 
@@ -165,7 +166,7 @@ fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
 #[defun]
 fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
     let cursor = cursor.borrow();
-    let language: Language = cursor.reft.language().into();
+    let language: Language = cursor.reft.language().clone().into();
     Ok(cursor.field_id().and_then(|id| language.info().field_name(id)))
 }
 
