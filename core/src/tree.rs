@@ -17,7 +17,7 @@ impl_pred!(tree_p, &Shared<Tree>);
 /// Return the language that was used to parse the syntax TREE.
 #[defun(mod_in_name = true)]
 fn language(tree: Borrowed<Tree>) -> Result<Language> {
-    Ok(tree.borrow().language().into())
+    Ok(tree.borrow().language().clone().into())
 }
 
 /// Return the sexp representation of the syntax TREE, in a string.

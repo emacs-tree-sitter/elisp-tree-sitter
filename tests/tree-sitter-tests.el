@@ -356,7 +356,7 @@ source_file (1 . 20)
     (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-debug-query
                       "((function_item (identifier) @function)
-                        (match? @function \"make_query\"))
+                        (.match? @function \"make_query\"))
                        (macro_definition (identifier) @macro)"))
            (node-texts (mapcar (lambda (capture)
                                  (pcase-let ((`(_ . ,node) capture))

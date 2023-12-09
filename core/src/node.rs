@@ -157,7 +157,7 @@ pub(crate) trait LispUtils {
 impl<'n> LispUtils for Node<'n> {
     #[inline]
     fn lisp_type(&self) -> &'static GlobalRef {
-        let language: Language = self.language().into();
+        let language: Language = self.language().clone().into();
         if self.is_error() {
             ERROR
         } else {

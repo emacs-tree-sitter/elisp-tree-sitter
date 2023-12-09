@@ -115,7 +115,7 @@ impl IntoLisp<'_> for BytePos {
 // -------------------------------------------------------------------------------------------------
 // Range
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Range(pub(crate) tree_sitter::Range);
 
 impl_pred!(range_p, Range);

@@ -1,4 +1,5 @@
 use std::{mem, os, collections::HashMap, sync::Mutex};
+use std::num::NonZeroU16;
 
 use emacs::{defun, Result, ResultExt, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
 
@@ -8,7 +9,7 @@ use once_cell::sync::Lazy;
 use crate::{types, error};
 use tree_sitter::{LANGUAGE_VERSION, MIN_COMPATIBLE_LANGUAGE_VERSION};
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(transparent)]
 pub struct Language(pub(crate) tree_sitter::Language);
 
@@ -71,12 +72,8 @@ impl LangInfo {
     }
 
     #[inline]
-    pub(crate) fn field_name(&self, id: u16) -> Option<&GlobalRef> {
-        if id == 0 {
-            None
-        } else {
-            self.field_names.get(id as usize - 1)
-        }
+    pub(crate) fn field_name(&self, id: NonZeroU16) -> Option<&GlobalRef> {
+        self.field_names.get(id.get() as usize - 1)
     }
 }
 
@@ -123,7 +120,7 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
     }).collect();
     let language: Language = language.into();
     LANG_INFOS.try_lock().expect("Failed to access language info registry")
-        .insert(language.id(), LangInfo {
+        .insert(language.clone().id(), LangInfo {
             load_file: file,
             lang_symbol: lang_symbol.make_global_ref(),
             _lib: lib,
@@ -158,7 +155,11 @@ fn lang_node_type(language: Language, type_id: u16) -> Result<Option<&'static Gl
 /// Return a field's name keyword, given its numeric FIELD-ID in LANGUAGE.
 #[defun]
 fn lang_field(language: Language, field_id: u16) -> Result<Option<&'static GlobalRef>> {
-    Ok(language.info().field_name(field_id))
+    if let Some(field_id) = NonZeroU16::new(field_id) {
+        Ok(language.info().field_name(field_id))
+    } else {
+        Ok(None)
+    }
 }
 
 /// Return the numeric id of TYPE-NAME in LANGUAGE.
@@ -203,5 +204,5 @@ defun_lang_methods! {
     "lang-node-type-named-p" fn node_kind_is_named(type_id: u16) -> bool
 
     /// Return the numeric id of FIELD-NAME in LANGUAGE.
-    "-lang-field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
+    "-lang-field-id-for-name" fn field_id_for_name(field_name: String) -> Option<NonZeroU16>
 }
