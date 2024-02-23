@@ -69,10 +69,10 @@
   :group 'tree-sitter-hl-faces)
 
 (define-obsolete-face-alias 'tree-sitter-hl-face:function.method
-  'tree-sitter-hl-face:method "0.9.0")
+                            'tree-sitter-hl-face:method "0.9.0")
 
 (define-obsolete-face-alias 'tree-sitter-hl-face:function.method.call
-  'tree-sitter-hl-face:method.call "0.9.0")
+                            'tree-sitter-hl-face:method.call "0.9.0")
 
 ;;; ------------------------------------
 ;;; Types.
@@ -223,6 +223,11 @@
 (defface tree-sitter-hl-face:conditional
   '((default :inherit tree-sitter-hl-face:keyword))
   "Face for conditional."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:exception
+  '((default :inherit font-lock-keyword-face))
+  "Face for things that are exception."
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:conditional.ternary
@@ -523,8 +528,8 @@ If LOUDLY is non-nil, print debug messages."
         (tree-sitter-hl--extend-regions hl-region query-region)
         (setf `(,beg . ,end) hl-region)
         (tsc--query-cursor-set-byte-range tree-sitter-hl--query-cursor
-                                         (position-bytes (car query-region))
-                                         (position-bytes (cdr query-region))))
+                                          (position-bytes (car query-region))
+                                          (position-bytes (cdr query-region))))
       (let* ((root-node (tsc-root-node tree-sitter-tree))
              (captures  (tsc--query-cursor-captures-1
                          tree-sitter-hl--query-cursor
