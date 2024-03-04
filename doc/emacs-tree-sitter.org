@@ -477,7 +477,7 @@ When a node matches multiple patterns in a highlighting query, earlier patterns 
 /Minor modes/ that want to customize syntax highlighting should call the function ~tree-sitter-hl-add-patterns~. It plays a similar role to ~font-lock-add-keywords~.
 
 #+html: {{% notice info %}}
-The language bundle ~tree-sitter-langs~ provides [[https://github.com/emacs-tree-sitter/elisp-tree-sitter/tree/master/langs/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
+The language bundle ~tree-sitter-langs~ provides [[https://github.com/emacs-tree-sitter/tree-sitter-langs/tree/master/queries][highlighting queries]] for several languages. These queries will be used when the corresponding major modes do not set ~tree-sitter-hl-default-patterns~.
 #+html: {{% /notice %}}
 
 * Core APIs
