@@ -70,7 +70,7 @@ echo "!! Building the dynamic module"
     cargo build --all "${extra_args[@]}"
 
     cp -f "$target_dir/$profile_/$MODULE_ORIGINAL" "$MODULE_RENAMED"
-    version=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2)
+    version=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2 | cut -d@ -f2)
     echo "$version" | tr -d $'\n' > DYN-VERSION
 )
 
