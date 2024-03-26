@@ -105,9 +105,6 @@ this to nil."
       (with-temp-buffer
         (let ((coding-system-for-read 'utf-8))
           (insert-file-contents tsc-dyn-get--version-file)
-          (goto-char (point-min))
-          (when (re-search-forward "@" nil t)
-            (delete-region (point-min) (point)))
           (buffer-string))))))
 
 (defun tsc-dyn-get--loaded-version ()
@@ -189,7 +186,7 @@ This function records the downloaded version in the manifest
   "Return the dynamic module's version after asking 'cargo'."
   (thread-first (shell-command-to-string "cargo pkgid")
     string-trim
-    (split-string "\[#:\]")
+    (split-string "\[#:@\]")
     last car))
 
 ;; TODO: Remove this when cargo allows specifying output file name.
