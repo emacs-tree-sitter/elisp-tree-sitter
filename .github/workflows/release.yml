@@ -16,13 +16,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        # The `os` versions below should be as low as possible, for better compatibility.
         include:
           # TODO: Get host platform from rustc instead of specifying it explicitly.
           - os: macos-11
             emacs-version: '27.2'
             ext: dylib
             host: x86_64-apple-darwin
-          - os: macos-12
+          - os: macos-11
             emacs-version: '27.2'
             ext: dylib
             target: aarch64-apple-darwin

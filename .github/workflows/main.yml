@@ -34,11 +34,13 @@ jobs:
           - '27.2'
           - '28.1'
         include:
-          - os: macos-12
+          # XXX: The (os, emacs-version) combination must be different from those from those above,
+          # otherwise GitHub Actions modifies the existing combinations, instead of adding new.
+          - os: macos-11
             emacs-version: '27.2'
             # Cross build
             target: aarch64-apple-darwin
-          - os: macos-12
+          - os: macos-11
             emacs-version: '28.1'
             # Cross build
             target: aarch64-apple-darwin
@@ -68,7 +70,6 @@ jobs:
 
       - run: bin/setup
       - run: bin/build -target "${{ matrix.target }}"
-        continue-on-error: true
 
       - run: bin/inspect-binaries
         continue-on-error: true
@@ -79,6 +80,5 @@ jobs:
       - run: eask install-deps --dev
       - run: bin/test
         if: ${{ !matrix.target }}
-        continue-on-error: true
       - run: bin/test bench
         if: ${{ !matrix.target }}
