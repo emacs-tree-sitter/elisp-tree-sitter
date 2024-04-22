@@ -33,6 +33,7 @@ See `tree-sitter-require'.")
     ;; The CLI tool outputs `.so', but `.dylib' is more sensible on macOS.
     ('darwin (list ".dylib" ".so"))
     ('gnu/linux (list ".so"))
+    ('android (list ".so"))
     ('windows-nt (list ".dll"))
     (_ (error "Unsupported system-type %s" system-type)))
   "List of suffixes for shared libraries that define tree-sitter languages.")
