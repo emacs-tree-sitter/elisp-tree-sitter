@@ -297,10 +297,10 @@ modes and end users."
 (defcustom tree-sitter-hl-face-mapping-function
   #'tree-sitter-hl-face-from-common-scope
   "Function used to map capture names in query patterns to highlighting faces.
-This can also be used to selectively disable certain capture names. For example,
-the following code disables keyword highlighting:
+This can also be used to selectively disable certain capture names.  For
+example, the following code disables keyword highlighting:
 
- (add-function :before-while 'tree-sitter-hl-face-mapping-function
+ (add-function :before-while `tree-sitter-hl-face-mapping-function
                (lambda (capture-name)
                  (not (string= capture-name \"keyword\"))))"
   :group 'tree-sitter-hl
@@ -679,7 +679,7 @@ Enabling this automatically enables `tree-sitter-mode' in the buffer.
 
 To enable this automatically whenever `tree-sitter-mode' is enabled:
 
- (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)"
+ (add-hook `tree-sitter-after-on-hook #`tree-sitter-hl-mode)"
   :init-value nil
   :group 'tree-sitter
   (tree-sitter--handle-dependent tree-sitter-hl-mode
