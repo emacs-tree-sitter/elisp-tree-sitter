@@ -5,7 +5,8 @@ set -euo pipefail
 here=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
 source "$here/env.bash"
 
-echo "[!!] Using Emacs binary from $(which $EMACS) version: $($EMACS --version)"
+eask emacs --version
+
 if [[ $* == "watch" ]]; then
     (
         cd "$PROJECT_ROOT/core"
