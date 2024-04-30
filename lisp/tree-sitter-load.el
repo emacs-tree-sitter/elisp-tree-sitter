@@ -32,6 +32,7 @@ See `tree-sitter-require'.")
   (pcase system-type
     ;; The CLI tool outputs `.so', but `.dylib' is more sensible on macOS.
     ('darwin (list ".dylib" ".so"))
+    ('berkeley-unix (list ".so"))
     ('gnu/linux (list ".so"))
     ('android (list ".so"))
     ('windows-nt (list ".dll"))

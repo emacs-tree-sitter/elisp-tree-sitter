@@ -72,7 +72,7 @@ this to nil."
   (pcase system-type
     ('windows-nt "dll")
     ('darwin "dylib")
-    ((or 'gnu 'gnu/linux 'gnu/kfreebsd) "so")
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix) "so")
     ((or 'ms-dos 'cygwin) (error "Unsupported system-type %s" system-type))
     (_ "so")))
 
@@ -82,7 +82,7 @@ this to nil."
 
 ;;; TODO: Make this correct.
 (defun tsc-dyn-get--system-specific-file ()
-  "Return the dynamic module filename, which is system-dependent."
+  "Return the pre-built dynamic module filename, which is system-dependent."
   (pcase system-type
     ('windows-nt "tsc-dyn.x86_64-pc-windows-msvc.dll")
     ('darwin (if (string-prefix-p "x86_64" system-configuration)
