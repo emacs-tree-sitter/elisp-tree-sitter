@@ -185,6 +185,11 @@
   "Face for keywords."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:keyword.directive
+  '((default :inherit font-lock-keyword-face))
+  "Face for directive keyword."
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:operator
   '((default :inherit tree-sitter-hl-face:keyword))
   "Face for operators."
