@@ -185,6 +185,16 @@
   "Face for keywords."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:keyword.conditional
+  '((default :inherit font-lock-keyword-face))
+  "Face for conditional keyword."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:keyword.repeat
+  '((default :inherit font-lock-keyword-face))
+  "Face for repeat keyword."
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:keyword.directive
   '((default :inherit font-lock-keyword-face))
   "Face for directive keyword."
