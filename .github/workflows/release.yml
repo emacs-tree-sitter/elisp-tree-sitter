@@ -20,11 +20,11 @@ jobs:
         include:
           # TODO: Get host platform from rustc instead of specifying it explicitly.
           - os: macos-15
-            emacs-version: '27.2'
+            emacs-version: '28.2'
             ext: dylib
             host: x86_64-apple-darwin
           - os: macos-15
-            emacs-version: '27.2'
+            emacs-version: '28.2'
             ext: dylib
             target: aarch64-apple-darwin
           - os: ubuntu-20.04

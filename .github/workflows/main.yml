@@ -31,17 +31,17 @@ jobs:
           - ubuntu-20.04
           - windows-2019
         emacs-version:
-          - '27.2'
-          - '28.1'
+          - '28.2'
+          - '29.4'
         include:
           # XXX: The (os, emacs-version) combination must be different from those from those above,
           # otherwise GitHub Actions modifies the existing combinations, instead of adding new.
           - os: macos-15
-            emacs-version: '27.2'
+            emacs-version: '28.2'
             # Cross build
             target: aarch64-apple-darwin
           - os: macos-15
-            emacs-version: '28.1'
+            emacs-version: '29.4'
             # Cross build
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
