@@ -9,6 +9,6 @@ source "$here/env.bash"
     cd "$PROJECT_ROOT"
     # XXX: Create the directory because `eask link` doesn't.
     #mkdir -p "$(eask package-directory)"
-    eask link tsc core
+    eask link add tsc core
     eask install
 )
