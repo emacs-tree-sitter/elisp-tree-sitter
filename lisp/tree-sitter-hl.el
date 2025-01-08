@@ -166,6 +166,16 @@
   "Face for special strings, e.g. regular expressions."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:character
+  '((default :inherit font-lock-string-face))
+  "Face for characters."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:character.special
+  '((default :inherit tree-sitter-hl-face:character :weight bold))
+  "Face for special characters."
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:escape
   '((default :inherit font-lock-keyword-face))
   "Face for escape characters in strings."
