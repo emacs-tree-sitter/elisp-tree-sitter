@@ -1,9 +1,10 @@
 ;;; tree-sitter-hl.el --- Syntax highlighting based on tree-sitter -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Timo von Hartz <c0untlizzi@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:

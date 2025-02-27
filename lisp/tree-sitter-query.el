@@ -1,8 +1,9 @@
 ;;; tree-sitter-query.el --- Tools for running queries live -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
