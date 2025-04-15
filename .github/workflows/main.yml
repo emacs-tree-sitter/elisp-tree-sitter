@@ -28,7 +28,7 @@ jobs:
       matrix:
         os:
           - macos-15
-          - ubuntu-20.04
+          - ubuntu-24.04
           - windows-2019
         emacs-version:
           - '28.2'
