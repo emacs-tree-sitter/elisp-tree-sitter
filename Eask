@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "tree-sitter"
          "0.18.0"
          "Incremental parsing system")
