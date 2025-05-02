@@ -80,6 +80,7 @@ jobs:
         if: matrix.target
         run: |
           mv core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.target }}.${{ matrix.ext }}
+
       - name: Make a target-explicit copy of native-build's binary
         if: ${{ !matrix.target && matrix.host }}
         shell: bash
@@ -89,7 +90,7 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: tsc-dyn
+          name: tsc-dyn.${{ matrix.host }}
           path: core/tsc-dyn.*${{ matrix.ext }}
           if-no-files-found: error
 
@@ -106,10 +107,26 @@ jobs:
           bin/dev release-notes $(git describe --tags --abbrev=0) > RELEASE-NOTES
           cat RELEASE-NOTES
 
-      - name: Download binaries
+      - name: Download binaries (x86_64-apple-darwin)
         uses: actions/download-artifact@v4
         with:
-          name: tsc-dyn
+          name: tsc-dyn.x86_64-apple-darwin
+
+      - name: Download binaries (aarch64-apple-darwin)
+        uses: actions/download-artifact@v4
+        with:
+          name: tsc-dyn.aarch64-apple-darwin
+
+      - name: Download binaries (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v4
+        with:
+          name: tsc-dyn.x86_64-unknown-linux-gnu
+
+      - name: Download binaries (x86_64-pc-windows-msvc)
+        uses: actions/download-artifact@v4
+        with:
+          name: tsc-dyn.x86_64-pc-windows-msvc
+
       - run: ls -R
 
       - name: Create GitHub Release
