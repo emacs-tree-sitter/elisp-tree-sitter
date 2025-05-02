@@ -26,6 +26,7 @@ jobs:
           - os: macos-15
             emacs-version: '28.2'
             ext: dylib
+            host: aarch64-apple-darwin
             target: aarch64-apple-darwin
           - os: ubuntu-24.04
             emacs-version: '27.2'
@@ -60,6 +61,7 @@ jobs:
           submodules: true
 
       - run: bin/setup
+
       - run: bin/build -target "${{ matrix.target }}"
         continue-on-error: true
 
@@ -69,10 +71,13 @@ jobs:
       - name: Install tree-sitter CLI
         if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@0.19.3
+
       - run: eask install-deps --dev
+
       - run: bin/test
         if: ${{ !matrix.target }}
         continue-on-error: true
+
       - run: bin/test bench
         if: ${{ !matrix.target }}
 
