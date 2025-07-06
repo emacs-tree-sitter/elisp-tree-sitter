@@ -32,7 +32,7 @@ jobs:
             emacs-version: '27.2'
             ext: so
             host: x86_64-unknown-linux-gnu
-          - os: windows-2019
+          - os: windows-2022
             emacs-version: '27.2'
             ext: dll
             host: x86_64-pc-windows-msvc
@@ -157,7 +157,7 @@ jobs:
           # and
           # (different-types 443 (tsc . 1))
           #
-          # - os: windows-2019
+          # - os: windows-2022
           #   emacs-version: '27.2'
     runs-on: ${{ matrix.os }}
     steps:

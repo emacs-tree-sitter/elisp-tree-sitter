@@ -29,7 +29,7 @@ jobs:
         os:
           - macos-15
           - ubuntu-24.04
-          - windows-2019
+          - windows-2022
         emacs-version:
           - '28.2'
           - '29.4'

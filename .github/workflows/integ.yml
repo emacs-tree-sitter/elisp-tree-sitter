@@ -19,7 +19,7 @@ jobs:
         os:
           - macos-15
           - ubuntu-18.04
-          - windows-2019
+          - windows-2022
         emacs-version:
           - '27.2'
           - '28.1'
