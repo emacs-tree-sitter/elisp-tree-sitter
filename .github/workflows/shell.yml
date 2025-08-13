@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: ${{ github.event.inputs.platform }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ github.event.inputs.revision }}
     - uses: mxschmitt/action-tmate@v3
