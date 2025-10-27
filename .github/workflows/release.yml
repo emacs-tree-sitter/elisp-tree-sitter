@@ -113,22 +113,22 @@ jobs:
           cat RELEASE-NOTES
 
       - name: Download binaries (x86_64-apple-darwin)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: tsc-dyn.x86_64-apple-darwin
 
       - name: Download binaries (aarch64-apple-darwin)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: tsc-dyn.aarch64-apple-darwin
 
       - name: Download binaries (x86_64-unknown-linux-gnu)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: tsc-dyn.x86_64-unknown-linux-gnu
 
       - name: Download binaries (x86_64-pc-windows-msvc)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: tsc-dyn.x86_64-pc-windows-msvc
 
