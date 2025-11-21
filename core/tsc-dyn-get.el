@@ -1,8 +1,9 @@
 ;;; tsc-dyn-get.el --- Utilities to obtain tsc-dyn -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -82,7 +83,7 @@ this to nil."
 
 ;;; TODO: Make this correct.
 (defun tsc-dyn-get--system-specific-file ()
-  "Return the dynamic module filename, which is system-dependent."
+  "Return the pre-built dynamic module filename, which is system-dependent."
   (pcase system-type
     ('windows-nt "tsc-dyn.x86_64-pc-windows-msvc.dll")
     ('darwin (if (string-prefix-p "x86_64" system-configuration)
@@ -186,7 +187,7 @@ This function records the downloaded version in the manifest
   "Return the dynamic module's version after asking 'cargo'."
   (thread-first (shell-command-to-string "cargo pkgid")
     string-trim
-    (split-string "\[#:\]")
+    (split-string "\[#:@\]")
     last car))
 
 ;; TODO: Remove this when cargo allows specifying output file name.
@@ -329,8 +330,8 @@ Return nil if the file does not exist, or is not a loadable shared library."
     (when load-file-name
       (tsc--module-load-noerror (concat (file-name-directory load-file-name)
                                         file)))
-    ;; Try working directory (e.g. when invoked by `cask'). TODO: Modifying load
-    ;; path when using `cask' instead.
+    ;; Try working directory (e.g. when invoked by `eask'). TODO: Modifying load
+    ;; path when using `eask' instead.
     (tsc--module-load-noerror file)
     ;; Fall back to `load-path'.
     (seq-find (lambda (dir)

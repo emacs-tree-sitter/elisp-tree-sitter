@@ -1,0 +1,33 @@
+name: Update Submodules
+
+on:
+  schedule:
+    - cron:  '0 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+        fetch-depth: 0 
+
+    - name: Submodule update
+      run: |
+        git submodule init
+        git submodule update --remote --merge
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v7
+      with:
+        title: 'Update submodules'
+        body: ''
+        commit-message: 'Update all submodules'
+        branch: submodules-update
+        delete-branch: true

@@ -7,13 +7,17 @@ on:
       - doc
     paths:
       - doc/**
+  workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish-doc:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -26,7 +30,7 @@ jobs:
           hugo version
 
       - name: Set up Emacs
-        uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
+        uses: jcs090218/setup-emacs@master
         with:
           version: '27.2'
 
@@ -34,7 +38,7 @@ jobs:
         run: bin/dev generate-doc-md
 
       - name: Check out GitHub page repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           repository: emacs-tree-sitter/emacs-tree-sitter.github.io
           path: emacs-tree-sitter.github.io

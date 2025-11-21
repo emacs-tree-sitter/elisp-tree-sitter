@@ -1,6 +1,5 @@
 # ELisp Tree-sitter <img src="doc/static/img/emacs-tree-sitter-96x96.png" align="left">
 [![Documentation](https://img.shields.io/badge/documentation-latest-blue)](https://emacs-tree-sitter.github.io/)
-[![Azure Pipelines](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_apis/build/status/ci?branchName=master&label=build&api-version=6.0-preview.1)](https://dev.azure.com/emacs-tree-sitter/elisp-tree-sitter/_build/latest?definitionId=1&branchName=master)
 [![GitHub Actions](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml/badge.svg)](https://github.com/emacs-tree-sitter/elisp-tree-sitter/actions/workflows/main.yml)
 
 For Emacs 29+, please use [the built-in integration](https://lists.gnu.org/archive/html/emacs-devel/2022-11/msg01443.html) instead of this package.
@@ -26,7 +25,7 @@ If you want to hack on `emacs-tree-sitter` itself, see the next section instead.
 
 - Clone this repo with the `--recursive` flag.
 - Add 3 of its directories to `load-path`: `core/`, `lisp/` and `langs/`.
-- Install [cask](https://cask.readthedocs.io).
+- Install [eask](https://emacs-eask.github.io/).
 - Run `bin/setup`.
 
 If you want to hack on the high-level features (in Lisp) only:

@@ -1,8 +1,9 @@
 ;;; tree-sitter-debug.el --- Debug tools for tree-sitter -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019  Tuấn-Anh Nguyễn
+;; Copyright (C) 2019-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -57,17 +58,21 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
   (push-mark (byte-to-position (cdr byte-range))
              tree-sitter-debug-highlight-jump-region))
 
-(defun tree-sitter-debug--display-node (named-p type start-byte end-byte depth)
+(defun tree-sitter-debug--display-node (named-p type start-byte end-byte depth field)
   "Display NODE that appears at the given DEPTH in the syntax tree."
   (when named-p
     (insert (make-string (* 2 depth) ?\ ))
-    (let ((node-text (format "%s:\n" type)))
+    (let* ((field-text (if field
+                           (format " (%s)" field)
+                         ""))
+           (node-text (format "%s%s:" type field-text)))
       (if tree-sitter-debug-jump-buttons
           (insert-button node-text
                          'action 'tree-sitter-debug--button-node-lookup
                          'follow-link t
                          'points-to `(,start-byte . ,end-byte))
-        (insert node-text)))))
+        (insert node-text))
+      (insert "\n"))))
 
 (defvar tree-sitter-debug-traversal-method :mapc)
 
@@ -81,19 +86,19 @@ This only takes effect if `tree-sitter-debug-jump-buttons' is non-nil."
         (pcase tree-sitter-debug-traversal-method
           (:mapc (tsc-traverse-mapc
                   (lambda (props)
-                    (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
+                    (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth ,field] props))
                       (tree-sitter-debug--display-node
-                       named-p type start-byte end-byte depth)))
+                       named-p type start-byte end-byte depth field)))
                   tree
-                  [:named-p :type :start-byte :end-byte :depth]))
+                  [:named-p :type :start-byte :end-byte :depth :field]))
           (:iter (iter-do (props (tsc-traverse-iter
-                                  tree [:named-p :type :start-byte :end-byte :depth]))
-                   (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth] props))
+                                  tree [:named-p :type :start-byte :end-byte :depth :field]))
+                   (pcase-let ((`[,named-p ,type ,start-byte ,end-byte ,depth ,field] props))
                      (tree-sitter-debug--display-node
-                      named-p type start-byte end-byte depth))))
-          (:do (tsc-traverse-do ([named-p type start-byte end-byte depth] tree)
+                      named-p type start-byte end-byte depth field))))
+          (:do (tsc-traverse-do ([named-p type start-byte end-byte depth field] tree)
                  (tree-sitter-debug--display-node
-                  named-p type start-byte end-byte depth))))))))
+                  named-p type start-byte end-byte depth field))))))))
 
 (defun tree-sitter-debug--setup ()
   "Set up syntax tree debugging in the current buffer."

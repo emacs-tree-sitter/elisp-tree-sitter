@@ -1,9 +1,10 @@
 ;;; tree-sitter-hl.el --- Syntax highlighting based on tree-sitter -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Timo von Hartz <c0untlizzi@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -69,10 +70,10 @@
   :group 'tree-sitter-hl-faces)
 
 (define-obsolete-face-alias 'tree-sitter-hl-face:function.method
-  'tree-sitter-hl-face:method "0.9.0")
+                            'tree-sitter-hl-face:method "0.9.0")
 
 (define-obsolete-face-alias 'tree-sitter-hl-face:function.method.call
-  'tree-sitter-hl-face:method.call "0.9.0")
+                            'tree-sitter-hl-face:method.call "0.9.0")
 
 ;;; ------------------------------------
 ;;; Types.
@@ -166,6 +167,16 @@
   "Face for special strings, e.g. regular expressions."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:character
+  '((default :inherit font-lock-string-face))
+  "Face for characters."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:character.special
+  '((default :inherit tree-sitter-hl-face:character :weight bold))
+  "Face for special characters."
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:escape
   '((default :inherit font-lock-keyword-face))
   "Face for escape characters in strings."
@@ -183,6 +194,21 @@
 (defface tree-sitter-hl-face:keyword
   '((default :inherit font-lock-keyword-face))
   "Face for keywords."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:keyword.conditional
+  '((default :inherit font-lock-keyword-face))
+  "Face for conditional keyword."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:keyword.repeat
+  '((default :inherit font-lock-keyword-face))
+  "Face for repeat keyword."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:keyword.directive
+  '((default :inherit font-lock-keyword-face))
+  "Face for directive keyword."
   :group 'tree-sitter-hl-faces)
 
 (defface tree-sitter-hl-face:operator
@@ -208,6 +234,31 @@
 (defface tree-sitter-hl-face:number
   '((default :inherit tree-sitter-hl-face:constant))
   "Face for numbers."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:boolean
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for boolean."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:repeat
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for repeat."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:conditional
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for conditional."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:exception
+  '((default :inherit font-lock-keyword-face))
+  "Face for things that are exception."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:conditional.ternary
+  '((default :inherit tree-sitter-hl-face:keyword))
+  "Face for conditional ternary."
   :group 'tree-sitter-hl-faces)
 
 ;;; ------------------------------------
@@ -272,10 +323,10 @@ modes and end users."
 (defcustom tree-sitter-hl-face-mapping-function
   #'tree-sitter-hl-face-from-common-scope
   "Function used to map capture names in query patterns to highlighting faces.
-This can also be used to selectively disable certain capture names. For example,
-the following code disables keyword highlighting:
+This can also be used to selectively disable certain capture names.  For
+example, the following code disables keyword highlighting:
 
- (add-function :before-while 'tree-sitter-hl-face-mapping-function
+ (add-function :before-while `tree-sitter-hl-face-mapping-function
                (lambda (capture-name)
                  (not (string= capture-name \"keyword\"))))"
   :group 'tree-sitter-hl
@@ -503,8 +554,8 @@ If LOUDLY is non-nil, print debug messages."
         (tree-sitter-hl--extend-regions hl-region query-region)
         (setf `(,beg . ,end) hl-region)
         (tsc--query-cursor-set-byte-range tree-sitter-hl--query-cursor
-                                         (position-bytes (car query-region))
-                                         (position-bytes (cdr query-region))))
+                                          (position-bytes (car query-region))
+                                          (position-bytes (cdr query-region))))
       (let* ((root-node (tsc-root-node tree-sitter-tree))
              (captures  (tsc--query-cursor-captures-1
                          tree-sitter-hl--query-cursor
@@ -654,7 +705,7 @@ Enabling this automatically enables `tree-sitter-mode' in the buffer.
 
 To enable this automatically whenever `tree-sitter-mode' is enabled:
 
- (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)"
+ (add-hook `tree-sitter-after-on-hook #`tree-sitter-hl-mode)"
   :init-value nil
   :group 'tree-sitter
   (tree-sitter--handle-dependent tree-sitter-hl-mode

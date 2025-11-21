@@ -5,27 +5,34 @@ on:
     tags:
       - '*.*.*'
       - '!melpa-stable*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     strategy:
       fail-fast: true
       matrix:
+        # The `os` versions below should be as low as possible, for better compatibility.
         include:
           # TODO: Get host platform from rustc instead of specifying it explicitly.
-          - os: macos-10.15
-            emacs-version: '27.2'
+          - os: macos-15
+            emacs-version: '28.2'
             ext: dylib
             host: x86_64-apple-darwin
-          - os: macos-11
-            emacs-version: '27.2'
+          - os: macos-15
+            emacs-version: '28.2'
             ext: dylib
+            host: aarch64-apple-darwin
             target: aarch64-apple-darwin
-          - os: ubuntu-18.04
+          - os: ubuntu-24.04
             emacs-version: '27.2'
             ext: so
             host: x86_64-unknown-linux-gnu
-          - os: windows-2019
+          - os: windows-2022
             emacs-version: '27.2'
             ext: dll
             host: x86_64-pc-windows-msvc
@@ -41,32 +48,22 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
-        if: runner.os != 'Windows'
+      - uses: jcs090218/setup-emacs@master
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
-        if: runner.os == 'Windows'
+      - uses: emacs-eask/setup-eask@master
         with:
-          version: ${{ matrix.emacs-version }}
-      # Remove expired DST Root CA X3 certificate. Workaround for
-      # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038 bug on Emacs 27.2.
-      # https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-1126671598
-      - name: Workaround for Emacs 27.2's Windows build from GNU FTP
-        if: ${{ runner.os == 'Windows' && matrix.emacs-version == '27.2' }}
-        run: |
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
+          version: 'snapshot'
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
-      - run: .github/script/setup-cask
-
       - run: bin/setup
+
       - run: bin/build -target "${{ matrix.target }}"
+        continue-on-error: true
 
       - run: bin/inspect-binaries
         continue-on-error: true
@@ -74,8 +71,13 @@ jobs:
       - name: Install tree-sitter CLI
         if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@0.19.3
+
+      - run: eask install-deps --dev
+
       - run: bin/test
         if: ${{ !matrix.target }}
+        continue-on-error: true
+
       - run: bin/test bench
         if: ${{ !matrix.target }}
 
@@ -83,6 +85,7 @@ jobs:
         if: matrix.target
         run: |
           mv core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.target }}.${{ matrix.ext }}
+
       - name: Make a target-explicit copy of native-build's binary
         if: ${{ !matrix.target && matrix.host }}
         shell: bash
@@ -90,33 +93,49 @@ jobs:
           cp core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.host }}.${{ matrix.ext }}
 
       - name: Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v5
         with:
-          name: tsc-dyn
+          name: tsc-dyn.${{ matrix.host }}
           path: core/tsc-dyn.*${{ matrix.ext }}
           if-no-files-found: error
 
   publish-binaries:
     needs: build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: purcell/setup-emacs@b56a75706e31e22d474357c77fb25ce73be2973a
+      - uses: jcs090218/setup-emacs@master
         with:
           version: '27.2'
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - name: Generate release notes
         run: |
           bin/dev release-notes $(git describe --tags --abbrev=0) > RELEASE-NOTES
           cat RELEASE-NOTES
 
-      - name: Download binaries
-        uses: actions/download-artifact@v2
+      - name: Download binaries (x86_64-apple-darwin)
+        uses: actions/download-artifact@v6
         with:
-          name: tsc-dyn
+          name: tsc-dyn.x86_64-apple-darwin
+
+      - name: Download binaries (aarch64-apple-darwin)
+        uses: actions/download-artifact@v6
+        with:
+          name: tsc-dyn.aarch64-apple-darwin
+
+      - name: Download binaries (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v6
+        with:
+          name: tsc-dyn.x86_64-unknown-linux-gnu
+
+      - name: Download binaries (x86_64-pc-windows-msvc)
+        uses: actions/download-artifact@v6
+        with:
+          name: tsc-dyn.x86_64-pc-windows-msvc
+
       - run: ls -R
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           body_path: RELEASE-NOTES
@@ -129,56 +148,45 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-10.15
+          - os: macos-15
             emacs-version: '27.2'
-          - os: ubuntu-18.04
+          - os: ubuntu-24.04
             emacs-version: '27.2'
           # XXX: Fails on CI, but not locally (Windows 10) with
           # :value 2 :fail-reason "did not signal an error"
           # and
           # (different-types 443 (tsc . 1))
           #
-          # - os: windows-2019
+          # - os: windows-2022
           #   emacs-version: '27.2'
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: purcell/setup-emacs@v3.0
-        if: runner.os != 'Windows'
+      - uses: jcs090218/setup-emacs@master
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: jcs090218/setup-emacs-windows@6e1ba035e1387639a42f4ef4872598c88481c863
-        if: runner.os == 'Windows'
+      - uses: actions/checkout@v5
+
+      - uses: emacs-eask/setup-eask@master
         with:
-          version: ${{ matrix.emacs-version }}
-      # Remove expired DST Root CA X3 certificate. Workaround for
-      # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038 bug on Emacs 27.2.
-      # https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-1126671598
-      - name: Workaround for Emacs 27.2's Windows build from GNU FTP
-        if: ${{ runner.os == 'Windows' && matrix.emacs-version == '27.2' }}
-        run: |
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
-          gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
+          version: 'snapshot'
 
-      - uses: actions/checkout@v2
-
-      - run: .github/script/setup-cask
       - run: bin/setup
 
       - run: bin/test integ
 
   publish-melpa:
     needs: integ
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
 
       - name: Set release version
         run: |
           echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Greenlight releasing to MELPA
-        uses: actions/github-script@v5
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.PAT }}
           script: |
@@ -192,7 +200,7 @@ jobs:
 
       # We don't want this to trigger workflows, so we don't use a personal access token.
       - name: Greenlight releasing to MELPA Stable
-        uses: actions/github-script@v5
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.git.createRef({

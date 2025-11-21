@@ -11,11 +11,15 @@ on:
         default: macos-latest
         description: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ${{ github.event.inputs.platform }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
       with:
         ref: ${{ github.event.inputs.revision }}
     - uses: mxschmitt/action-tmate@v3

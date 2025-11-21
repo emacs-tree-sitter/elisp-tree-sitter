@@ -1,8 +1,9 @@
 ;;; tree-sitter-tests.el --- Tests for tree-sitter.el -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019-2021  Tuấn-Anh Nguyễn
+;; Copyright (C) 2019-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:

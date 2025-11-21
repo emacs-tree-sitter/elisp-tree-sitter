@@ -1,8 +1,9 @@
 ;;; tree-sitter-load.el --- Language loading for tree-sitter -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2020  Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -32,7 +33,7 @@ See `tree-sitter-require'.")
   (pcase system-type
     ;; The CLI tool outputs `.so', but `.dylib' is more sensible on macOS.
     ('darwin (list ".dylib" ".so"))
-    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix) "so")
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix 'android) "so")
     ('windows-nt (list ".dll"))
     (_ (error "Unsupported system-type %s" system-type)))
   "List of suffixes for shared libraries that define tree-sitter languages.")

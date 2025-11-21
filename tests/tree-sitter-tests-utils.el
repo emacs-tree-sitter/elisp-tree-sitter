@@ -1,8 +1,9 @@
 ;;; tree-sitter-tests-utils.el --- Utils for tree-sitter-tests.el -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2019-2022  Tuấn-Anh Nguyễn
+;; Copyright (C) 2019-2025 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -17,8 +18,9 @@
 
 (defvar tree-sitter-langs--testing)
 ;;; Disable grammar downloading.
-(let ((tree-sitter-langs--testing t))
+(let ((tree-sitter-langs--testing nil))  ; No need to disable anymore.
   (require 'tree-sitter-langs))
+
 ;;; Build the grammars, if necessary.
 (dolist (lang-symbol '(rust python javascript c))
   (tree-sitter-langs-ensure lang-symbol))
