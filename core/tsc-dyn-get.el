@@ -1,4 +1,4 @@
-;;; tsc-dyn-get.el --- Utilities to obtain tsc-dyn -*- lexical-binding: t; coding: utf-8 -*-
+;;; tsc-dyn-get.el --- Utilities to obtain tsc-dyn  -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2020-2025 emacs-tree-sitter maintainers
 ;;
@@ -73,7 +73,7 @@ this to nil."
   (pcase system-type
     ('windows-nt "dll")
     ('darwin "dylib")
-    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix) "so")
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix 'android) "so")
     ((or 'ms-dos 'cygwin) (error "Unsupported system-type %s" system-type))
     (_ "so")))
 
