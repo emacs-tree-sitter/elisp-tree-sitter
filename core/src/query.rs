@@ -58,7 +58,7 @@ fn _make_query(language: Language, source: String, tag_assigner: Value) -> Resul
     let capture_names = raw.capture_names().to_vec();
     let mut capture_tags = vec![];
     for name in &capture_names {
-        let value = tag_assigner.call((name, ))?;
+        let value = tag_assigner.call((*name, ))?;
         if !value.is_not_nil() {
             raw.disable_capture(name);
         }
@@ -95,7 +95,7 @@ fn _query_capture_names(query: Value) -> Result<Vector> {
     let names = query.raw.capture_names();
     let vec = env.make_vector(names.len(), ())?;
     for (i, name) in names.iter().enumerate() {
-        vec.set(i, name)?;
+        vec.set(i, *name)?;
     }
     Ok(vec)
 }

@@ -85,7 +85,7 @@ fn parse_chunks(parser: &mut Parser, input_function: Value, old_tree: Option<&Sh
             })
     };
     // TODO: Support error cases (None).
-    let tree = parser.parse_with(input, old_tree).unwrap();
+    let tree = parser.parse(input, old_tree).unwrap();
     match input_error {
         None => Ok(shared(tree)),
         Some(e) => Err(e),

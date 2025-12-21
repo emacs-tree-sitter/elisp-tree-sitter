@@ -157,7 +157,7 @@ fn make_cursor(tree_or_node: TreeOrNode) -> Result<RCursor> {
 /// Return nil if the current node doesn't have a field.
 #[defun]
 fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
-    Ok(cursor.borrow().field_id())
+    Ok(cursor.borrow().field_id().map(|id| id.get()))
 }
 
 /// Return the field associated with CURSOR's current node, as a keyword.
@@ -166,7 +166,7 @@ fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
 fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
     let cursor = cursor.borrow();
     let language: Language = cursor.reft.language().into();
-    Ok(cursor.field_id().and_then(|id| language.info().field_name(id)))
+    Ok(cursor.field_id().and_then(|id| language.info().field_name(id.into())))
 }
 
 macro_rules! defun_cursor_walks {

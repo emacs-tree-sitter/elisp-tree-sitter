@@ -70,7 +70,7 @@ jobs:
 
       - name: Install tree-sitter CLI
         if: ${{ !matrix.target }}
-        run: npm install -g tree-sitter-cli@0.19.3
+        run: npm install -g tree-sitter-cli@0.26.3
 
       - run: eask install-deps --dev
 
