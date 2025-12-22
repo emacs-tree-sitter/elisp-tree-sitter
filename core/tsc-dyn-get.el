@@ -184,7 +184,7 @@ This function records the downloaded version in the manifest
        ,@body)))
 
 (defun tsc-dyn-get--build-version ()
-  "Return the dynamic module's version after asking 'cargo'."
+  "Return the dynamic module's version after asking `cargo'."
   (thread-first (shell-command-to-string "cargo pkgid")
     string-trim
     (split-string "\[#:@\]")

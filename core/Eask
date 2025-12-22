@@ -7,7 +7,10 @@
 
 (package-file "tsc.el")
 (files
- "*.el"
+ "tsc.el"
+ "tsc-obsolete.el"
+ "tsc-dyn-get.el"
+ ;; dynamic link lib
  "tsc-dyn.dylib"
  "tsc-dyn.so"
  "tsc-dyn.dll"
