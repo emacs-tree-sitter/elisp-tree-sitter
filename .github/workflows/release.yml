@@ -155,16 +155,16 @@ jobs:
       matrix:
         include:
           - os: macos-15
-            emacs-version: '27.2'
+            emacs-version: '28.2'
           - os: ubuntu-24.04
-            emacs-version: '27.2'
+            emacs-version: '28.2'
           # XXX: Fails on CI, but not locally (Windows 10) with
           # :value 2 :fail-reason "did not signal an error"
           # and
           # (different-types 443 (tsc . 1))
           #
           # - os: windows-2022
-          #   emacs-version: '27.2'
+          #   emacs-version: '28.2'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: jcs090218/setup-emacs@master
