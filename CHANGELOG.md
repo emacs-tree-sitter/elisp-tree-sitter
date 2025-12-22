@@ -159,6 +159,7 @@ Initial release
 <!-- Links -->
 
 [Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...HEAD
+[0.19.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.0...0.16.1
