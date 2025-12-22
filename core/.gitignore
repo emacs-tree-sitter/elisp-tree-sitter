@@ -1,5 +1,7 @@
 **/*.rs.bk
 
+*-pkg.el
+
 tsc-dyn.*
 DYN-VERSION
 target/

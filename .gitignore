@@ -3,6 +3,8 @@
 **/.eask
 **/dist
 
+*-pkg.el
+
 # OS generated
 .DS_Store
 

@@ -27,3 +27,6 @@
 ;; Use GNU tar in Windows
 (when (memq system-type '(cygwin windows-nt ms-dos))
   (setq package-build-tar-executable "C:/Program Files/Git/usr/bin/tar.exe"))
+
+(when (getenv "GITHUB_WORKSPACE")
+  (setq tsc-dyn-get-from '( :compilation)))
