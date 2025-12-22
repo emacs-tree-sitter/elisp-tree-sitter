@@ -188,7 +188,7 @@ jobs:
       - name: Greenlight releasing to MELPA
         uses: actions/github-script@v8
         with:
-          github-token: ${{ secrets.PAT }}
+          github-token: ${{ secrets.PAT_2 }}
           script: |
             github.rest.git.updateRef({
               owner: context.repo.owner,
