@@ -135,9 +135,10 @@ jobs:
       - run: ls -R
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           draft: false
+          token: ${{ secrets.PAT_2 }}
           body_path: RELEASE-NOTES
           files: |
             tsc-dyn.*
