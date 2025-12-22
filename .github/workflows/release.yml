@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  RELEASE_VERSION: 0.19.0
+
 jobs:
   build:
     strategy:
@@ -134,10 +137,6 @@ jobs:
           name: tsc-dyn.x86_64-pc-windows-msvc
 
       - run: ls -R
-
-      - name: Set release version
-        run: |
-          echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.5.0
