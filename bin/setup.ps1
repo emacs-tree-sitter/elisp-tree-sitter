@@ -7,7 +7,7 @@ try {
     #$eask_package_dir = ((eask package-directory) | Out-String).Trim()
     #New-Item -ItemType Directory -Force -Path "$eask_package_dir"
     eask link add tsc core
-    eask install-deps --dev
+    eask install-deps --dev --allow-error
     eask install
 } finally {
     Pop-Location
