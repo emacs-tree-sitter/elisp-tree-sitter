@@ -138,7 +138,6 @@ jobs:
       - name: Set release version
         run: |
           echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-          echo ${{ env.RELEASE_VERSION }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.5.0
