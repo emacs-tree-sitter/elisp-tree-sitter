@@ -43,6 +43,7 @@ jobs:
           rustup install stable
           rustc -Vv
           cargo -V
+
       - name: Set up Rust's cross-build target
         if: matrix.target
         run: |

@@ -1,7 +1,7 @@
 ;; -*- mode: eask; lexical-binding: t -*-
 
 (package "tree-sitter"
-         "0.18.0"
+         "0.19.0"
          "Incremental parsing system")
 
 (website-url "https://github.com/emacs-tree-sitter/elisp-tree-sitter")
