@@ -5,3 +5,5 @@
 
 # OS generated
 .DS_Store
+
+emacs_backtrace.txt
