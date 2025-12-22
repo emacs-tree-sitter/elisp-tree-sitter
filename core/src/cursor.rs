@@ -102,10 +102,10 @@ impl RCursor {
     }
 
     #[inline]
-    pub fn borrow_mut<'e>(&'e mut self) -> RCursorBorrowMut {
-        let reft: Ref<'e, Tree> = self.tree.borrow();
+    pub fn borrow_mut(&mut self) -> RCursorBorrowMut {
+        let reft: Ref<Tree> = self.tree.borrow();
         // XXX: Explain the safety here.
-        let cursor: &'e mut _ = unsafe { mem::transmute(&mut self.inner) };
+        let cursor: &mut _ = unsafe { mem::transmute(&mut self.inner) };
         RCursorBorrowMut { reft, cursor }
     }
 }
@@ -165,7 +165,7 @@ fn current_field_id(cursor: &RCursor) -> Result<Option<u16>> {
 #[defun]
 fn current_field(cursor: &RCursor) -> Result<Option<&'static GlobalRef>> {
     let cursor = cursor.borrow();
-    let language: Language = cursor.reft.language().into();
+    let language: Language = cursor.reft.language().clone().into();
     Ok(cursor.field_id().and_then(|id| language.info().field_name(id.into())))
 }
 

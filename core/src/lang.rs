@@ -1,4 +1,4 @@
-use std::{mem, os, collections::HashMap, sync::Mutex};
+use std::{collections::HashMap, mem, os, sync::Mutex};
 
 use emacs::{defun, Result, ResultExt, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
 
@@ -201,7 +201,13 @@ defun_lang_methods! {
 
     /// Return t if the numeric TYPE-ID identifies a named node type in LANGUAGE.
     "lang-node-type-named-p" fn node_kind_is_named(type_id: u16) -> bool
+}
 
-    /// Return the numeric id of FIELD-NAME in LANGUAGE.
-    "-lang-field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
+/// Return the numeric id of FIELD-NAME in LANGUAGE.
+#[defun(name = "-lang-field-id-for-name")]
+fn field_id_for_name(language: Language, field_name: String) -> Result<Option<u16>> {
+    Ok(language
+       .0
+       .field_id_for_name(&field_name)
+       .map(|nz| nz.get()))
 }

@@ -1,7 +1,7 @@
-use std::{cell::RefCell, iter};
+use std::cell::RefCell;
 
 use emacs::{defun, Env, Error, GlobalRef, IntoLisp, Result, Value, Vector};
-use tree_sitter::{Node, QueryCursor, QueryErrorKind, TextProvider};
+use tree_sitter::{Node, QueryCursor, QueryErrorKind, TextProvider, StreamingIterator};
 
 use crate::{
     types::{BytePos, Point},
@@ -39,7 +39,7 @@ impl_pred!(query_p, &RefCell<Query>);
 /// the associated capture name is disabled.
 #[defun(user_ptr)]
 fn _make_query(language: Language, source: String, tag_assigner: Value) -> Result<Query> {
-    let mut raw = tree_sitter::Query::new(language.into(), &source).or_else(|err| {
+    let mut raw = tree_sitter::Query::new(&language.0, &source).or_else(|err| {
         let symbol = match err.kind {
             QueryErrorKind::Syntax => error::tsc_query_invalid_syntax,
             QueryErrorKind::NodeType => error::tsc_query_invalid_node_type,
@@ -55,10 +55,11 @@ fn _make_query(language: Language, source: String, tag_assigner: Value) -> Resul
         // TODO: Convert named node types and field names to symbols and keywords?
         tag_assigner.env.signal(symbol, (err.message, point, byte_pos))
     })?;
-    let capture_names = raw.capture_names().to_vec();
+    let capture_names: Vec<String> =
+        raw.capture_names().iter().map(|s| s.to_string()).collect();
     let mut capture_tags = vec![];
     for name in &capture_names {
-        let value = tag_assigner.call((*name, ))?;
+        let value = tag_assigner.call((name.clone(), ))?;
         if !value.is_not_nil() {
             raw.disable_capture(name);
         }
@@ -137,15 +138,19 @@ fn make_query_cursor() -> Result<QueryCursor> {
 fn text_callback<'e>(
     text_function: Value<'e>,
     error: &'e RefCell<Option<Error>>,
-) -> impl TextProvider<'e> {
+) -> impl TextProvider<Vec<u8>> + use<'e> {
     move |child: Node| {
         let beg = child.lisp_start_byte();
         let end = child.lisp_end_byte();
-        let text = text_function.call((beg, end)).and_then(|v| v.into_rust()).unwrap_or_else(|e| {
-            error.borrow_mut().replace(e);
-            "".to_owned()
-        });
-        iter::once(text.into_bytes())
+        let text = text_function
+            .call((beg, end))
+            .and_then(|v| v.into_rust())
+            .unwrap_or_else(|e| {
+                error.borrow_mut().replace(e);
+                "".to_owned()
+            });
+
+        std::iter::once(text.into_bytes())
     }
 }
 
@@ -158,14 +163,14 @@ fn _query_cursor_matches<'e>(
 ) -> Result<Vector<'e>> {
     let raw = &query.raw;
     let error = RefCell::new(None);
-    let matches = cursor.matches(
+    let mut matches = cursor.matches(
         raw,
         node.borrow().clone(),
         text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    for m in matches {
+    while let Some(m) = matches.next() {
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
         }
@@ -195,18 +200,18 @@ fn _query_cursor_captures_1<'e>(
     let query = query.into_rust::<&RefCell<Query>>()?.borrow();
     let raw = &query.raw;
     let error = RefCell::new(None);
-    let captures = cursor.captures(
+    let mut captures = cursor.captures(
         raw,
         node.borrow().clone(),
         text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    for (m, capture_index) in captures {
-        if let Some(error) = error.borrow_mut().take() {
-            return Err(error);
+    while let Some((m, capture_index)) = captures.next() {
+        if let Some(err) = error.borrow_mut().take() {
+            return Err(err);
         }
-        let c = m.captures[capture_index];
+        let c = m.captures[*capture_index];
         let capture = env.cons(
             &query.capture_tags[c.index as usize],
             c.node.lisp_byte_range(env)?,
@@ -232,18 +237,18 @@ fn _query_cursor_captures<'e>(
     let query = query.into_rust::<&RefCell<Query>>()?.borrow();
     let raw = &query.raw;
     let error = RefCell::new(None);
-    let captures = cursor.captures(
+    let mut captures = cursor.captures(
         raw,
         node.borrow().clone(),
         text_callback(text_function, &error),
     );
     let mut vec = vec![];
     let env = text_function.env;
-    for (m, capture_index) in captures {
+    while let Some((m, capture_index)) = captures.next() {
         if let Some(error) = error.borrow_mut().take() {
             return Err(error);
         }
-        let c = m.captures[capture_index];
+        let c = m.captures[*capture_index];
         let captured_node = node.map(|_| c.node);
         let capture = env.cons(
             &query.capture_tags[c.index as usize],
@@ -251,7 +256,6 @@ fn _query_cursor_captures<'e>(
         )?;
         vec.push(capture);
     }
-
     // XXX
     let vector = env.make_vector(vec.len(), ())?;
     for (i, v) in vec.into_iter().enumerate() {
