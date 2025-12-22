@@ -6,8 +6,8 @@
 ;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
-;; Version: 0.19.1
-;; Package-Requires: ((emacs "27.1") (tsc "0.19.1"))
+;; Version: 0.19.2
+;; Package-Requires: ((emacs "27.1") (tsc "0.19.2"))
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
