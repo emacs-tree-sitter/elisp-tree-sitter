@@ -1,5 +1,6 @@
 **/*.rs.bk
 
+*-autoloads.el
 *-pkg.el
 
 tsc-dyn.*

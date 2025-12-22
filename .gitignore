@@ -3,6 +3,7 @@
 **/.eask
 **/dist
 
+*-autoloads.el
 *-pkg.el
 
 # OS generated
