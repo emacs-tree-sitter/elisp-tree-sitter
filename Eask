@@ -28,4 +28,6 @@
 (when (memq system-type '(cygwin windows-nt ms-dos))
   (setq package-build-tar-executable "C:/Program Files/Git/usr/bin/tar.exe"))
 
+(message "? %s" (getenv "GITHUB_ACTION"))
+
 (setq tsc-dyn-get-from '( :compilation))
