@@ -27,13 +27,14 @@ fn make_parser() -> Result<Parser> {
 /// with an incompatible version of tree-sitter-cli.
 #[defun]
 fn set_language(parser: &mut Parser, language: Language, env: &Env) -> Result<()> {
-    parser.set_language(language.into()).or_signal(env, error::tsc_lang_abi_error)
+    let lan = language.0;
+    parser.set_language(&lan).or_signal(env, error::tsc_lang_abi_error)
 }
 
 /// Return PARSER's current language.
 #[defun(mod_in_name = true)]
 fn language(parser: &Parser) -> Result<Option<Language>> {
-    Ok(parser.language().map(|l| l.into()))
+    Ok(parser.language().map(|l| l.clone().into()))
 }
 
 // TODO: Add a version that reuses a single byte buffer to avoid multiple allocations. Also allow
@@ -84,8 +85,9 @@ fn parse_chunks(parser: &mut Parser, input_function: Value, old_tree: Option<&Sh
                 "".to_owned()
             })
     };
+    let options = tree_sitter::ParseOptions::new();
     // TODO: Support error cases (None).
-    let tree = parser.parse_with(input, old_tree).unwrap();
+    let tree = parser.parse_with_options(input, old_tree, Some(options)).unwrap();
     match input_error {
         None => Ok(shared(tree)),
         Some(e) => Err(e),
@@ -110,20 +112,6 @@ fn parse_string(parser: &mut Parser, input: String) -> Result<Shared<Tree>> {
 #[defun]
 fn _reset_parser(parser: &mut Parser) -> Result<()> {
     Ok(parser.reset())
-}
-
-/// Return the duration in microseconds that PARSER is allowed to take each parse.
-/// Note: timeout and cancellation are not yet properly supported.
-#[defun]
-fn _timeout_micros(parser: &Parser) -> Result<u64> {
-    Ok(parser.timeout_micros())
-}
-
-/// Set MAX-DURATION in microseconds that PARSER is allowed to take each parse.
-/// Note: timeout and cancellation are not yet properly supported.
-#[defun]
-fn _set_timeout_micros(parser: &mut Parser, max_duration: u64) -> Result<()> {
-    Ok(parser.set_timeout_micros(max_duration))
 }
 
 /// Set the RANGES of text that PARSER should include when parsing.

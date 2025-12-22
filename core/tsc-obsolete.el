@@ -137,5 +137,9 @@
 (define-obsolete-function-alias 'ts--try-load-dyn 'tsc--try-load-dyn "2020-10-13")
 (define-obsolete-function-alias 'ts--without-restriction 'tsc--without-restriction "2020-10-13")
 
+;; 0.26.3
+(define-obsolete-function-alias 'tsc--timeout-micros nil "2025-12-22")
+(define-obsolete-function-alias 'tsc--set-timeout-micros nil "2025-12-22")
+
 (provide 'tsc-obsolete)
 ;;; tsc-obsolete.el ends here

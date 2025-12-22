@@ -157,7 +157,7 @@ pub(crate) trait LispUtils {
 impl<'n> LispUtils for Node<'n> {
     #[inline]
     fn lisp_type(&self) -> &'static GlobalRef {
-        let language: Language = self.language().into();
+        let language: Language = self.language().clone().into();
         if self.is_error() {
             ERROR
         } else {
@@ -291,10 +291,10 @@ defun_node_navs! {
     // Child ---------------------------------------------------------------------------------------
 
     /// Return NODE's child at the given 0-based index.
-    "get-nth-child" fn child(i: usize)
+    "get-nth-child" fn child(i: u32)
 
     /// Return NODE's named child at the given 0-based index.
-    "get-nth-named-child" fn named_child(i: usize)
+    "get-nth-named-child" fn named_child(i: u32)
 
     /// Return NODE's child with the given FIELD-NAME string.
     "-get-child-by-field-name" fn child_by_field_name(field_name: String)
