@@ -143,6 +143,7 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           token: ${{ secrets.PAT }}
+          prerelease: false
           draft: false
           body_path: RELEASE-NOTES
           files: |
