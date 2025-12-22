@@ -5,10 +5,10 @@ use emacs::{defun, Result, ResultExt, GlobalRef, Value, Env, IntoLisp, FromLisp,
 use libloading::{Library, Symbol};
 use once_cell::sync::Lazy;
 
-use crate::{types, error};
+use crate::{error, types};
 use tree_sitter::{LANGUAGE_VERSION, MIN_COMPATIBLE_LANGUAGE_VERSION};
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[repr(transparent)]
 pub struct Language(pub(crate) tree_sitter::Language);
 
@@ -39,7 +39,7 @@ impl_newtype_traits!(Language);
 impl_pred!(language_p, Language);
 
 impl Language {
-    pub fn id(&self) -> usize {
+    pub fn id(self) -> usize {
         unsafe { mem::transmute(self) }
     }
 
@@ -122,8 +122,9 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
             .make_global_ref()
     }).collect();
     let language: Language = language.into();
+    let id = language.clone().id().clone();
     LANG_INFOS.try_lock().expect("Failed to access language info registry")
-        .insert(language.id(), LangInfo {
+        .insert(id, LangInfo {
             load_file: file,
             lang_symbol: lang_symbol.make_global_ref(),
             _lib: lib,
