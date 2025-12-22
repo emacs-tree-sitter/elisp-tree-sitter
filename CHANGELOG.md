@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- N/A
+
+## [0.19.0] - 2025-12-22
 - Make button without newline (#259)
 - feat: Support android
 - Fix error on NetBSD (#256)
@@ -153,7 +156,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2020-01-27
 Initial release
 
+
+<!-- Links -->
+
 [Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...HEAD
+[0.19.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.0...0.16.1

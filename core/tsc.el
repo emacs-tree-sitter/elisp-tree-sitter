@@ -25,7 +25,7 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tsc--dyn-version "0.18.0"
+  (defconst tsc--dyn-version "0.19.0"
     "Required version of the dynamic module `tsc-dyn'.")
   (require 'tsc-dyn-get)
   (tsc-dyn-get-ensure tsc--dyn-version))
