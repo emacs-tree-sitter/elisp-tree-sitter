@@ -10,5 +10,6 @@ source "$here/env.bash"
     # XXX: Create the directory because `eask link` doesn't.
     #mkdir -p "$(eask package-directory)"
     eask link add tsc core
+    eask install-deps --dev
     eask install
 )
