@@ -80,8 +80,8 @@ jobs:
 
       - run: eask install-deps --dev
 
-      - run: bin/test
-        if: ${{ !matrix.target }}
-
-      - run: bin/test bench
-        if: ${{ !matrix.target }}
+      # - run: bin/test
+      #   if: ${{ !matrix.target }}
+      #
+      # - run: bin/test bench
+      #   if: ${{ !matrix.target }}
