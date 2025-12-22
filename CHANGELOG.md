@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-12.23
+- Remove unused el files
+
 ## [0.19.0] - 2025-12.22
 - Make button without newline (#259)
 - feat: Support android
@@ -159,6 +162,7 @@ Initial release
 <!-- Links -->
 
 [Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...HEAD
+[0.19.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.19.0...0.19.1
 [0.19.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.16.1...0.17.0
