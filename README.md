@@ -39,7 +39,7 @@ If you want to build additional (or all) grammars from source, or work on the co
 **Note**: If you are only interested in building the grammar binaries, not the dynamic module, check out [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs#building-grammars-from-source).
 
 - Install NodeJS. It is needed to generate the grammar code from the JavaScript DSL. The recommended tool to manage NodeJS is [volta](https://volta.sh/).
-- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).) **Note: version 0.20+ cannot be used, as they introduced [a breaking change](https://github.com/tree-sitter/tree-sitter/pull/1157) in binary storage location.**
+- Install [tree-sitter CLI tool](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation): (Its binary can also be downloaded directly from [GitHub](https://github.com/tree-sitter/tree-sitter/releases).)
     ```bash
     # For yarn user
     yarn global add tree-sitter-cli@0.26.3
