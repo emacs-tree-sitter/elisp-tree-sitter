@@ -167,6 +167,11 @@
   "Face for special strings, e.g. regular expressions."
   :group 'tree-sitter-hl-faces)
 
+(defface tree-sitter-hl-face:string.special.path
+  '((default :inherit tree-sitter-hl-face:string.special))
+  "Face for special strings, e.g. path."
+  :group 'tree-sitter-hl-faces)
+
 (defface tree-sitter-hl-face:character
   '((default :inherit font-lock-string-face))
   "Face for characters."
@@ -304,6 +309,16 @@
   '((default :inherit default))
   "Face for things that are syntatic noises.
 It's up to themes how they should be displayed: dimmed, hidden..."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:diff.plus
+  '((default :inherit diff-added))
+  "Face used to highlight addition."
+  :group 'tree-sitter-hl-faces)
+
+(defface tree-sitter-hl-face:diff.minus
+  '((default :inherit diff-removed))
+  "Face used to highlight deletion."
   :group 'tree-sitter-hl-faces)
 
 ;;; ----------------------------------------------------------------------------
