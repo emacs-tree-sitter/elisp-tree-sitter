@@ -1,6 +1,6 @@
 ;;; tree-sitter.el --- Incremental parsing system -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2021-2025 emacs-tree-sitter maintainers
+;; Copyright (C) 2021-2026 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>

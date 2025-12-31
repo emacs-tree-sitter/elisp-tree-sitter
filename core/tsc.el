@@ -1,6 +1,6 @@
 ;;; tsc.el --- Core Tree-sitter APIs -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2021-2025 emacs-tree-sitter maintainers
+;; Copyright (C) 2021-2026 emacs-tree-sitter maintainers
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
