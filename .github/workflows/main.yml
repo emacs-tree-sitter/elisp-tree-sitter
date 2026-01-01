@@ -21,6 +21,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TS_VERSION: 0.26.3
+
 jobs:
   ci:
     strategy:
@@ -77,7 +80,7 @@ jobs:
 
       - name: Install tree-sitter CLI
         if: ${{ !matrix.target }}
-        run: npm install -g tree-sitter-cli@0.26.3
+        run: npm install -g tree-sitter-cli@${{ env.TS_VERSION }}
 
       # - run: bin/test
       #   if: ${{ !matrix.target }}
