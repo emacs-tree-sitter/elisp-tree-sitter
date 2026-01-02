@@ -328,13 +328,7 @@ source_file (1 . 20)
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
     (tsc-test-use-lang 'javascript)
-    (tsc-test-tree-sexp '(program
-                          (expression_statement
-                           (string
-                            (escape_sequence)
-                            (string_fragment)
-                            (escape_sequence)
-                            (string_fragment)))))))
+    (tsc-test-tree-sexp '(program (expression_statement (string (string_fragment)))))))
 
 ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
 (ert-deftest buffer-input::narrowing ()
