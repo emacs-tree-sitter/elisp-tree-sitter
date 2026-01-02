@@ -82,8 +82,8 @@ jobs:
         if: ${{ !matrix.target }}
         run: npm install -g tree-sitter-cli@${{ env.TS_VERSION }}
 
-      # - run: bin/test
-      #   if: ${{ !matrix.target }}
-      #
-      # - run: bin/test bench
-      #   if: ${{ !matrix.target }}
+      - run: bin/test
+        if: ${{ !matrix.target }}
+
+      - run: bin/test bench
+        if: ${{ !matrix.target }}
