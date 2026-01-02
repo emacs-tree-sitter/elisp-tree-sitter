@@ -328,7 +328,13 @@ source_file (1 . 20)
   (with-temp-buffer
     (insert "\"Tuấn-Anh Nguyễn\";")
     (tsc-test-use-lang 'javascript)
-    (tsc-test-tree-sexp '(program (expression_statement (string))))))
+    (tsc-test-tree-sexp '(program
+                          (expression_statement
+                           (string
+                            (escape_sequence)
+                            (string_fragment)
+                            (escape_sequence)
+                            (string_fragment)))))))
 
 ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
 (ert-deftest buffer-input::narrowing ()
@@ -357,7 +363,7 @@ source_file (1 . 20)
     (narrow-to-region 1 2)
     (let* ((captures (tree-sitter-debug-query
                       "((function_item (identifier) @function)
-                        (match? @function \"make_query\"))
+                        (#match? @function \"make_query\"))
                        (macro_definition (identifier) @macro)"))
            (node-texts (mapcar (lambda (capture)
                                  (pcase-let ((`(_ . ,node) capture))
@@ -417,7 +423,7 @@ source_file (1 . 20)
     (tree-sitter-hl-mode)
     (let* ((beg (save-excursion
                   (re-search-forward "^abc")
-                  (backward-char)
+                  (forward-char)
                   (point)))
            (end (1+ beg)))
       (tree-sitter-hl--highlight-region beg end)
