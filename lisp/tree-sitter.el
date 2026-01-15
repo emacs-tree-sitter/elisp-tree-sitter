@@ -56,6 +56,15 @@ Use this to enable other minor modes that depends on the syntax tree."
   :type '(alist :key-type symbol
                 :value-type symbol))
 
+(make-obsolete-variable 'tree-sitter-major-mode-language-alist
+                        'tree-sitter-major-mode-language-table
+                        "0.19.3")
+
+(defcustom tree-sitter-major-mode-language-table nil
+  "A hash table that maps major modes to tree-sitter language names."
+  :group 'tree-sitter
+  :type 'hash-table)
+
 (defcustom tree-sitter-mode-lighter " tree-sitter"
   "Lighter for command `tree-sitter-mode'."
   :group 'tree-sitter
@@ -156,7 +165,7 @@ OLD-LEN is the char length of the old text."
   "Enable `tree-sitter' in the current buffer."
   (unless tree-sitter-language
     ;; Determine the language symbol based on `major-mode' .
-    (let ((lang-symbol (alist-get major-mode tree-sitter-major-mode-language-alist)))
+    (let ((lang-symbol (gethash major-mode tree-sitter-major-mode-language-table)))
       (unless lang-symbol
         (error "No language registered for major mode `%s'" major-mode))
       (setq tree-sitter-language (tree-sitter-require lang-symbol))))
