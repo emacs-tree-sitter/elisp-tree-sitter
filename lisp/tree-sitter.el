@@ -165,7 +165,8 @@ OLD-LEN is the char length of the old text."
   "Enable `tree-sitter' in the current buffer."
   (unless tree-sitter-language
     ;; Determine the language symbol based on `major-mode' .
-    (let ((lang-symbol (gethash major-mode tree-sitter-major-mode-language-table)))
+    (let ((lang-symbol (ignore-errors
+                         (gethash major-mode tree-sitter-major-mode-language-table))))
       (unless lang-symbol
         (error "No language registered for major mode `%s'" major-mode))
       (setq tree-sitter-language (tree-sitter-require lang-symbol))))
