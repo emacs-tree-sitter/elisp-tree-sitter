@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.19.4] - 2026-01.16
 - perf: Use hash table instead of alist
 
 ## [0.19.3] - 2025-12.23
@@ -166,6 +168,7 @@ Initial release
 <!-- Links -->
 
 [Unreleased]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...HEAD
+[0.19.4]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.19.0...0.19.4
 [0.19.3]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.19.0...0.19.3
 [0.19.1]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.19.0...0.19.1
 [0.19.0]: https://github.com/emacs-tree-sitter/elisp-tree-sitter/compare/0.18.0...0.19.0
