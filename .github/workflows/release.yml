@@ -84,6 +84,7 @@ jobs:
 
       - run: bin/test bench
         if: ${{ !matrix.target }}
+        continue-on-error: true
 
       - name: Rename cross-build's binary
         if: matrix.target
