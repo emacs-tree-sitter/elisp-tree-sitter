@@ -97,7 +97,7 @@ jobs:
           cp core/tsc-dyn.${{ matrix.ext }} core/tsc-dyn.${{ matrix.host }}.${{ matrix.ext }}
 
       - name: Upload binary
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: tsc-dyn.${{ matrix.host }}
           path: core/tsc-dyn.*${{ matrix.ext }}
