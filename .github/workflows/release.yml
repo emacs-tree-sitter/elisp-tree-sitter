@@ -197,7 +197,7 @@ jobs:
           echo "RELEASE_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Greenlight releasing to MELPA
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.PAT }}
           script: |
@@ -211,7 +211,7 @@ jobs:
 
       # We don't want this to trigger workflows, so we don't use a personal access token.
       - name: Greenlight releasing to MELPA Stable
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.git.createRef({
