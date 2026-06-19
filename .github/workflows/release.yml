@@ -60,7 +60,7 @@ jobs:
         with:
           version: 'snapshot'
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
@@ -110,7 +110,7 @@ jobs:
       - uses: jcs090218/setup-emacs@master
         with:
           version: '27.2'
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Generate release notes
         run: |
           bin/dev release-notes $(git describe --tags --abbrev=0) > RELEASE-NOTES
@@ -176,7 +176,7 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: emacs-eask/setup-eask@master
         with:
@@ -190,7 +190,7 @@ jobs:
     needs: integ
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set release version
         run: |
