@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Added support for parsing and highlighting a single region, to enable `jupyter-repl` [integration](https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/78).
 
 ## [0.19.4] - 2026-01.16
 - perf: Use hash table instead of alist
