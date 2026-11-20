@@ -307,7 +307,7 @@
 
 (defface tree-sitter-hl-face:noise
   '((default :inherit default))
-  "Face for things that are syntatic noises.
+  "Face for things that are syntactic noises.
 It's up to themes how they should be displayed: dimmed, hidden..."
   :group 'tree-sitter-hl-faces)
 
@@ -470,7 +470,7 @@ highlighted.
 
 One case that illustrates the need for QUERY-REGION to be larger than HL-REGION
 is when `evil-adjust-cursor' triggers a `vertical-motion' (outside of a
-redisplay), resulting in `jit-lock--run-funtions' being called on a very small
+redisplay), resulting in `jit-lock--run-functions' being called on a very small
 region. Another case is sibling sub-patterns being cut in halves by HL-REGION's
 boundaries.
 
