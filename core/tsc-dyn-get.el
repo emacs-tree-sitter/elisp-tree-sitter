@@ -249,7 +249,7 @@ build directory, and record the built version in the manifest
               (signal (car s) (cdr s)))))))
 
 (defun tsc-dyn-get--build-async (dir)
-  "Build the dynamic module `tsc-dyn' and put it in DIR, asynchrounously."
+  "Build the dynamic module `tsc-dyn' and put it in DIR, asynchronously."
   (let* ((default-directory dir)
          (compilation-auto-jump-to-first-error nil)
          (compilation-scroll-output t)
@@ -383,7 +383,7 @@ you will need to restart Emacs to load the new version."
                      (funcall get-new)))
            (recorded (if (version<= requested recorded)
                          (progn
-                           (tsc-dyn-get--log "Recorded version already satifies requested -> loading")
+                           (tsc-dyn-get--log "Recorded version already satisfies requested -> loading")
                            (unless (tsc-dyn--try-load)
                              ;; The version file may have been accidentally deleted.
                              (tsc-dyn-get--log "Could not load -> getting new")

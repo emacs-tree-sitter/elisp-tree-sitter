@@ -59,7 +59,7 @@ case $target in
     ('')
         ;;
     (*)
-        echo "!! Unsupport cross-build target $target"
+        echo "!! Unsupported cross-build target $target"
         exit 1
         ;;
 esac
